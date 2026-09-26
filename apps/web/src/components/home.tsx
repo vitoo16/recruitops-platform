@@ -9,13 +9,7 @@ import vi from '@/messages/vi.json';
 
 type Locale = 'vi' | 'en';
 
-function HomeContent({
-  locale,
-  onLocaleChange,
-}: {
-  locale: Locale;
-  onLocaleChange: () => void;
-}) {
+function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: () => void }) {
   const t = useTranslations('home');
 
   return (
@@ -47,16 +41,12 @@ function HomeContent({
         <article className="rounded-2xl border bg-white p-6">
           <Send className="size-5" aria-hidden="true" />
           <h2 className="mt-6 font-semibold">{t('publishingTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">
-            {t('publishingDescription')}
-          </p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('publishingDescription')}</p>
         </article>
         <article className="rounded-2xl border bg-white p-6">
           <UsersRound className="size-5" aria-hidden="true" />
           <h2 className="mt-6 font-semibold">{t('candidateTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">
-            {t('candidateDescription')}
-          </p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('candidateDescription')}</p>
         </article>
       </section>
     </main>

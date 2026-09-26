@@ -29,11 +29,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Format preview
-        run: |
-          pnpm exec prettier --write apps/web/src/components/home.tsx
-          git diff -- apps/web/src/components/home.tsx
-          exit 1
+      - name: Format check
+        run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck
