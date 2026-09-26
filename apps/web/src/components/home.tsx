@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { NextIntlClientProvider, useTranslations } from 'next-intl';
 import { Languages, Send, UsersRound } from 'lucide-react';
+import { AuthPanel } from '@/components/auth/auth-panel';
 import { Button } from '@/components/ui/button';
 import en from '@/messages/en.json';
 import vi from '@/messages/vi.json';
@@ -22,7 +23,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         </Button>
       </div>
 
-      <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
+      <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <div>
           <p className="mb-4 text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
           <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
@@ -30,10 +31,16 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
         </div>
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-neutral-500">{t('foundationLabel')}</p>
-          <p className="mt-2 text-2xl font-semibold">{t('foundationStatus')}</p>
-          <p className="mt-3 text-sm leading-6 text-neutral-600">{t('foundationHint')}</p>
+        <div className="space-y-4">
+          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-neutral-500">{t('foundationLabel')}</p>
+            <p className="mt-2 text-2xl font-semibold">{t('foundationStatus')}</p>
+            <p className="mt-3 text-sm leading-6 text-neutral-600">{t('foundationHint')}</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-6 shadow-sm">
+            <p className="mb-4 text-sm font-medium text-neutral-500">{t('accessLabel')}</p>
+            <AuthPanel />
+          </div>
         </div>
       </section>
 
@@ -59,10 +66,7 @@ export function Home() {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <HomeContent
-        locale={locale}
-        onLocaleChange={() => setLocale(locale === 'vi' ? 'en' : 'vi')}
-      />
+      <HomeContent locale={locale} onLocaleChange={() => setLocale(locale === 'vi' ? 'en' : 'vi')} />
     </NextIntlClientProvider>
   );
 }

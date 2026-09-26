@@ -5,6 +5,8 @@ const ApiEnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().min(1).optional(),
   REDIS_URL: z.string().min(1).optional(),
+  SUPABASE_URL: z.url().optional(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:3000')
@@ -16,8 +18,20 @@ const ApiEnvSchema = z.object({
     ),
 });
 
+const SupabaseAuthEnvSchema = z.object({
+  SUPABASE_URL: z.url(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+});
+
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
+export type SupabaseAuthEnv = z.infer<typeof SupabaseAuthEnvSchema>;
 
 export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
+}
+
+export function parseSupabaseAuthEnv(
+  input: Record<string, string | undefined>,
+): SupabaseAuthEnv {
+  return SupabaseAuthEnvSchema.parse(input);
 }
