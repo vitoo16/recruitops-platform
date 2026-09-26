@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
@@ -27,7 +27,9 @@ export function AuthPanel() {
   const t = useTranslations('auth');
   const [session, setSession] = useState<Session | null>(null);
   const [principal, setPrincipal] = useState<VerifiedPrincipal | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'missing-config'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'missing-config'>(
+    'loading',
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const form = useForm<LoginForm>({
@@ -131,9 +133,15 @@ export function AuthPanel() {
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5" aria-hidden="true" />
           <div className="min-w-0">
-            <p className="font-medium">{principal?.email ?? session.user.email ?? t('authenticated')}</p>
+            <p className="font-medium">
+              {principal?.email ?? session.user.email ?? t('authenticated')}
+            </p>
             <p className="mt-1 text-sm text-neutral-500">
-              {verifying ? t('verifying') : principal ? t('verifiedRole', { role: principal.role }) : t('sessionReady')}
+              {verifying
+                ? t('verifying')
+                : principal
+                  ? t('verifiedRole', { role: principal.role })
+                  : t('sessionReady')}
             </p>
           </div>
         </div>
