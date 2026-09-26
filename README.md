@@ -56,14 +56,14 @@ tooling/        repository developer tooling
 - Observability: Sentry/OpenTelemetry
 - Deployment: Docker first, scalable worker topology later
 
-## Free-tier deployment target
+## Free-tier deployment
 
-The initial free deployment profile is intentionally split by responsibility:
+The current zero-cost MVP topology is:
 
-- **Frontend:** Render Static Site
-- **Backend API:** Render Free Web Service
-- **Database + private object storage:** Supabase Free
-- **Redis:** Upstash Redis Free
-- **Durable external scheduling bridge:** Upstash QStash Free, when scheduled publishing is implemented
+- **Frontend:** Render Static Site — `https://recruitops-frontend.onrender.com`
+- **Backend API:** Render Free Web Service — `https://recruitops-api.onrender.com`
+- **Database + private object storage:** Supabase Free, Singapore
+- **Redis:** Render Key Value Free, Singapore
+- **Durable external scheduling bridge:** optional QStash later, only when scheduled publishing is implemented
 
-See `docs/deployment/free-tier.md` before provisioning accounts. The API can sleep on Render free tier, so the production scheduling design must not depend on an always-awake process.
+The API can sleep on Render free tier, so production scheduling must not depend on an always-awake process. See `docs/deployment/free-tier.md` for the exact free-tier constraints and upgrade path.
