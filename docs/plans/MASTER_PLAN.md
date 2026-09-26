@@ -43,7 +43,8 @@
 - [x] Configure structured request logging/correlation IDs baseline.
 - [x] Add initial CI workflow.
 - [x] Add reproducible free-tier deployment configuration for frontend/API and document Supabase/Upstash dependencies.
-- [ ] Verify clean install, formatting, typecheck, test and build in CI.
+- [x] Provision Supabase Free project in Singapore and create the `recruitops-private` private storage bucket.
+- [x] Verify clean install, formatting, typecheck, test and build in CI.
 
 ## Phase 2 — Authentication, users and security foundation
 
