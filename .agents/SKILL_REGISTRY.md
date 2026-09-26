@@ -31,13 +31,18 @@ Before any non-trivial task, map the task to all applicable skills below.
 - **vercel-react-best-practices**: https://www.skills.sh/vercel-labs/agent-skills/react-best-practices
 - **composition-patterns**: https://www.skills.sh/vercel-labs/agent-skills/composition-patterns
 - **next-best-practices**: https://www.skills.sh/vercel-labs/next-skills/next-best-practices
+- **next-cache-components**: https://www.skills.sh/vercel-labs/next-skills/next-cache-components
 - **react-hook-form**: https://www.skills.sh/pproenca/dot-skills/react-hook-form
 - **zod**: https://www.skills.sh/pproenca/dot-skills/zod
 - **tailwind-css-patterns**: https://www.skills.sh/giuseppe-trisciuoglio/developer-kit/tailwind-css-patterns
+- **tailwind-v4-shadcn**: https://www.skills.sh/secondsky/claude-skills/tailwind-v4-shadcn
 - **shadcn**: https://www.skills.sh/shadcn/ui/shadcn
 - **frontend-design**: https://www.skills.sh/nexu-io/open-design/frontend-design
+- **frontend-design-anthropic**: https://www.skills.sh/anthropics/skills/frontend-design
 - **web-design-guidelines**: https://www.skills.sh/vercel-labs/agent-skills/web-design-guidelines
 - **frontend-accessibility-best-practices**: https://www.skills.sh/sergiodxa/agent-skills/frontend-accessibility-best-practices
+- **accessibility**: https://www.skills.sh/addyosmani/web-quality-skills/accessibility
+- **seo**: https://www.skills.sh/addyosmani/web-quality-skills/seo
 - **i18n-frontend-implementer**: https://www.skills.sh/patricio0312rev/skills/i18n-frontend-implementer
 - **web-perf**: https://www.skills.sh/cloudflare/skills/web-perf
 - **next-upgrade**: https://www.skills.sh/vercel-labs/next-skills/next-upgrade
@@ -100,3 +105,7 @@ Before any non-trivial task, map the task to all applicable skills below.
 
 - **sentry-nextjs-sdk**: https://www.skills.sh/getsentry/sentry-agent-skills/sentry-nextjs-sdk
 - **sentry-node-sdk**: https://www.skills.sh/getsentry/sentry-for-ai/sentry-node-sdk
+
+## AutoSkills verification note
+
+The repository AutoSkills dry-run (v0.3.3) detected TypeScript, Turborepo, Node.js, Vitest, NestJS, React, Next.js, Tailwind CSS, shadcn/ui, Zod and Prisma, and recommended 22 stack skills. The entries added above cover the additional recommendations that were not already represented by the manual registry.
