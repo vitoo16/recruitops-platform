@@ -8,47 +8,59 @@
 | API | Render Web Service | Free |
 | PostgreSQL | Supabase | Free project |
 | CV/media storage | Supabase Storage / S3-compatible access | Free project quota |
-| Redis | Upstash Redis | Free |
+| Redis | Render Key Value | Free |
 | External scheduled HTTP trigger | Upstash QStash | Free quota where applicable |
 
 This is an MVP/hobby topology. It is intentionally portable rather than production-SLA oriented.
 
 ## Provisioned free resources
 
-The following free Supabase resource is already provisioned for this repository:
-
 ```text
-Project: recruitops-platform
-Project ref: ybkmijhhhuqzatpnigsq
-Region: ap-southeast-1 (Singapore)
-Project URL: https://ybkmijhhhuqzatpnigsq.supabase.co
+Supabase project: recruitops-platform
+Supabase ref: ybkmijhhhuqzatpnigsq
+Supabase region: ap-southeast-1 (Singapore)
+Supabase URL: https://ybkmijhhhuqzatpnigsq.supabase.co
 Private storage bucket: recruitops-private
+
+Render frontend: recruitops-frontend
+Frontend URL: https://recruitops-frontend.onrender.com
+
+Render API: recruitops-api
+API URL: https://recruitops-api.onrender.com
+API region: Singapore
+
+Render Redis: recruitops-redis
+Redis region: Singapore
+Redis plan: Free
 ```
 
-The bucket is private. No database password, S3 secret, service-role key, OAuth secret, or other credential is committed to this repository.
+No database password, Redis connection credential, S3 secret, service-role key, OAuth secret, or other credential is committed to this repository.
 
-## Why not use Render Free Postgres as the long-lived development database?
+## Render configuration
 
-Render's free Postgres tier is useful for trials, but the free database is time-limited. RecruitOps needs candidate/application data to remain durable during ongoing development, so the initial plan uses Supabase Free PostgreSQL instead.
-
-## Render Blueprint
-
-`render.yaml` defines:
-- `recruitops-web`: static Next.js export from `apps/web/out`;
+`render.yaml` defines the intended reproducible configuration for:
+- `recruitops-frontend`: static Next.js export from `apps/web/out`;
 - `recruitops-api`: NestJS Node web service in Singapore;
 - monorepo build/start commands;
 - `/api/health` health check;
 - secret placeholders using `sync: false` instead of committed secret values.
 
+Render already provides pnpm for this repository through `packageManager`. Do not run `corepack enable` in Render build commands because its build filesystem can expose the system pnpm shim as read-only.
+
 ## Supabase
 
 The project is provisioned in Singapore (`ap-southeast-1`).
 
-Provide the API with:
+When the database module is enabled, provide the API with:
 
 ```text
 DATABASE_URL=<Supabase Postgres connection string compatible with Prisma>
-STORAGE_ENDPOINT=<Supabase S3 endpoint when S3-compatible access is enabled>
+```
+
+When S3-compatible storage credentials are enabled, provide:
+
+```text
+STORAGE_ENDPOINT=<Supabase S3 endpoint>
 STORAGE_REGION=<Supabase storage region>
 STORAGE_BUCKET=recruitops-private
 STORAGE_ACCESS_KEY_ID=<secret>
@@ -57,19 +69,21 @@ STORAGE_SECRET_ACCESS_KEY=<secret>
 
 `recruitops-private` already exists as a private bucket. Candidate CV access must remain authorization-controlled.
 
-## Upstash Redis
+## Render Key Value
 
-Create a free Redis database in a nearby region and set:
+`recruitops-redis` is already provisioned on the Render Free plan in Singapore.
+
+When the queue module is enabled, set:
 
 ```text
-REDIS_URL=rediss://...
+REDIS_URL=<private/internal Render Key Value connection URL>
 ```
 
-Use TLS in hosted environments. Free Redis quotas are intended for prototypes, not guaranteed production workload.
+Prefer the provider's private/internal connection path from services in the same region. Never commit the credential-bearing URL.
 
 ## QStash
 
-The Render API can sleep when idle. Future scheduled publishing can use QStash to call an authenticated API endpoint at a scheduled time. QStash is a delivery/wake-up bridge, not the business source of truth.
+The Render API can sleep when idle. Future scheduled publishing may use QStash to call an authenticated API endpoint at a scheduled time. QStash is only a delivery/wake-up bridge, not the business source of truth.
 
 Future scheduled endpoint requirements:
 - verify QStash signatures;
@@ -78,16 +92,17 @@ Future scheduled endpoint requirements:
 - enqueue durable work where possible;
 - return safely for duplicate delivery.
 
-## Render environment values
+## Current API foundation
 
-After creating the Blueprint, populate every field marked `sync: false` in Render.
+The current foundation API exposes health functionality and does not yet consume PostgreSQL or Redis. Therefore `DATABASE_URL` and `REDIS_URL` are optional at process bootstrap until the corresponding modules are implemented. Each future module must validate its required configuration when enabled.
 
-Minimum values for the current API foundation:
+Current runtime values include:
 
 ```text
-CORS_ORIGINS=https://<recruitops-web>.onrender.com
-DATABASE_URL=<Supabase Postgres URL>
-REDIS_URL=<Upstash Redis TLS URL>
+NODE_ENV=production
+PORT=10000
+CORS_ORIGINS=https://recruitops-frontend.onrender.com
+STORAGE_BUCKET=recruitops-private
 ```
 
 Leave future social credentials unset until each integration phase starts.
@@ -95,7 +110,7 @@ Leave future social credentials unset until each integration phase starts.
 ## Free-tier limitations
 
 - Render Free Web Services can sleep after inactivity and cold-start on the next request.
-- Free compute, bandwidth, build minutes, storage and Redis commands are bounded.
+- Free compute, bandwidth, build minutes, storage and Redis capacity are bounded.
 - Do not promise exact-time publishing from a sleeping free API.
 - Do not deploy business-critical background processing until an always-on worker is available.
 
