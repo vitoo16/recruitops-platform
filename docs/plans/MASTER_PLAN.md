@@ -22,7 +22,7 @@
 - [x] Push initial scaffold to `main`.
 - [x] Verify repository default branch is `main`.
 - [ ] Configure repository branch/ruleset protections where supported.
-- [ ] Run AutoSkills dry-run in the created repository.
+- [x] Run AutoSkills dry-run in the created repository.
 - [ ] Install/verify stack-detected skills.
 - [ ] Install/verify required manual skills from `.agents/SKILL_REGISTRY.md`.
 
@@ -37,7 +37,7 @@
 - [x] Configure environment validation baseline.
 - [x] Add PostgreSQL local service.
 - [x] Add Redis local service.
-- [ ] Add object-storage local development strategy.
+- [x] Add object-storage local development strategy.
 - [x] Initialize Prisma.
 - [x] Add baseline health endpoint.
 - [x] Configure structured request logging/correlation IDs baseline.
