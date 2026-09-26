@@ -32,6 +32,11 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
+      - name: Validate local infrastructure configuration
+        run: |
+          node tooling/scripts/init-local-infra.mjs --infra-only
+          docker compose --env-file infra/docker/.env.local -f infra/docker/docker-compose.yml config --quiet
+
       - name: Typecheck
         run: pnpm typecheck
         env:
