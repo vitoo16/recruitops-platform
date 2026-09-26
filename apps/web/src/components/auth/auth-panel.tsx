@@ -27,9 +27,7 @@ export function AuthPanel() {
   const t = useTranslations('auth');
   const [session, setSession] = useState<Session | null>(null);
   const [principal, setPrincipal] = useState<VerifiedPrincipal | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'missing-config'>(
-    'loading',
-  );
+  const [status, setStatus] = useState<'loading' | 'ready' | 'missing-config'>('loading');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const form = useForm<LoginForm>({
