@@ -55,3 +55,15 @@ tooling/        repository developer tooling
 - Tests: Vitest + Playwright
 - Observability: Sentry/OpenTelemetry
 - Deployment: Docker first, scalable worker topology later
+
+## Free-tier deployment target
+
+The initial free deployment profile is intentionally split by responsibility:
+
+- **Frontend:** Render Static Site
+- **Backend API:** Render Free Web Service
+- **Database + private object storage:** Supabase Free
+- **Redis:** Upstash Redis Free
+- **Durable external scheduling bridge:** Upstash QStash Free, when scheduled publishing is implemented
+
+See `docs/deployment/free-tier.md` before provisioning accounts. The API can sleep on Render free tier, so the production scheduling design must not depend on an always-awake process.
