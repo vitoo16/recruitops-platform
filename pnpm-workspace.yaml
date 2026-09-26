@@ -3,7 +3,9 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - '@nestjs/core'
+  - '@parcel/watcher'
   - '@prisma/engines'
+  - '@swc/core'
+  - esbuild
   - prisma
 
