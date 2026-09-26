@@ -53,11 +53,11 @@ describe('SupabaseAuthService', () => {
       ),
     );
 
-    await expect(
-      new SupabaseAuthService().verifyAccessToken('valid-token'),
-    ).resolves.toMatchObject({
-      role: 'VIEWER',
-    });
+    await expect(new SupabaseAuthService().verifyAccessToken('valid-token')).resolves.toMatchObject(
+      {
+        role: 'VIEWER',
+      },
+    );
   });
 
   it('rejects tokens the Auth server does not accept', async () => {
