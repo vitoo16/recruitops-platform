@@ -21,7 +21,8 @@ function parseSupabaseUser(value: unknown): SupabaseUserPayload | null {
     return null;
   }
 
-  const email = value.email === null || typeof value.email === 'string' ? value.email : null;
+  const email =
+    value.email === null || typeof value.email === 'string' ? value.email : null;
   const appMetadata = isRecord(value.app_metadata) ? value.app_metadata : {};
 
   return { id: value.id, email, appMetadata };
@@ -56,7 +57,9 @@ export class SupabaseAuthService {
         signal: AbortSignal.timeout(5_000),
       });
     } catch {
-      throw new ServiceUnavailableException('Authentication provider is temporarily unavailable.');
+      throw new ServiceUnavailableException(
+        'Authentication provider is temporarily unavailable.',
+      );
     }
 
     if (!response.ok) {
@@ -67,7 +70,9 @@ export class SupabaseAuthService {
     const user = parseSupabaseUser(payload);
 
     if (!user) {
-      throw new UnauthorizedException('Authentication provider returned an invalid user payload.');
+      throw new UnauthorizedException(
+        'Authentication provider returned an invalid user payload.',
+      );
     }
 
     return {
