@@ -13,6 +13,20 @@
 
 This is an MVP/hobby topology. It is intentionally portable rather than production-SLA oriented.
 
+## Provisioned free resources
+
+The following free Supabase resource is already provisioned for this repository:
+
+```text
+Project: recruitops-platform
+Project ref: ybkmijhhhuqzatpnigsq
+Region: ap-southeast-1 (Singapore)
+Project URL: https://ybkmijhhhuqzatpnigsq.supabase.co
+Private storage bucket: recruitops-private
+```
+
+The bucket is private. No database password, S3 secret, service-role key, OAuth secret, or other credential is committed to this repository.
+
 ## Why not use Render Free Postgres as the long-lived development database?
 
 Render's free Postgres tier is useful for trials, but the free database is time-limited. RecruitOps needs candidate/application data to remain durable during ongoing development, so the initial plan uses Supabase Free PostgreSQL instead.
@@ -28,7 +42,7 @@ Render's free Postgres tier is useful for trials, but the free database is time-
 
 ## Supabase
 
-Create one project in the closest practical region. For Vietnam, Singapore (`ap-southeast-1`) is the preferred initial region when available.
+The project is provisioned in Singapore (`ap-southeast-1`).
 
 Provide the API with:
 
@@ -41,7 +55,7 @@ STORAGE_ACCESS_KEY_ID=<secret>
 STORAGE_SECRET_ACCESS_KEY=<secret>
 ```
 
-Create `recruitops-private` as a private bucket. Candidate CV access must remain authorization-controlled.
+`recruitops-private` already exists as a private bucket. Candidate CV access must remain authorization-controlled.
 
 ## Upstash Redis
 
