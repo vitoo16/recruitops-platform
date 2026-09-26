@@ -8,5 +8,6 @@ Each file below is canonical Mermaid source embedded in Markdown and should rend
 - `publication-state.md`
 - `candidate-lifecycle.md`
 - `database-erd.md`
+- `free-tier-deployment.md`
 
 Do not duplicate diagram source elsewhere.

@@ -20,6 +20,9 @@
 ## Execution
 - `plans/MASTER_PLAN.md`
 
+## Deployment
+- `deployment/free-tier.md`
+
 ## Operations
 - `operations/quality-gates.md`
 - `operations/runbooks/README.md`
