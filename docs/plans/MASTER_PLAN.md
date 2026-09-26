@@ -45,8 +45,8 @@
 - [x] Add reproducible free-tier deployment configuration for frontend/API and document Supabase/Render Key Value dependencies.
 - [x] Provision Supabase Free project in Singapore and create the `recruitops-private` private storage bucket.
 - [x] Provision Render Key Value Free (`recruitops-redis`) in Singapore.
-- [ ] Verify Render Static Site Free deployment for `recruitops-frontend`.
-- [ ] Verify Render Web Service Free deployment for `recruitops-api`.
+- [x] Verify Render Static Site Free deployment for `recruitops-frontend`.
+- [x] Verify Render Web Service Free deployment for `recruitops-api`.
 - [x] Verify clean install, formatting, typecheck, test and build in CI.
 
 ## Phase 2 — Authentication, users and security foundation
