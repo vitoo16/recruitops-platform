@@ -1,0 +1,16 @@
+{
+  "home": {
+    "eyebrow": "Nền tảng vận hành tuyển dụng đa kênh",
+    "title": "Một nơi để quản lý nội dung tuyển dụng, lịch đăng và ứng viên.",
+    "description": "RecruitOps đang được xây dựng theo kiến trúc module, API chính thức và quy trình human-in-the-loop cho những nền tảng không hỗ trợ tự động hóa phù hợp.",
+    "foundationLabel": "Trạng thái",
+    "foundationStatus": "Foundation đang được khởi tạo",
+    "foundationHint": "Bước tiếp theo là kết nối dữ liệu, xác thực và các adapter mạng xã hội theo Master Plan.",
+    "publishingTitle": "Social Publishing",
+    "publishingDescription": "Soạn nội dung, tạo biến thể theo nền tảng, chọn điểm đăng và theo dõi trạng thái xuất bản.",
+    "candidateTitle": "Candidate Operations",
+    "candidateDescription": "Theo dõi nguồn ứng viên, CV, vòng tuyển dụng và hoa hồng trong một luồng thống nhất.",
+    "capabilities": "Năng lực cốt lõi",
+    "switchLanguage": "Chuyển ngôn ngữ"
+  }
+}

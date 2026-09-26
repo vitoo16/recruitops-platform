@@ -1,0 +1,78 @@
+services:
+  - type: web
+    name: recruitops-web
+    runtime: static
+    branch: main
+    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @recruitops/web build
+    staticPublishPath: ./apps/web/out
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+
+  - type: web
+    name: recruitops-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @recruitops/api... build
+    startCommand: pnpm --filter @recruitops/api start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_REGION
+        sync: false
+      - key: STORAGE_BUCKET
+        value: recruitops-private
+      - key: STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: META_CLIENT_ID
+        sync: false
+      - key: META_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: TIKTOK_CLIENT_KEY
+        sync: false
+      - key: TIKTOK_CLIENT_SECRET
+        sync: false
+      - key: ZALO_APP_ID
+        sync: false
+      - key: ZALO_APP_SECRET
+        sync: false
+      - key: N8N_WEBHOOK_BASE_URL
+        sync: false
+      - key: N8N_SHARED_SECRET
+        sync: false
+      - key: QSTASH_TOKEN
+        sync: false
+      - key: QSTASH_CURRENT_SIGNING_KEY
+        sync: false
+      - key: QSTASH_NEXT_SIGNING_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false

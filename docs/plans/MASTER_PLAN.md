@@ -18,9 +18,9 @@
 - [x] Define initial ADRs for monorepo, social adapters and n8n ownership.
 - [x] Design senior-level repository structure.
 - [x] Generate local repository scaffold.
-- [ ] Create private GitHub repository `vitoo16/recruitops-platform`.
-- [ ] Push initial scaffold to `main`.
-- [ ] Verify repository default branch is `main`.
+- [x] Create GitHub repository `vitoo16/recruitops-platform`.
+- [x] Push initial scaffold to `main`.
+- [x] Verify repository default branch is `main`.
 - [ ] Configure repository branch/ruleset protections where supported.
 - [ ] Run AutoSkills dry-run in the created repository.
 - [ ] Install/verify stack-detected skills.
@@ -28,21 +28,22 @@
 
 ## Phase 1 — Monorepo and local development foundation
 
-- [ ] Initialize pnpm/Turborepo workspace.
-- [ ] Initialize `apps/web` with Next.js + TypeScript strict mode.
-- [ ] Initialize `apps/api` with NestJS + TypeScript strict mode.
-- [ ] Initialize `apps/worker`.
-- [ ] Initialize shared packages.
-- [ ] Configure shared TypeScript, linting and formatting.
-- [ ] Configure environment validation.
-- [ ] Add PostgreSQL local service.
-- [ ] Add Redis local service.
+- [x] Initialize pnpm/Turborepo workspace.
+- [x] Initialize `apps/web` with Next.js + TypeScript strict mode.
+- [x] Initialize `apps/api` with NestJS + TypeScript strict mode.
+- [x] Initialize `apps/worker`.
+- [x] Initialize shared packages.
+- [x] Configure shared TypeScript and formatting baseline.
+- [x] Configure environment validation baseline.
+- [x] Add PostgreSQL local service.
+- [x] Add Redis local service.
 - [ ] Add object-storage local development strategy.
-- [ ] Initialize Prisma.
-- [ ] Add baseline health endpoints.
-- [ ] Configure structured logging/correlation IDs.
-- [ ] Add initial CI workflow.
-- [ ] Verify clean install, lint, typecheck, test and build.
+- [x] Initialize Prisma.
+- [x] Add baseline health endpoint.
+- [x] Configure structured request logging/correlation IDs baseline.
+- [x] Add initial CI workflow.
+- [x] Add reproducible free-tier deployment configuration for frontend/API and document Supabase/Upstash dependencies.
+- [ ] Verify clean install, formatting, typecheck, test and build in CI.
 
 ## Phase 2 — Authentication, users and security foundation
 
@@ -65,7 +66,7 @@
 - [ ] Implement media model/upload flow.
 - [ ] Implement draft workflow.
 - [ ] Implement platform preview model.
-- [ ] Implement VI/EN application i18n.
+- [x] Implement VI/EN application i18n baseline.
 - [ ] Implement job/content validation tests.
 - [ ] Update ERD/API docs and diagrams.
 
@@ -148,7 +149,7 @@
 - [ ] Add database performance review/indexes.
 - [ ] Add dependency/security scanning.
 - [ ] Add backup/restore procedure.
-- [ ] Add production deployment topology.
+- [x] Add initial free-tier deployment topology and upgrade path.
 - [ ] Add platform-specific worker scaling strategy.
 - [ ] Execute accessibility review.
 - [ ] Execute web performance review.

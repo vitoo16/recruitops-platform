@@ -4,10 +4,14 @@ node_modules/
 
 # Builds
 .next/
+out/
 dist/
 build/
 coverage/
 .turbo/
+
+# Generated
+packages/database/src/generated/
 
 # Environment
 .env
