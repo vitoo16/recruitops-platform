@@ -15,13 +15,14 @@ const LoginSchema = z.object({
   password: z.string().min(8),
 });
 
-type LoginForm = z.infer<typeof LoginSchema>;
+const VerifiedPrincipalSchema = z.object({
+  id: z.string().min(1),
+  email: z.email().nullable(),
+  role: z.enum(['OWNER', 'ADMIN', 'RECRUITER', 'VIEWER']),
+});
 
-type VerifiedPrincipal = {
-  id: string;
-  email: string | null;
-  role: 'OWNER' | 'ADMIN' | 'RECRUITER' | 'VIEWER';
-};
+type LoginForm = z.infer<typeof LoginSchema>;
+type VerifiedPrincipal = z.infer<typeof VerifiedPrincipalSchema>;
 
 export function AuthPanel() {
   const t = useTranslations('auth');
@@ -77,7 +78,7 @@ export function AuthPanel() {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error('verification_failed');
-        return (await response.json()) as VerifiedPrincipal;
+        return VerifiedPrincipalSchema.parse(await response.json());
       })
       .then((verified) => {
         if (active) setPrincipal(verified);
