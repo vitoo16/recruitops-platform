@@ -5,3 +5,4 @@ dist
 coverage
 .turbo
 packages/database/src/generated
+pnpm-lock.yaml

@@ -69,7 +69,10 @@ export function Home() {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <HomeContent locale={locale} onLocaleChange={() => setLocale(locale === 'vi' ? 'en' : 'vi')} />
+      <HomeContent
+        locale={locale}
+        onLocaleChange={() => setLocale(locale === 'vi' ? 'en' : 'vi')}
+      />
     </NextIntlClientProvider>
   );
 }
