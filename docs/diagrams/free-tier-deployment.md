@@ -7,8 +7,8 @@ flowchart TB
     API[Render Free Web Service\nNestJS API]
     DB[(Supabase PostgreSQL)]
     STORE[(Supabase private Storage)]
-    REDIS[(Upstash Redis)]
-    QSTASH[Upstash QStash\noptional scheduled trigger]
+    REDIS[(Render Key Value\nRedis-compatible)]
+    QSTASH[External scheduled trigger\noptional later]
 
     USER --> WEB
     WEB --> API

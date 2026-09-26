@@ -12,8 +12,8 @@ Use:
 - Render Static Site for the exported Next.js frontend.
 - Render Free Web Service for the NestJS API.
 - Supabase Free project for PostgreSQL and private object storage.
-- Upstash Redis Free for Redis/BullMQ-compatible connectivity.
-- Upstash QStash as an optional external scheduled HTTP trigger for wake-up/scheduling bridges while the free Render API can sleep.
+- Render Key Value Free in Singapore for Redis/BullMQ-compatible connectivity.
+- An external scheduled HTTP trigger such as QStash only if needed later for wake-up/scheduling bridges while the free Render API can sleep.
 
 The worker application remains defined in the monorepo but is not deployed as an always-on free Render worker because Render background workers are not part of the free service set.
 
@@ -23,7 +23,8 @@ The worker application remains defined in the monorepo but is not deployed as an
 - No infrastructure cost for initial development/hobby validation within provider free quotas.
 - Frontend is CDN-hosted and does not sleep.
 - PostgreSQL/storage remain separate from API compute.
-- Redis can later be reused by dedicated paid workers.
+- API and Redis are colocated in Render Singapore for a simple future private queue connection.
+- Redis contracts remain portable to a dedicated provider later.
 - Deployment configuration remains infrastructure-as-code through `render.yaml` and documented environment variables.
 
 ### Trade-offs
