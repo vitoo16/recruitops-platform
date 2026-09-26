@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 
 const originalEnv = { ...process.env };
@@ -53,7 +53,9 @@ describe('SupabaseAuthService', () => {
       ),
     );
 
-    await expect(new SupabaseAuthService().verifyAccessToken('valid-token')).resolves.toMatchObject({
+    await expect(
+      new SupabaseAuthService().verifyAccessToken('valid-token'),
+    ).resolves.toMatchObject({
       role: 'VIEWER',
     });
   });
