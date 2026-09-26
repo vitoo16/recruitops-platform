@@ -9,7 +9,13 @@ import vi from '@/messages/vi.json';
 
 type Locale = 'vi' | 'en';
 
-function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: () => void }) {
+function HomeContent({
+  locale,
+  onLocaleChange,
+}: {
+  locale: Locale;
+  onLocaleChange: () => void;
+}) {
   const t = useTranslations('home');
 
   return (
@@ -25,7 +31,9 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
         <div>
           <p className="mb-4 text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
-          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">{t('title')}</h1>
+          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
+            {t('title')}
+          </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
         </div>
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -39,12 +47,16 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         <article className="rounded-2xl border bg-white p-6">
           <Send className="size-5" aria-hidden="true" />
           <h2 className="mt-6 font-semibold">{t('publishingTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('publishingDescription')}</p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            {t('publishingDescription')}
+          </p>
         </article>
         <article className="rounded-2xl border bg-white p-6">
           <UsersRound className="size-5" aria-hidden="true" />
           <h2 className="mt-6 font-semibold">{t('candidateTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('candidateDescription')}</p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            {t('candidateDescription')}
+          </p>
         </article>
       </section>
     </main>
