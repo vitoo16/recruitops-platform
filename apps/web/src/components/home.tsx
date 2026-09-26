@@ -10,21 +10,13 @@ import vi from '@/messages/vi.json';
 
 type Locale = 'vi' | 'en';
 
-function HomeContent({
-  locale,
-  onLocaleChange,
-}: {
-  locale: Locale;
-  onLocaleChange: () => void;
-}) {
+function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: () => void }) {
   const t = useTranslations('home');
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center gap-10 px-6 py-16">
       <div className="flex items-center justify-between gap-4">
-        <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">
-          RECRUITOPS
-        </div>
+        <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
         <Button variant="outline" onClick={onLocaleChange} aria-label={t('switchLanguage')}>
           <Languages className="mr-2 size-4" aria-hidden="true" />
           {locale === 'vi' ? 'EN' : 'VI'}
@@ -37,9 +29,7 @@ function HomeContent({
           <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
             {t('title')}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
-            {t('description')}
-          </p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
         </div>
         <div className="space-y-4">
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
