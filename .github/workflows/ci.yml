@@ -29,11 +29,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Preview exact formatting diff
-        run: |
-          pnpm format
-          git diff -- apps/api/src/auth apps/web/src/components packages/config/src/index.ts
-          exit 1
+      - name: Format check
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
