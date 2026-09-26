@@ -30,8 +30,6 @@ export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
 }
 
-export function parseSupabaseAuthEnv(
-  input: Record<string, string | undefined>,
-): SupabaseAuthEnv {
+export function parseSupabaseAuthEnv(input: Record<string, string | undefined>): SupabaseAuthEnv {
   return SupabaseAuthEnvSchema.parse(input);
 }
