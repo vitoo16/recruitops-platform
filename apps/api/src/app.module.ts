@@ -6,6 +6,7 @@ import { ContentModule } from './content/content.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { FilesModule } from './files/files.module.js';
 import { HealthController } from './health/health.controller.js';
+import { IntegrationHealthModule } from './integration-health/integration-health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { MetaConnectionsModule } from './meta-connections/meta-connections.module.js';
 import { SocialCredentialsModule } from './social-credentials/social-credentials.module.js';
@@ -18,6 +19,7 @@ import { SocialCredentialsModule } from './social-credentials/social-credentials
     ContentModule,
     DatabaseModule,
     FilesModule,
+    IntegrationHealthModule,
     JobsModule,
     MetaConnectionsModule,
     SocialCredentialsModule,
