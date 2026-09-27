@@ -4,6 +4,7 @@ import { DatabaseModule } from '../database/database.module.js';
 import { RedisModule } from '../redis/redis.module.js';
 import { SocialCredentialsModule } from '../social-credentials/social-credentials.module.js';
 import { MetaConnectionClientFactory } from './meta-connection-client.factory.js';
+import { MetaConnectionReturnUrlFactory } from './meta-connection-return-url.factory.js';
 import { MetaConnectionsController } from './meta-connections.controller.js';
 import { MetaConnectionsRepository } from './meta-connections.repository.js';
 import { MetaConnectionsService } from './meta-connections.service.js';
@@ -14,6 +15,7 @@ import { MetaOAuthSessionStore } from './meta-oauth-session.store.js';
   controllers: [MetaConnectionsController],
   providers: [
     MetaConnectionClientFactory,
+    MetaConnectionReturnUrlFactory,
     MetaConnectionsRepository,
     MetaConnectionsService,
     MetaOAuthSessionStore,
