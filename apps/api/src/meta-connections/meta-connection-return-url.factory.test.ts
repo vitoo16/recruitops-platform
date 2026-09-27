@@ -44,6 +44,25 @@ describe('MetaConnectionReturnUrlFactory', () => {
     expect(url.searchParams.has('metaConnectionSession')).toBe(false);
   });
 
+  it('allows plain HTTP only for local development hosts', () => {
+    configureMetaEnv();
+    vi.stubEnv('META_FRONTEND_REDIRECT_URI', 'http://localhost:3000/');
+    const factory = new MetaConnectionReturnUrlFactory();
+
+    expect(() => factory.assertConfigured()).not.toThrow();
+
+    vi.stubEnv('META_FRONTEND_REDIRECT_URI', 'http://app.example.com/');
+    expect(() => factory.assertConfigured()).toThrow();
+  });
+
+  it('rejects embedded URL credentials', () => {
+    configureMetaEnv();
+    vi.stubEnv('META_FRONTEND_REDIRECT_URI', 'https://user:password@app.example.com/');
+    const factory = new MetaConnectionReturnUrlFactory();
+
+    expect(() => factory.assertConfigured()).toThrow();
+  });
+
   it('fails closed when the frontend return URL is not configured', () => {
     configureMetaEnv();
     vi.stubEnv('META_FRONTEND_REDIRECT_URI', '');
