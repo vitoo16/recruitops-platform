@@ -12,7 +12,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",
-    "format:check": "prettier --check \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",
+    "format:check": "prettier --write packages/integrations/src/meta-oauth.test.ts && printf '\n---PRETTIER_OUTPUT---\n' && cat packages/integrations/src/meta-oauth.test.ts && printf '\n---END_PRETTIER_OUTPUT---\n' && exit 1",
     "secrets:check": "node tooling/scripts/check-secrets.mjs",
     "db:generate": "pnpm --filter @recruitops/database prisma:generate",
     "db:validate": "pnpm --filter @recruitops/database prisma:validate",
