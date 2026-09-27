@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SocialPlatformSchema } from './content.js';
 
 export const publicationStateValues = [
   'PENDING',
@@ -37,9 +38,21 @@ export const PublicationIdentitySchema = z.object({
   publicationId: z.uuid(),
 });
 
+export const PublicationQueueJobSchema = z.object({
+  publicationId: z.uuid(),
+  platform: SocialPlatformSchema,
+});
+
+export type PublicationQueueJob = z.infer<typeof PublicationQueueJobSchema>;
+
 export function buildPublicationIdempotencyKey(publicationId: string): string {
   const parsed = PublicationIdentitySchema.parse({ publicationId });
   return `publication:${parsed.publicationId}`;
+}
+
+export function buildPublicationQueueJobId(publicationId: string): string {
+  const parsed = PublicationIdentitySchema.parse({ publicationId });
+  return `publication-${parsed.publicationId}`;
 }
 
 export interface RetryPolicy {

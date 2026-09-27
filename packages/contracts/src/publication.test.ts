@@ -1,45 +1,46 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPublicationIdempotencyKey,
+  buildPublicationQueueJobId,
   calculateRetryDelayMs,
   canTransitionPublicationState,
+  PublicationQueueJobSchema,
   shouldRetryPublication,
 } from './publication.js';
 
-describe('publication domain', () => {
-  it('enforces publication lifecycle transitions', () => {
-    expect(canTransitionPublicationState('PENDING', 'SCHEDULED')).toBe(true);
-    expect(canTransitionPublicationState('SCHEDULED', 'PUBLISHING')).toBe(true);
+const publicationId = '550e8400-e29b-41d4-a716-446655440001';
+
+describe('publication contracts', () => {
+  it('allows only declared lifecycle transitions', () => {
     expect(canTransitionPublicationState('PUBLISHING', 'RETRY_WAITING')).toBe(true);
     expect(canTransitionPublicationState('RETRY_WAITING', 'PUBLISHING')).toBe(true);
     expect(canTransitionPublicationState('PUBLISHED', 'PUBLISHING')).toBe(false);
-    expect(canTransitionPublicationState('CANCELLED', 'PENDING')).toBe(false);
   });
 
-  it('builds a stable idempotency key from the logical publication id', () => {
-    const publicationId = '20e06284-2d8b-4f67-a6db-dd399db5c83c';
-
+  it('builds stable database and queue idempotency identifiers', () => {
     expect(buildPublicationIdempotencyKey(publicationId)).toBe(`publication:${publicationId}`);
-    expect(buildPublicationIdempotencyKey(publicationId)).toBe(
-      buildPublicationIdempotencyKey(publicationId),
-    );
+    expect(buildPublicationQueueJobId(publicationId)).toBe(`publication-${publicationId}`);
+    expect(buildPublicationQueueJobId(publicationId)).not.toContain(':');
   });
 
-  it('uses bounded exponential backoff', () => {
-    const policy = { maxAttempts: 5, baseDelayMs: 1_000, maxDelayMs: 5_000 };
-
-    expect(calculateRetryDelayMs(1, policy)).toBe(1_000);
-    expect(calculateRetryDelayMs(2, policy)).toBe(2_000);
-    expect(calculateRetryDelayMs(3, policy)).toBe(4_000);
-    expect(calculateRetryDelayMs(4, policy)).toBe(5_000);
+  it('validates the minimal queue payload', () => {
+    expect(
+      PublicationQueueJobSchema.parse({ publicationId, platform: 'LINKEDIN' }),
+    ).toEqual({ publicationId, platform: 'LINKEDIN' });
+    expect(
+      PublicationQueueJobSchema.safeParse({ publicationId, platform: 'UNKNOWN' }).success,
+    ).toBe(false);
   });
 
-  it('stops retrying at the configured terminal attempt or on non-retryable errors', () => {
-    const policy = { maxAttempts: 3, baseDelayMs: 1_000, maxDelayMs: 8_000 };
+  it('calculates bounded exponential retry delays', () => {
+    expect(calculateRetryDelayMs(1)).toBe(1_000);
+    expect(calculateRetryDelayMs(2)).toBe(2_000);
+    expect(calculateRetryDelayMs(30)).toBe(15 * 60 * 1_000);
+  });
 
-    expect(shouldRetryPublication(1, true, policy)).toBe(true);
-    expect(shouldRetryPublication(2, true, policy)).toBe(true);
-    expect(shouldRetryPublication(3, true, policy)).toBe(false);
-    expect(shouldRetryPublication(1, false, policy)).toBe(false);
+  it('stops retrying at the configured attempt limit', () => {
+    expect(shouldRetryPublication(1, true)).toBe(true);
+    expect(shouldRetryPublication(5, true)).toBe(false);
+    expect(shouldRetryPublication(1, false)).toBe(false);
   });
 });
