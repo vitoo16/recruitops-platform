@@ -1,4 +1,7 @@
-import { IntegrationHealthResponseSchema, type IntegrationHealthResponse } from '@recruitops/contracts';
+import {
+  IntegrationHealthResponseSchema,
+  type IntegrationHealthResponse,
+} from '@recruitops/contracts';
 import { z } from 'zod';
 
 export const MetaConnectionTargetSchema = z.enum(['FACEBOOK', 'INSTAGRAM']);
