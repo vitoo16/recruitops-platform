@@ -121,11 +121,7 @@ describe('MetaOAuthClient', () => {
 
   it('calculates missing permissions without mutating the granted set', () => {
     const granted = ['pages_show_list', 'pages_read_engagement'];
-    const required = [
-      'pages_show_list',
-      'pages_read_engagement',
-      'pages_manage_posts',
-    ];
+    const required = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'];
 
     expect(getMissingMetaPermissions(granted, required)).toEqual(['pages_manage_posts']);
   });
