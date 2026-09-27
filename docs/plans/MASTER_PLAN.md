@@ -67,7 +67,7 @@
 - [x] Implement Job management UI.
 - [x] Implement content Post domain.
 - [x] Implement PostVariant domain.
-- [ ] Complete media model/upload flow (model, safe object-key contract and private browser upload adapter implemented; persistence API/UI wiring pending).
+- [ ] Complete media model/upload flow (model, safe object-key contract, private browser upload adapter and metadata persistence API implemented; user-facing media UI wiring pending).
 - [x] Implement draft workflow.
 - [x] Implement platform preview model.
 - [x] Implement VI/EN application i18n baseline.
@@ -112,8 +112,8 @@
 
 - [x] Implement Candidate domain.
 - [x] Implement Application domain.
-- [ ] Complete private CV storage (document model, RLS-safe key contract and private browser adapter implemented; metadata persistence/API wiring pending).
-- [ ] Complete validated CV upload/download flow (validation and signed-download primitives implemented; user-facing authorization/persistence flow pending).
+- [ ] Complete private CV storage (document model, RLS-safe key contract, private browser adapter and metadata persistence API implemented; authorized cross-recruiter access/UI wiring pending).
+- [ ] Complete validated CV upload/download flow (validation, private upload and signed-download primitives plus metadata persistence implemented; user-facing authorization/download flow pending).
 - [x] Implement candidate source attribution.
 - [x] Implement candidate deduplication strategy.
 - [ ] Implement candidate/application UI.
