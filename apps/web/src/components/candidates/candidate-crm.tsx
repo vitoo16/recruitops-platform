@@ -313,7 +313,11 @@ export function CandidateCrm() {
                 <Input id="candidate-phone" {...candidateForm.register('phone')} />
               </Field>
               <p className="text-xs leading-5 text-neutral-500">{t('contactHint')}</p>
-              <Button className="w-full" type="submit" disabled={candidateForm.formState.isSubmitting}>
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={candidateForm.formState.isSubmitting}
+              >
                 {candidateForm.formState.isSubmitting ? t('saving') : t('createAction')}
               </Button>
             </form>
@@ -322,7 +326,9 @@ export function CandidateCrm() {
           <div className="space-y-2" aria-live="polite" aria-busy={loading}>
             {loading ? <p className="text-sm text-neutral-500">{t('loading')}</p> : null}
             {!loading && candidates.length === 0 ? (
-              <p className="rounded-2xl border bg-white p-5 text-sm text-neutral-500">{t('empty')}</p>
+              <p className="rounded-2xl border bg-white p-5 text-sm text-neutral-500">
+                {t('empty')}
+              </p>
             ) : null}
             {candidates.map((candidate) => (
               <button
@@ -421,7 +427,10 @@ export function CandidateCrm() {
                           </p>
                         </div>
                         <div>
-                          <label className="sr-only" htmlFor={`application-status-${application.id}`}>
+                          <label
+                            className="sr-only"
+                            htmlFor={`application-status-${application.id}`}
+                          >
                             {t('statusLabel')}
                           </label>
                           <select
