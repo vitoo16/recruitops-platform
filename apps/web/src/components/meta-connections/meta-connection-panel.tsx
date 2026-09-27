@@ -1,14 +1,24 @@
 'use client';
 
+import type { IntegrationHealthResponse } from '@recruitops/contracts';
 import type { Session } from '@supabase/supabase-js';
-import { Camera, Link2, PanelsTopLeft, RefreshCw, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  Camera,
+  Link2,
+  PanelsTopLeft,
+  RefreshCw,
+  RotateCcw,
+  ShieldCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   confirmMetaSelection,
+  getIntegrationHealth,
   getMetaSelection,
   startMetaConnection,
   type MetaAccountSelection,
@@ -37,6 +47,7 @@ const SelectionFormSchema = z.object({
 type Role = z.infer<typeof PrincipalSchema>['role'];
 type StartForm = z.infer<typeof StartFormSchema>;
 type SelectionForm = z.infer<typeof SelectionFormSchema>;
+type MetaHealth = IntegrationHealthResponse['meta'];
 
 function apiUrl(): string | null {
   return process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? null;
@@ -74,15 +85,23 @@ function parseSelectionKey(value: string): MetaAccountSelection | null {
   return null;
 }
 
+function isMetaTarget(value: string): value is MetaConnectionTarget {
+  return value === 'FACEBOOK' || value === 'INSTAGRAM';
+}
+
 export function MetaConnectionPanel() {
   const t = useTranslations('metaConnections');
   const configuredApiUrl = useMemo(apiUrl, []);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [health, setHealth] = useState<MetaHealth | null>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
   const [selection, setSelection] = useState<MetaSelectionResponse | null>(null);
   const [returnState, setReturnState] = useState(readReturnState);
+  const [loadingHealth, setLoadingHealth] = useState(false);
   const [loadingSelection, setLoadingSelection] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [redirectingTarget, setRedirectingTarget] = useState<MetaConnectionTarget | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startForm = useForm<StartForm>({
@@ -104,6 +123,8 @@ export function MetaConnectionPanel() {
       setSession(nextSession);
       if (!nextSession) {
         setRole(null);
+        setHealth(null);
+        setHealthError(null);
         setSelection(null);
       }
     });
@@ -136,6 +157,25 @@ export function MetaConnectionPanel() {
       active = false;
     };
   }, [configuredApiUrl, session]);
+
+  const loadHealth = useCallback(async () => {
+    if (!session?.access_token || !configuredApiUrl || !canManage) return;
+    setLoadingHealth(true);
+    setHealthError(null);
+    try {
+      const result = await getIntegrationHealth(configuredApiUrl, session.access_token);
+      setHealth(result.meta);
+    } catch {
+      setHealth(null);
+      setHealthError(t('healthLoadFailed'));
+    } finally {
+      setLoadingHealth(false);
+    }
+  }, [canManage, configuredApiUrl, session?.access_token, t]);
+
+  useEffect(() => {
+    void loadHealth();
+  }, [loadHealth]);
 
   useEffect(() => {
     if (returnState.status === 'denied') {
@@ -177,11 +217,27 @@ export function MetaConnectionPanel() {
     };
   }, [canManage, configuredApiUrl, returnState, selectionForm, session?.access_token, t]);
 
-  async function onStart(values: StartForm) {
+  async function beginAuthorization(targets: readonly MetaConnectionTarget[]) {
     if (!session?.access_token || !configuredApiUrl || !canManage) return;
     setError(null);
     setStatusMessage(null);
+    setRedirectingTarget(targets.length === 1 ? targets[0]! : null);
 
+    try {
+      const result = await startMetaConnection(configuredApiUrl, session.access_token, targets);
+      window.location.assign(result.authorizationUrl);
+    } catch {
+      setRedirectingTarget(null);
+      setError(t('startFailed'));
+    }
+  }
+
+  function beginReconnect(platform: string) {
+    if (!isMetaTarget(platform)) return;
+    void beginAuthorization([platform]);
+  }
+
+  async function onStart(values: StartForm) {
     const parsed = StartFormSchema.safeParse(values);
     if (!parsed.success) {
       setError(t('chooseTarget'));
@@ -191,13 +247,7 @@ export function MetaConnectionPanel() {
     const targets: MetaConnectionTarget[] = [];
     if (parsed.data.facebook) targets.push('FACEBOOK');
     if (parsed.data.instagram) targets.push('INSTAGRAM');
-
-    try {
-      const result = await startMetaConnection(configuredApiUrl, session.access_token, targets);
-      window.location.assign(result.authorizationUrl);
-    } catch {
-      setError(t('startFailed'));
-    }
+    await beginAuthorization(targets);
   }
 
   async function onConfirm(values: SelectionForm) {
@@ -229,6 +279,7 @@ export function MetaConnectionPanel() {
       clearReturnState();
       setReturnState({ status: null, connectionSessionId: null });
       setStatusMessage(t('connected', { count: result.connected.length }));
+      await loadHealth();
     } catch {
       setError(t('confirmFailed'));
     } finally {
@@ -269,6 +320,99 @@ export function MetaConnectionPanel() {
         <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
       </div>
 
+      <div className="space-y-4 rounded-xl border bg-neutral-50 p-4" aria-live="polite">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Activity className="size-4" aria-hidden="true" />
+            <h3 className="font-semibold">{t('healthTitle')}</h3>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void loadHealth()}
+            disabled={loadingHealth}
+          >
+            <RefreshCw
+              className="mr-2 size-4 data-[loading=true]:animate-spin motion-reduce:animate-none"
+              data-loading={loadingHealth}
+              aria-hidden="true"
+            />
+            {t('refreshHealth')}
+          </Button>
+        </div>
+
+        {loadingHealth && !health ? (
+          <p className="text-sm text-neutral-500">{t('loadingHealth')}</p>
+        ) : null}
+
+        {healthError ? (
+          <p
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            role="alert"
+          >
+            {healthError}
+          </p>
+        ) : null}
+
+        {health ? (
+          <div className="space-y-3">
+            <p className="text-sm">
+              <span className="font-medium">{t('healthStatusLabel')}:</span>{' '}
+              {t(`healthStatus.${health.status}`)}
+            </p>
+            {!health.configured ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                {t('runtimeNotConfigured')}
+              </p>
+            ) : null}
+            {health.accounts.length === 0 ? (
+              <p className="text-sm text-neutral-500">{t('noConnectedAccounts')}</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {health.accounts.map((account) => (
+                  <article key={account.id} className="rounded-lg border bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{account.displayName}</p>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {t(`accountPlatform.${account.platform}`)} ·{' '}
+                          {t(`accountStatus.${account.status}`)}
+                        </p>
+                      </div>
+                      {account.requiresReconnect && isMetaTarget(account.platform) ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={!health.configured || redirectingTarget !== null}
+                          onClick={() => beginReconnect(account.platform)}
+                        >
+                          <RotateCcw className="mr-2 size-4" aria-hidden="true" />
+                          {redirectingTarget === account.platform
+                            ? t('redirecting')
+                            : t('reconnect')}
+                        </Button>
+                      ) : null}
+                    </div>
+                    {account.reconnectReason ? (
+                      <p className="mt-3 text-sm text-amber-700">
+                        {t(`reconnectReason.${account.reconnectReason}`)}
+                      </p>
+                    ) : null}
+                    {account.expiresAt ? (
+                      <p className="mt-2 text-xs text-neutral-500">
+                        {t('credentialExpiry', {
+                          value: new Date(account.expiresAt).toLocaleString(),
+                        })}
+                      </p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+
       {statusMessage ? (
         <div
           className="flex items-start justify-between gap-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
@@ -294,7 +438,7 @@ export function MetaConnectionPanel() {
 
       {!selection ? (
         <form className="space-y-4" onSubmit={startForm.handleSubmit(onStart)} noValidate>
-          <fieldset className="space-y-3">
+          <fieldset className="space-y-3" disabled={health?.configured === false}>
             <legend className="text-sm font-semibold">{t('targetsLegend')}</legend>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
               <input className="mt-1 size-4" type="checkbox" {...startForm.register('facebook')} />
@@ -321,7 +465,15 @@ export function MetaConnectionPanel() {
               </span>
             </label>
           </fieldset>
-          <Button type="submit" disabled={startForm.formState.isSubmitting || loadingSelection}>
+          <Button
+            type="submit"
+            disabled={
+              startForm.formState.isSubmitting ||
+              loadingSelection ||
+              health?.configured === false ||
+              redirectingTarget !== null
+            }
+          >
             <Link2 className="mr-2 size-4" aria-hidden="true" />
             {startForm.formState.isSubmitting ? t('redirecting') : t('connectAction')}
           </Button>

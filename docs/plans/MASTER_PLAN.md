@@ -84,8 +84,8 @@
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
 - [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.
 - [ ] Verify current Zalo official APIs/scopes and implement supported connection flow.
-- [ ] Implement reconnect/expired-token UX.
-- [ ] Add integration health status.
+- [x] Implement reconnect/expired-token UX.
+- [x] Add integration health status.
 
 ## Phase 5 — Publishing and scheduling core
 

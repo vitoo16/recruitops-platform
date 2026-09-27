@@ -2,6 +2,41 @@
   "eyebrow": "Social account connections",
   "title": "Connect Facebook Pages and Instagram Professional accounts",
   "description": "RecruitOps uses Meta's official authorization flow. Provider tokens stay server-side and only accounts you explicitly select are promoted into publishing destinations.",
+  "healthTitle": "Meta integration health",
+  "healthStatusLabel": "Status",
+  "refreshHealth": "Refresh health",
+  "loadingHealth": "Checking Meta integration health...",
+  "healthLoadFailed": "RecruitOps could not load integration health. Try refreshing the status.",
+  "runtimeNotConfigured": "Meta OAuth or credential-encryption runtime configuration is incomplete. Connection actions are disabled until the server configuration is complete.",
+  "noConnectedAccounts": "No Meta accounts are connected yet.",
+  "reconnect": "Reconnect",
+  "credentialExpiry": "Credential expiry: {value}",
+  "healthStatus": {
+    "NOT_CONFIGURED": "Runtime configuration incomplete",
+    "DISCONNECTED": "Ready to connect",
+    "HEALTHY": "Connected and healthy",
+    "RECONNECT_REQUIRED": "Reconnect required"
+  },
+  "accountPlatform": {
+    "FACEBOOK": "Facebook",
+    "INSTAGRAM": "Instagram",
+    "THREADS": "Threads",
+    "LINKEDIN": "LinkedIn",
+    "TIKTOK": "TikTok",
+    "ZALO": "Zalo"
+  },
+  "accountStatus": {
+    "CONNECTED": "Connected",
+    "EXPIRED": "Expired",
+    "REVOKED": "Revoked",
+    "ERROR": "Error"
+  },
+  "reconnectReason": {
+    "MISSING_CREDENTIAL": "The durable credential is missing. Re-authorize this account before publishing.",
+    "EXPIRED": "The credential has expired. Re-authorize this account before publishing.",
+    "REVOKED": "Provider access has been revoked. Re-authorize this account to restore access.",
+    "ERROR": "The account is in an integration error state. Re-authorize it to restore a clean connection."
+  },
   "targetsLegend": "Choose which Meta capabilities to authorize",
   "facebook": "Facebook Pages",
   "facebookHint": "Discover Pages you manage and connect selected Pages as API publishing destinations.",

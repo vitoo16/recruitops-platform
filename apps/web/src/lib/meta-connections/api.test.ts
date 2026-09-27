@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { confirmMetaSelection, getMetaSelection, startMetaConnection } from './api';
+import {
+  confirmMetaSelection,
+  getIntegrationHealth,
+  getMetaSelection,
+  startMetaConnection,
+} from './api';
 
 const apiUrl = 'https://api.example.com/api';
 const accessToken = 'supabase-access-token';
@@ -17,6 +22,38 @@ afterEach(() => {
 });
 
 describe('Meta connection frontend API client', () => {
+  it('loads typed integration health with bearer auth and no credential material', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        meta: {
+          provider: 'META',
+          configured: true,
+          status: 'RECONNECT_REQUIRED',
+          accounts: [
+            {
+              id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+              platform: 'FACEBOOK',
+              displayName: 'RecruitOps Page',
+              status: 'EXPIRED',
+              requiresReconnect: true,
+              reconnectReason: 'EXPIRED',
+            },
+          ],
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIntegrationHealth(apiUrl, accessToken);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${apiUrl}/integrations/health`);
+    expect(new Headers(init.headers).get('authorization')).toBe(`Bearer ${accessToken}`);
+    expect(result.meta.status).toBe('RECONNECT_REQUIRED');
+    expect(JSON.stringify(result)).not.toContain('credentialRef');
+    expect(JSON.stringify(result)).not.toContain('ciphertext');
+  });
+
   it('starts authorization with bearer auth and explicit targets', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({

@@ -1,3 +1,7 @@
+import {
+  IntegrationHealthResponseSchema,
+  type IntegrationHealthResponse,
+} from '@recruitops/contracts';
 import { z } from 'zod';
 
 export const MetaConnectionTargetSchema = z.enum(['FACEBOOK', 'INSTAGRAM']);
@@ -73,6 +77,13 @@ async function requestJson<TSchema extends z.ZodType>(
 
   if (!response.ok) throw new Error(`meta_api_${response.status}`);
   return schema.parse(await response.json());
+}
+
+export async function getIntegrationHealth(
+  apiUrl: string,
+  accessToken: string,
+): Promise<IntegrationHealthResponse> {
+  return requestJson(IntegrationHealthResponseSchema, `${apiUrl}/integrations/health`, accessToken);
 }
 
 export async function startMetaConnection(
