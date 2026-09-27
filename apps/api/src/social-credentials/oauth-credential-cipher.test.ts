@@ -78,7 +78,11 @@ describe('OAuthCredentialCipher', () => {
 
   it('fails closed when the encrypted key ID is no longer available', () => {
     const cipher = new OAuthCredentialCipher();
-    const encrypted = cipher.encrypt('THREADS', { accessToken: 'secret', scopes: [] }, environment());
+    const encrypted = cipher.encrypt(
+      'THREADS',
+      { accessToken: 'secret', scopes: [] },
+      environment(),
+    );
 
     expect(() =>
       cipher.decrypt(
