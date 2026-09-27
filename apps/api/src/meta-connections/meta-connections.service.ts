@@ -127,7 +127,11 @@ export class MetaConnectionsService {
       const longLivedToken = await provider.exchangeLongLivedUserToken(
         shortLivedToken.accessToken,
       );
-      const pages = await this.discoverPages(provider, pending.targets, longLivedToken.accessToken);
+      const pages = await this.discoverPages(
+        provider,
+        pending.targets,
+        longLivedToken.accessToken,
+      );
       const accounts = pages.map(sanitizePage);
       const scopes = buildMetaConnectionScopes(pending.targets);
       const tokenExpiresAt = longLivedToken.expiresInSeconds
