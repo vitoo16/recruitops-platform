@@ -1,8 +1,24 @@
 # Integrations Package
 
-Platform implementations belong here, behind vendor-neutral contracts from `@recruitops/contracts`.
+Platform implementations live here behind vendor-neutral contracts from `@recruitops/contracts`.
 
-## Current contract boundary
+## Current implementations
+
+### Manual Assist
+
+`DefaultManualDistributionProvider` prepares a human-in-the-loop distribution instruction for a saved Destination configured with `postingMode=MANUAL`.
+
+It:
+- resolves the saved Destination;
+- rejects disabled, API-mode, or platform-mismatched destinations;
+- composes copyable post text from content, hashtags, and optional link;
+- emits stable checklist codes rather than hard-coded localized UI text;
+- includes an attach-media step only when media is present;
+- never clicks a browser, scrapes a session, or calls a private provider endpoint.
+
+The frontend must translate checklist codes through project i18n before rendering them to users.
+
+## Provider adapter boundary
 
 `@recruitops/contracts` defines:
 - `SocialPublisher`

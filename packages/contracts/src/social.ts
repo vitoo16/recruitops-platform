@@ -11,10 +11,19 @@ export const destinationTypeValues = [
 ] as const;
 export const postingModeValues = ['API', 'MANUAL'] as const;
 export const socialAccountStatusValues = ['CONNECTED', 'EXPIRED', 'REVOKED', 'ERROR'] as const;
+export const manualDistributionChecklistValues = [
+  'OPEN_DESTINATION',
+  'ATTACH_MEDIA',
+  'PASTE_CONTENT',
+  'REVIEW_CONTENT',
+  'PUBLISH_MANUALLY',
+  'CONFIRM_PUBLICATION',
+] as const;
 
 export const DestinationTypeSchema = z.enum(destinationTypeValues);
 export const PostingModeSchema = z.enum(postingModeValues);
 export const SocialAccountStatusSchema = z.enum(socialAccountStatusValues);
+export const ManualDistributionChecklistSchema = z.enum(manualDistributionChecklistValues);
 
 const normalizedTagsSchema = z
   .array(z.string().trim().min(1).max(64))
@@ -59,6 +68,7 @@ export type SocialAccount = z.infer<typeof SocialAccountSchema>;
 export type DestinationType = z.infer<typeof DestinationTypeSchema>;
 export type PostingMode = z.infer<typeof PostingModeSchema>;
 export type SocialAccountStatus = z.infer<typeof SocialAccountStatusSchema>;
+export type ManualDistributionChecklistCode = z.infer<typeof ManualDistributionChecklistSchema>;
 
 export function matchesDestinationFilter(
   destination: Destination,
@@ -139,7 +149,7 @@ export interface ManualDistributionInstruction {
   destinationId: string;
   destinationUrl?: string | undefined;
   copyText: string;
-  checklist: readonly string[];
+  checklist: readonly ManualDistributionChecklistCode[];
 }
 
 export interface ManualDistributionProvider {
