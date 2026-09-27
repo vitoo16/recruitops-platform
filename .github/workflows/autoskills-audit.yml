@@ -11,6 +11,7 @@ on:
       - packages/**/package.json
       - apps/web/components.json
       - .agents/**
+      - tooling/scripts/verify-skill-registry.mjs
       - .github/workflows/autoskills-audit.yml
 
 permissions:
@@ -31,6 +32,9 @@ jobs:
 
       - name: Detect recommended project skills
         run: npx --yes autoskills@0.3.3 --dry-run | tee autoskills-dry-run.txt
+
+      - name: Verify registry coverage and detection drift
+        run: node tooling/scripts/verify-skill-registry.mjs autoskills-dry-run.txt
 
       - name: Upload detection report
         uses: actions/upload-artifact@v4

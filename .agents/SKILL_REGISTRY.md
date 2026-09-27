@@ -37,8 +37,8 @@ Before any non-trivial task, map the task to all applicable skills below.
 - **tailwind-css-patterns**: https://www.skills.sh/giuseppe-trisciuoglio/developer-kit/tailwind-css-patterns
 - **tailwind-v4-shadcn**: https://www.skills.sh/secondsky/claude-skills/tailwind-v4-shadcn
 - **shadcn**: https://www.skills.sh/shadcn/ui/shadcn
-- **frontend-design**: https://www.skills.sh/nexu-io/open-design/frontend-design
-- **frontend-design-anthropic**: https://www.skills.sh/anthropics/skills/frontend-design
+- **frontend-design**: https://www.skills.sh/anthropics/skills/frontend-design
+- **frontend-design-nexu**: https://www.skills.sh/nexu-io/open-design/frontend-design
 - **web-design-guidelines**: https://www.skills.sh/vercel-labs/agent-skills/web-design-guidelines
 - **frontend-accessibility-best-practices**: https://www.skills.sh/sergiodxa/agent-skills/frontend-accessibility-best-practices
 - **accessibility**: https://www.skills.sh/addyosmani/web-quality-skills/accessibility
@@ -59,6 +59,7 @@ Before any non-trivial task, map the task to all applicable skills below.
 
 ## Database
 
+- **supabase-postgres-best-practices**: https://www.skills.sh/supabase/agent-skills/supabase-postgres-best-practices
 - **prisma-database-setup**: https://www.skills.sh/prisma/skills/prisma-database-setup
 - **prisma-client-api**: https://www.skills.sh/prisma/skills/prisma-client-api
 - **prisma-cli**: https://www.skills.sh/prisma/skills/prisma-cli
@@ -108,4 +109,4 @@ Before any non-trivial task, map the task to all applicable skills below.
 
 ## AutoSkills verification note
 
-The repository AutoSkills dry-run (v0.3.3) detected TypeScript, Turborepo, Node.js, Vitest, NestJS, React, Next.js, Tailwind CSS, shadcn/ui, Zod and Prisma, and recommended 22 stack skills. The entries added above cover the additional recommendations that were not already represented by the manual registry.
+The repository AutoSkills dry-run (v0.3.3) currently detects TypeScript, Turborepo, Node.js, Vitest, NestJS, React, Next.js, Tailwind CSS, shadcn/ui, React Hook Form, Zod, Supabase and Prisma, and recommends 24 stack skills. `.agents/autoskills-required.json` is the machine-checkable lock for that detected set. CI must fail when AutoSkills detects a stack skill that is not represented here.
