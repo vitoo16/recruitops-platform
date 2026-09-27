@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -37,6 +38,17 @@ function queryString(value: unknown, code: string): string {
     throw new BadRequestException({ code, message: 'Meta OAuth callback is invalid' });
   }
   return value;
+}
+
+function auditReasonCode(error: unknown): string {
+  if (error instanceof HttpException) {
+    const response = error.getResponse();
+    if (response && typeof response === 'object') {
+      const code = (response as { code?: unknown }).code;
+      if (typeof code === 'string') return code;
+    }
+  }
+  return error instanceof Error ? error.message : 'META_OAUTH_CONNECTION_FAILED';
 }
 
 function mapAccount(account: {
@@ -132,7 +144,7 @@ export class MetaConnectionsService {
         eventType: 'META_OAUTH_CONNECTION',
         outcome: 'DENIED',
         actorId,
-        reasonCode: error instanceof Error ? error.message : 'META_OAUTH_CONNECTION_FAILED',
+        reasonCode: auditReasonCode(error),
       });
       if (error instanceof MetaProviderError) {
         throw new BadRequestException({
