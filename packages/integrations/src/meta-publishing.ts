@@ -287,11 +287,11 @@ export class InstagramProfessionalPublisher implements SocialPublisher {
     const token = requireAccessToken(context.accessToken);
     const mediaIds = command.payload.mediaIds!;
     const sources = await this.media.resolve(mediaIds);
-    if (sources.length !== 1 || sources[0]?.mediaId !== mediaIds[0]) {
+    const source = sources[0];
+    if (sources.length !== 1 || !source || source.mediaId !== mediaIds[0]) {
       throw new MetaPublishingError('META_INSTAGRAM_MEDIA_RESOLUTION_MISMATCH');
     }
 
-    const source = sources[0];
     const mediaUrl = requirePublicMediaUrl(source.publicUrl);
     const createUrl = new URL(
       `https://graph.facebook.com/${this.config.graphApiVersion}/${igUserId}/media`,
