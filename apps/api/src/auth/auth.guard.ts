@@ -56,7 +56,8 @@ export class AuthGuard implements CanActivate {
       this.auditService.record({
         eventType: 'AUTHENTICATION_FAILURE',
         outcome: 'DENIED',
-        reasonCode: error instanceof UnauthorizedException ? 'INVALID_ACCESS_TOKEN' : 'AUTH_PROVIDER_ERROR',
+        reasonCode:
+          error instanceof UnauthorizedException ? 'INVALID_ACCESS_TOKEN' : 'AUTH_PROVIDER_ERROR',
         ...auditContext,
       });
       throw error;
