@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  getMissingMetaPermissions,
-  MetaOAuthClient,
-  MetaProviderError,
-} from './meta-oauth.js';
+import { getMissingMetaPermissions, MetaOAuthClient, MetaProviderError } from './meta-oauth.js';
 
 const config = {
   appId: 'app-id',
@@ -25,7 +21,9 @@ describe('MetaOAuthClient', () => {
     const client = new MetaOAuthClient(config);
     const url = new URL(client.buildAuthorizationUrl('signed-state'));
 
-    expect(`${url.origin}${url.pathname}`).toBe('https://www.facebook.com/v26.0/dialog/oauth');
+    expect(`${url.origin}${url.pathname}`).toBe(
+      'https://www.facebook.com/v26.0/dialog/oauth',
+    );
     expect(url.searchParams.get('client_id')).toBe('app-id');
     expect(url.searchParams.get('config_id')).toBe('business-login-config');
     expect(url.searchParams.get('response_type')).toBe('code');
@@ -45,9 +43,9 @@ describe('MetaOAuthClient', () => {
       tokenType: 'bearer',
       expiresIn: 3600,
     });
-    expect(JSON.stringify(await client.exchangeAuthorizationCode('authorization-code'))).not.toContain(
-      'server-secret',
-    );
+    expect(
+      JSON.stringify(await client.exchangeAuthorizationCode('authorization-code')),
+    ).not.toContain('server-secret');
   });
 
   it('returns only granted permissions', async () => {
@@ -108,7 +106,9 @@ describe('MetaOAuthClient', () => {
   it('surfaces provider failures as sanitized error codes', async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(jsonResponse({ error: { message: 'sensitive provider detail', code: 190 } }, 400));
+      .mockResolvedValue(
+        jsonResponse({ error: { message: 'sensitive provider detail', code: 190 } }, 400),
+      );
     const client = new MetaOAuthClient(config, fetchMock as typeof fetch);
 
     await expect(client.getGrantedPermissions('token')).rejects.toMatchObject({
