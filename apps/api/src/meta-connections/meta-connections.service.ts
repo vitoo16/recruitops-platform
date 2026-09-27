@@ -56,9 +56,7 @@ const MetaOAuthCallbackSchema = z
     }
   });
 
-const MetaSelectionLookupSchema = z
-  .object({ connectionSessionId: z.uuid() })
-  .strict();
+const MetaSelectionLookupSchema = z.object({ connectionSessionId: z.uuid() }).strict();
 
 const FacebookSelectionSchema = z
   .object({
