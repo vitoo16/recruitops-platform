@@ -1,7 +1,10 @@
 import {
   CandidateDocumentSchema,
+  MediaAssetSchema,
   type CandidateDocument,
+  type MediaAsset,
   type RegisterCandidateDocumentInput,
+  type RegisterMediaAssetInput,
 } from '@recruitops/contracts';
 
 export class FilesApiError extends Error {
@@ -45,6 +48,29 @@ async function requestJson(
   }
 
   return response.json();
+}
+
+export async function listMediaAssets(
+  apiUrl: string,
+  token: string,
+  postId: string,
+): Promise<MediaAsset[]> {
+  return MediaAssetSchema.array().parse(
+    await requestJson(apiUrl, token, `/posts/${postId}/media-assets`),
+  );
+}
+
+export async function registerMediaAsset(
+  apiUrl: string,
+  token: string,
+  input: RegisterMediaAssetInput,
+): Promise<MediaAsset> {
+  return MediaAssetSchema.parse(
+    await requestJson(apiUrl, token, '/files/media-assets', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  );
 }
 
 export async function listCandidateDocuments(
