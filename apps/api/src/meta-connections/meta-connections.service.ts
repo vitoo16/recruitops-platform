@@ -155,8 +155,9 @@ export class MetaConnectionsService {
       grantedPermissions,
       META_INSTAGRAM_REQUIRED_PERMISSIONS,
     );
+    const hasLinkedInstagramAccount = pages.some((page) => page.instagramBusinessAccount);
 
-    if (missingInstagramPermissions.length > 0) {
+    if (hasLinkedInstagramAccount && missingInstagramPermissions.length > 0) {
       warnings.push({
         code: 'META_INSTAGRAM_PERMISSIONS_MISSING',
         missingPermissions: missingInstagramPermissions,
