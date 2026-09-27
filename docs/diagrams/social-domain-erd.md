@@ -2,6 +2,7 @@
 
 ```mermaid
 erDiagram
+    SOCIAL_ACCOUNT o|--o| SOCIAL_CREDENTIAL : protects_with
     SOCIAL_ACCOUNT ||--o{ DESTINATION : authorizes
 
     SOCIAL_ACCOUNT {
@@ -11,8 +12,20 @@ erDiagram
       text display_name
       enum status
       text_array scopes
-      text credential_ref
+      text credential_ref FK, UK
       timestamptz expires_at
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    SOCIAL_CREDENTIAL {
+      text id PK
+      enum platform
+      text key_id
+      text algorithm
+      bytea iv
+      bytea auth_tag
+      bytea ciphertext
       timestamptz created_at
       timestamptz updated_at
     }
@@ -33,4 +46,4 @@ erDiagram
     }
 ```
 
-`credential_ref` is never an OAuth token. It is a pointer/key for protected credential material when secure credential storage is implemented for social providers.
+`credential_ref` is never an OAuth token. It references a protected record containing only authenticated-encryption metadata and ciphertext. Provider access/refresh tokens are encrypted in the server process before persistence and are not exposed in shared API contracts.

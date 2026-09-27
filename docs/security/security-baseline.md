@@ -3,6 +3,7 @@
 ## Sensitive assets
 
 - OAuth access/refresh credentials
+- OAuth credential-encryption keys
 - candidate CVs
 - candidate full name/email/phone
 - normalized candidate contact values and duplicate-match signals
@@ -12,7 +13,7 @@
 ## Mandatory controls
 
 - least privilege
-- encryption at rest for sensitive credentials
+- authenticated encryption at rest for OAuth provider credentials
 - private object storage
 - short-lived/signed file access where applicable
 - secrets outside source control
@@ -22,6 +23,18 @@
 - audit records for sensitive state changes
 - validated file uploads
 - dependency/security scanning in CI when implementation begins
+
+## OAuth credential handling
+
+- Provider token payloads must cross only server-side boundaries.
+- Public/shared contracts must not contain access tokens, refresh tokens, encrypted token envelopes or credential references.
+- Persist OAuth credentials only through the server-side credential store, which encrypts before writing to PostgreSQL.
+- AES-256-GCM integrity failures, unknown keys and malformed envelopes fail closed with sanitized error codes.
+- A fresh IV is generated for every encryption operation.
+- The runtime keyring separates the active write key from retained read keys so rotation can be performed without making existing credentials unreadable.
+- `AUTH_SECRET`, OAuth client secrets and credential-encryption keys are independent secrets and must not be reused across purposes.
+- `social_credentials` is API-owned: RLS is enabled and browser roles are explicitly revoked in the hosted migration.
+- No provider OAuth connection flow is considered complete until its current official scopes/requirements and token lifecycle are verified separately.
 
 ## Candidate PII handling
 
@@ -44,4 +57,4 @@ Automated tests lock the current PII authorization policy so route decorators ca
 
 These application tests complement, but do not replace, Supabase Storage RLS. Hosted RLS policy verification remains part of environment/security readiness checks.
 
-Security-sensitive implementation must load the OWASP security skill.
+Security-sensitive implementation must load the OWASP security skill when it is available. If it is unavailable in the execution environment, the agent must state that and follow repository security rules plus current official security documentation instead of pretending the skill was loaded.

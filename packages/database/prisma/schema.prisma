@@ -183,10 +183,11 @@ model SocialAccount {
   displayName       String
   status            SocialAccountStatus @default(CONNECTED)
   scopes            String[]            @default([])
-  credentialRef     String?
+  credentialRef     String?             @unique
   expiresAt         DateTime?           @db.Timestamptz(6)
   createdAt         DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(6)
+  credential        SocialCredential?   @relation(fields: [credentialRef], references: [id], onDelete: SetNull)
   destinations      Destination[]
   publications      Publication[]
 
@@ -194,6 +195,23 @@ model SocialAccount {
   @@index([platform, status])
   @@index([expiresAt])
   @@map("social_accounts")
+}
+
+model SocialCredential {
+  id            String         @id @default(uuid())
+  platform      SocialPlatform
+  keyId         String
+  algorithm     String
+  iv            Bytes          @db.ByteA
+  authTag       Bytes          @db.ByteA
+  ciphertext    Bytes          @db.ByteA
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  socialAccount SocialAccount?
+
+  @@index([platform])
+  @@index([keyId])
+  @@map("social_credentials")
 }
 
 model Destination {

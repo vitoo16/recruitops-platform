@@ -8,6 +8,7 @@ erDiagram
     POST ||--o{ POST_VARIANT : renders
     POST ||--o{ MEDIA_ASSET : owns
     POST_VARIANT ||--o{ PUBLICATION : distributed_as
+    SOCIAL_ACCOUNT o|--o| SOCIAL_CREDENTIAL : protects_with
     SOCIAL_ACCOUNT o|--o{ DESTINATION : authorizes
     SOCIAL_ACCOUNT o|--o{ PUBLICATION : authorizes
     DESTINATION ||--o{ PUBLICATION : targets
@@ -18,4 +19,4 @@ erDiagram
     APPLICATION o|--o{ CANDIDATE_DOCUMENT : contextualizes
 ```
 
-`MediaAsset.storageKey` and `CandidateDocument.storageKey` are private object-storage references, not public URLs.
+`MediaAsset.storageKey` and `CandidateDocument.storageKey` are private object-storage references, not public URLs. `SocialAccount.credentialRef` references an encrypted `SocialCredential` envelope and is never itself a provider token.
