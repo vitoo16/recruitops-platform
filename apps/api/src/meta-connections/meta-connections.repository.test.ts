@@ -33,7 +33,9 @@ describe('MetaConnectionsRepository', () => {
     };
     const database = {
       client: {
-        $transaction: vi.fn(async (callback: (tx: typeof transaction) => unknown) => callback(transaction)),
+        $transaction: vi.fn(async (callback: (tx: typeof transaction) => unknown) =>
+          callback(transaction),
+        ),
       },
     };
     const repository = new MetaConnectionsRepository(database as unknown as DatabaseService);
@@ -92,7 +94,9 @@ describe('MetaConnectionsRepository', () => {
   it('updates an existing account credential and destination instead of duplicating them', async () => {
     const transaction = {
       socialAccount: {
-        findFirst: vi.fn().mockResolvedValue({ id: 'social-1', credentialRef: 'credential-1' }),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: 'social-1', credentialRef: 'credential-1' }),
         create: vi.fn(),
         update: vi.fn().mockResolvedValue(undefined),
       },
@@ -108,7 +112,9 @@ describe('MetaConnectionsRepository', () => {
     };
     const database = {
       client: {
-        $transaction: vi.fn(async (callback: (tx: typeof transaction) => unknown) => callback(transaction)),
+        $transaction: vi.fn(async (callback: (tx: typeof transaction) => unknown) =>
+          callback(transaction),
+        ),
       },
     };
     const repository = new MetaConnectionsRepository(database as unknown as DatabaseService);
