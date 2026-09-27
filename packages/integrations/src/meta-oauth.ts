@@ -69,9 +69,8 @@ function graphApiVersion(config: MetaOAuthClientConfig): string {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
 }
 
 function providerErrorCode(body: unknown): number | undefined {
@@ -107,9 +106,8 @@ export class MetaOAuthClient {
   buildAuthorizationUrl(state: string): string {
     if (!state.trim()) throw new MetaProviderError('META_OAUTH_STATE_REQUIRED');
 
-    const url = new URL(
-      `https://www.facebook.com/${graphApiVersion(this.config)}/dialog/oauth`,
-    );
+    const version = graphApiVersion(this.config);
+    const url = new URL(`https://www.facebook.com/${version}/dialog/oauth`);
     url.searchParams.set('client_id', this.config.appId);
     url.searchParams.set('redirect_uri', this.config.redirectUri);
     url.searchParams.set('state', state);
@@ -122,9 +120,8 @@ export class MetaOAuthClient {
   async exchangeAuthorizationCode(code: string): Promise<MetaTokenResult> {
     if (!code.trim()) throw new MetaProviderError('META_AUTHORIZATION_CODE_REQUIRED');
 
-    const url = new URL(
-      `https://graph.facebook.com/${graphApiVersion(this.config)}/oauth/access_token`,
-    );
+    const version = graphApiVersion(this.config);
+    const url = new URL(`https://graph.facebook.com/${version}/oauth/access_token`);
     url.searchParams.set('client_id', this.config.appId);
     url.searchParams.set('client_secret', this.config.appSecret);
     url.searchParams.set('redirect_uri', this.config.redirectUri);
@@ -154,9 +151,8 @@ export class MetaOAuthClient {
   }
 
   async getGrantedPermissions(accessToken: string): Promise<string[]> {
-    const url = new URL(
-      `https://graph.facebook.com/${graphApiVersion(this.config)}/me/permissions`,
-    );
+    const version = graphApiVersion(this.config);
+    const url = new URL(`https://graph.facebook.com/${version}/me/permissions`);
     const body = await this.requestJson(url, {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
     });
@@ -165,26 +161,21 @@ export class MetaOAuthClient {
       throw new MetaProviderError('META_PERMISSIONS_RESPONSE_INVALID');
     }
 
-    return [
-      ...new Set(
-        record.data.flatMap((item) => {
-          const permission = asRecord(item);
-          return permission?.status === 'granted' && typeof permission.permission === 'string'
-            ? [permission.permission]
-            : [];
-        }),
-      ),
-    ].sort();
+    const granted = record.data.flatMap((item) => {
+      const permission = asRecord(item);
+      if (permission?.status !== 'granted') return [];
+      return typeof permission.permission === 'string' ? [permission.permission] : [];
+    });
+    return [...new Set(granted)].sort();
   }
 
   async getManagedPages(accessToken: string): Promise<MetaManagedPage[]> {
     const pages: MetaManagedPage[] = [];
+    const version = graphApiVersion(this.config);
     let after: string | undefined;
 
     for (let requestCount = 0; requestCount < 10; requestCount += 1) {
-      const url = new URL(
-        `https://graph.facebook.com/${graphApiVersion(this.config)}/me/accounts`,
-      );
+      const url = new URL(`https://graph.facebook.com/${version}/me/accounts`);
       url.searchParams.set(
         'fields',
         'id,name,access_token,tasks,instagram_business_account{id,username,name}',
@@ -205,33 +196,35 @@ export class MetaOAuthClient {
         if (typeof page?.id !== 'string' || typeof page.name !== 'string') continue;
 
         const instagram = asRecord(page.instagram_business_account);
-        const instagramAccount =
-          instagram && typeof instagram.id === 'string'
-            ? {
-                id: instagram.id,
-                ...(typeof instagram.username === 'string'
-                  ? { username: instagram.username }
-                  : {}),
-                ...(typeof instagram.name === 'string' ? { name: instagram.name } : {}),
-              }
-            : undefined;
+        const instagramId = typeof instagram?.id === 'string' ? instagram.id : undefined;
+        const instagramUsername =
+          typeof instagram?.username === 'string' ? instagram.username : undefined;
+        const instagramName = typeof instagram?.name === 'string' ? instagram.name : undefined;
+        const instagramAccount = instagramId
+          ? {
+              id: instagramId,
+              ...(instagramUsername ? { username: instagramUsername } : {}),
+              ...(instagramName ? { name: instagramName } : {}),
+            }
+          : undefined;
 
+        const tasks = Array.isArray(page.tasks)
+          ? page.tasks.filter((task): task is string => typeof task === 'string')
+          : [];
         pages.push({
           id: page.id,
           name: page.name,
           ...(typeof page.access_token === 'string' ? { accessToken: page.access_token } : {}),
-          tasks: Array.isArray(page.tasks)
-            ? page.tasks.filter((task): task is string => typeof task === 'string')
-            : [],
+          tasks,
           ...(instagramAccount ? { instagramBusinessAccount: instagramAccount } : {}),
         });
       }
 
       const paging = asRecord(root.paging);
       const cursors = paging ? asRecord(paging.cursors) : null;
-      const nextAfter =
-        typeof cursors?.after === 'string' && paging?.next ? cursors.after : undefined;
-      if (!nextAfter) return pages;
+      const nextAfter = typeof cursors?.after === 'string' ? cursors.after : undefined;
+      const hasNextPage = typeof paging?.next === 'string' && paging.next.length > 0;
+      if (!nextAfter || !hasNextPage) return pages;
       after = nextAfter;
     }
 
