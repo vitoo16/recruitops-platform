@@ -39,6 +39,27 @@ enum SocialPlatform {
   ZALO
 }
 
+enum DestinationType {
+  PAGE
+  PROFILE
+  GROUP
+  ORGANIZATION
+  OA
+  OTHER
+}
+
+enum PostingMode {
+  API
+  MANUAL
+}
+
+enum SocialAccountStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
 model Job {
   id               String         @id @default(uuid()) @db.Uuid
   title            String
@@ -62,15 +83,15 @@ model Job {
 }
 
 model Post {
-  id          String       @id @default(uuid()) @db.Uuid
-  jobId       String       @db.Uuid
+  id          String        @id @default(uuid()) @db.Uuid
+  jobId       String        @db.Uuid
   title       String
   baseContent String
   language    String
-  status      PostStatus   @default(DRAFT)
-  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
-  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status      PostStatus    @default(DRAFT)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(6)
+  job         Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   variants    PostVariant[]
 
   @@index([jobId])
@@ -94,4 +115,44 @@ model PostVariant {
   @@index([postId])
   @@index([platform])
   @@map("post_variants")
+}
+
+model SocialAccount {
+  id                String              @id @default(uuid()) @db.Uuid
+  platform          SocialPlatform
+  externalAccountId String
+  displayName       String
+  status            SocialAccountStatus @default(CONNECTED)
+  scopes            String[]            @default([])
+  credentialRef     String?
+  expiresAt         DateTime?           @db.Timestamptz(6)
+  createdAt         DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime            @updatedAt @db.Timestamptz(6)
+  destinations      Destination[]
+
+  @@unique([platform, externalAccountId])
+  @@index([platform, status])
+  @@index([expiresAt])
+  @@map("social_accounts")
+}
+
+model Destination {
+  id              String          @id @default(uuid()) @db.Uuid
+  platform        SocialPlatform
+  type            DestinationType
+  name            String
+  externalId      String?
+  url             String?
+  postingMode     PostingMode
+  enabled         Boolean         @default(true)
+  tags            String[]        @default([])
+  socialAccountId String?         @db.Uuid
+  createdAt       DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(6)
+  socialAccount   SocialAccount?  @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
+
+  @@index([platform, enabled])
+  @@index([postingMode, enabled])
+  @@index([socialAccountId])
+  @@map("destinations")
 }
