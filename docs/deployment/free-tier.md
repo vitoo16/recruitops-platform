@@ -47,6 +47,32 @@ No database password, Redis connection credential, S3 secret, service-role key, 
 
 Render already provides pnpm for this repository through `packageManager`. Do not run `corepack enable` in Render build commands because its build filesystem can expose the system pnpm shim as read-only.
 
+For the Static Site, set `SKIP_INSTALL_DEPS=true`. Render's automatic dependency installation otherwise attempts npm before the repository build command and can conflict with this pnpm workspace. The build command itself performs the canonical pnpm install before building `@recruitops/web`.
+
+## Authentication deployment
+
+The current free deployment uses Supabase Auth with public/publishable configuration only.
+
+Frontend build-time values:
+
+```text
+NEXT_PUBLIC_API_URL=https://recruitops-api.onrender.com/api
+NEXT_PUBLIC_SUPABASE_URL=https://ybkmijhhhuqzatpnigsq.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<Supabase publishable key>
+SKIP_INSTALL_DEPS=true
+```
+
+API values:
+
+```text
+SUPABASE_URL=https://ybkmijhhhuqzatpnigsq.supabase.co
+SUPABASE_PUBLISHABLE_KEY=<Supabase publishable key>
+```
+
+A publishable Supabase key is designed for public clients. Never place service-role/secret keys in the frontend, repository, logs, or user-visible configuration.
+
+The auth-enabled main commit was verified live on both Render services after CI passed.
+
 ## Supabase
 
 The project is provisioned in Singapore (`ap-southeast-1`).
@@ -94,7 +120,7 @@ Future scheduled endpoint requirements:
 
 ## Current API foundation
 
-The current foundation API exposes health functionality and does not yet consume PostgreSQL or Redis. Therefore `DATABASE_URL` and `REDIS_URL` are optional at process bootstrap until the corresponding modules are implemented. Each future module must validate its required configuration when enabled.
+The current API includes health and Supabase authentication/RBAC foundations. PostgreSQL and Redis-backed domain modules are not enabled yet. Therefore `DATABASE_URL` and `REDIS_URL` remain optional at process bootstrap until their corresponding modules are implemented. Each future module must validate its required configuration when enabled.
 
 Current runtime values include:
 
