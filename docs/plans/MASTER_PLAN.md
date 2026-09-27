@@ -79,7 +79,7 @@
 - [x] Implement Destination domain.
 - [x] Implement destination tagging/filtering.
 - [x] Implement SocialAccount domain.
-- [ ] Implement secure OAuth credential storage.
+- [ ] Implement secure OAuth credential storage (code, tests and hosted migration definition verified; production migration execution and runtime encryption-key provisioning remain pending explicit production authorization).
 - [ ] Verify current Meta official APIs/scopes and implement supported connection flow.
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
 - [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.

@@ -25,6 +25,7 @@ Examples include:
 - Supabase secret/service-role keys;
 - S3 access key IDs and secret access keys;
 - OAuth client secrets and refresh/access tokens;
+- OAuth credential-encryption keys;
 - TikTok, Meta, LinkedIn and Zalo client secrets;
 - n8n shared secrets and credentials;
 - QStash signing keys/tokens;
@@ -42,6 +43,33 @@ Server-only values must never use a `NEXT_PUBLIC_` prefix.
 6. Never pass secrets through browser-visible environment variables, static build output or client-side error messages.
 7. Prefer least-privilege credentials scoped to one provider/resource/environment.
 8. Separate development and production credentials.
+9. Do not reuse `AUTH_SECRET` or provider client secrets as OAuth credential-encryption keys.
+
+## OAuth credential storage
+
+Provider access/refresh tokens are encrypted in the API before PostgreSQL persistence. The database stores only an authenticated-encryption envelope:
+
+- provider platform;
+- encryption key ID;
+- algorithm identifier;
+- nonce/IV;
+- authentication tag;
+- ciphertext.
+
+The current implementation uses AES-256-GCM with a fresh 96-bit IV for each encryption. Additional authenticated data binds the envelope format, provider platform and key ID so those values cannot be silently swapped without decryption failing.
+
+Runtime key configuration is server-only:
+
+```text
+OAUTH_CREDENTIAL_ACTIVE_KEY_ID=<active-key-id>
+OAUTH_CREDENTIAL_ENCRYPTION_KEYS=<JSON object of key-id to 32-byte base64 key>
+```
+
+The keyring may retain previous keys for decryption while new writes use only the active key. Never delete an old key until every credential encrypted with that key has been re-encrypted or revoked.
+
+The `social_credentials` table is API-owned. Browser roles receive no direct policy and the hosted migration explicitly revokes `anon`/`authenticated` table access. `SocialAccount.credentialRef` stores only the credential record identifier; it is never a token.
+
+Provider-specific OAuth code must use the server-side credential store rather than persisting or returning raw tokens through public/shared contracts.
 
 ## Deployment rules
 
@@ -51,6 +79,7 @@ Server-only values must never use a `NEXT_PUBLIC_` prefix.
 - `render.yaml` may define variable names using `sync: false` or provider-generated values.
 - Public frontend build variables must be intentionally reviewed because static-site build-time values become browser-visible.
 - Credential-bearing `DATABASE_URL` and `REDIS_URL` remain server-only API/worker variables.
+- OAuth encryption keyring values must be configured only on trusted server/worker runtimes that need to decrypt provider credentials.
 
 ### Supabase
 
@@ -58,6 +87,7 @@ Server-only values must never use a `NEXT_PUBLIC_` prefix.
 - Backend privileged operations: use a server-side secret/service-role credential only when the feature explicitly requires it and least privilege cannot be achieved otherwise.
 - Never expose a service-role/secret key in `NEXT_PUBLIC_*` configuration.
 - Candidate/CV access must not rely on obscurity of bucket URLs; authorization must be enforced.
+- `social_credentials` remains API-owned and must not receive browser-facing Data API grants/policies.
 
 ### n8n
 
@@ -87,10 +117,12 @@ If a secret may have been exposed:
 
 1. revoke or rotate the credential at the provider immediately;
 2. update the authorized runtime secret store;
-3. verify affected services reconnect correctly;
-4. inspect logs/audit events for suspicious use;
-5. remove the exposed value from current source and, where appropriate, repository history;
-6. document the incident without reproducing the credential value.
+3. if an OAuth encryption key is rotated, add the replacement key under a new key ID and make it active before removing the previous key;
+4. re-encrypt or revoke records that still reference a retiring key before removing that key from the runtime keyring;
+5. verify affected services reconnect correctly;
+6. inspect logs/audit events for suspicious use;
+7. remove the exposed value from current source and, where appropriate, repository history;
+8. document the incident without reproducing the credential value.
 
 ## Review checklist
 
@@ -99,7 +131,8 @@ Before merging a change that touches credentials or integrations:
 - [ ] no real secret is present in the diff;
 - [ ] browser-visible variables contain only public configuration;
 - [ ] least-privilege scope is used;
-- [ ] secret value is stored in the provider credential store;
+- [ ] OAuth token material is encrypted before persistence;
+- [ ] encryption keys exist only in authorized runtime secret storage;
 - [ ] logs/errors do not reveal the credential;
 - [ ] rotation/revocation procedure is understood;
 - [ ] `pnpm secrets:check` passes.

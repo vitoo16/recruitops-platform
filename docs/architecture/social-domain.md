@@ -4,7 +4,7 @@
 
 A SocialAccount describes an authorized external identity without exposing credential material to public contracts.
 
-Persistent state may contain a `credentialRef` that points to protected/encrypted credential storage. Shared API contracts deliberately exclude token values and credential references.
+`credentialRef` is an optional unique reference to `SocialCredential`. It is never a provider token. Shared API contracts deliberately exclude token values, encrypted envelopes and credential references.
 
 Lifecycle states:
 - `CONNECTED`
@@ -12,7 +12,46 @@ Lifecycle states:
 - `REVOKED`
 - `ERROR`
 
-Provider-specific OAuth implementation remains a later task and must be verified against current official documentation before coding.
+Provider-specific OAuth connection flows remain later tasks and must be verified against current official provider documentation before coding.
+
+## SocialCredential
+
+`SocialCredential` is the protected persistence envelope for provider OAuth token material. It stores:
+
+- provider platform;
+- encryption key ID;
+- algorithm identifier;
+- IV;
+- authentication tag;
+- ciphertext;
+- timestamps.
+
+The API `OAuthCredentialStore` is the only application boundary introduced by this slice for saving/loading/clearing provider token payloads. It resolves the account platform, encrypts the validated payload using AES-256-GCM, persists only the encrypted envelope, and decrypts only after a server-side load.
+
+The key ID is stored with each envelope so old keys can remain available for decryption during key rotation while new writes use the configured active key.
+
+```mermaid
+sequenceDiagram
+    participant Adapter as Future OAuth adapter
+    participant Store as OAuthCredentialStore
+    participant Cipher as AES-256-GCM cipher
+    participant DB as PostgreSQL
+
+    Adapter->>Store: save socialAccountId + token payload
+    Store->>DB: resolve SocialAccount platform
+    Store->>Cipher: encrypt platform + payload
+    Cipher-->>Store: keyId + IV + authTag + ciphertext
+    Store->>DB: persist SocialCredential + credentialRef
+    Note over DB: no plaintext access/refresh token
+
+    Adapter->>Store: load socialAccountId
+    Store->>DB: load encrypted envelope
+    Store->>Cipher: authenticated decrypt
+    Cipher-->>Store: validated token payload
+    Store-->>Adapter: server-side token payload
+```
+
+No HTTP controller exposes this store. The hosted migration enables RLS on `social_credentials` and revokes `anon`/`authenticated` table access.
 
 ## Destination
 
@@ -52,11 +91,13 @@ flowchart LR
     ADAPTER[Provider Adapter]
     OFFICIAL[Official Provider API]
     MANUAL[ManualDistributionProvider]
+    CREDS[OAuthCredentialStore]
 
     DOMAIN --> CONTRACT
     CONTRACT --> ADAPTER
+    ADAPTER --> CREDS
     ADAPTER --> OFFICIAL
     DOMAIN --> MANUAL
 ```
 
-No provider adapter is implemented by this domain slice. Platform-specific implementation remains gated on current official API verification.
+No provider adapter is implemented by the credential-storage slice. Platform-specific implementation remains gated on current official API verification.
