@@ -23,7 +23,12 @@ export const CreateJobSchema = z
     location: z.string().trim().max(160).optional(),
     employmentType: EmploymentTypeSchema,
     status: JobStatusSchema.default('DRAFT'),
-    currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).default('VND'),
+    currency: z
+      .string()
+      .trim()
+      .length(3)
+      .transform((value) => value.toUpperCase())
+      .default('VND'),
     salaryMinMinor: optionalMoneyMinor,
     salaryMaxMinor: optionalMoneyMinor,
     sourceRef: z.string().trim().max(500).optional(),
