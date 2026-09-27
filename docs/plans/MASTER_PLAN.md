@@ -101,7 +101,7 @@
 - [ ] Implement LinkedIn adapter for currently supported official capabilities.
 - [ ] Implement TikTok adapter for currently supported official capabilities.
 - [ ] Implement Zalo adapter for currently supported official capabilities.
-- [ ] Implement Manual Assist provider for unsupported destinations such as arbitrary groups where official APIs do not allow posting.
+- [x] Implement Manual Assist provider for unsupported destinations such as arbitrary groups where official APIs do not allow posting.
 - [ ] Implement publish-now UI.
 - [ ] Implement schedule UI/calendar.
 - [ ] Implement publication status/error/retry UI.
