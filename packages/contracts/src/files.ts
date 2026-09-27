@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-export const privateFilePurposeValues = [
-  'CONTENT_MEDIA',
-  'CANDIDATE_CV',
-] as const;
+export const privateFilePurposeValues = ['CONTENT_MEDIA', 'CANDIDATE_CV'] as const;
 export const PrivateFilePurposeSchema = z.enum(privateFilePurposeValues);
 
 export const PrivateFileUploadIntentSchema = z.object({
@@ -14,13 +11,14 @@ export const PrivateFileUploadIntentSchema = z.object({
   originalFileName: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().min(1).max(255),
   sizeBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
-  sha256: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  sha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/i)
+    .optional(),
 });
 
 export type PrivateFilePurpose = z.infer<typeof PrivateFilePurposeSchema>;
-export type PrivateFileUploadIntent = z.infer<
-  typeof PrivateFileUploadIntentSchema
->;
+export type PrivateFileUploadIntent = z.infer<typeof PrivateFileUploadIntentSchema>;
 
 export interface PrivateFileUploadPolicy {
   allowedMimeTypes: readonly string[];
@@ -65,9 +63,7 @@ export function extensionForMimeType(mimeType: string): string {
   return mimeExtensions[mimeType.toLowerCase()] ?? 'bin';
 }
 
-export function buildPrivateObjectKey(
-  intent: PrivateFileUploadIntent,
-): string {
+export function buildPrivateObjectKey(intent: PrivateFileUploadIntent): string {
   const parsed = PrivateFileUploadIntentSchema.parse(intent);
   const namespace = parsed.purpose === 'CONTENT_MEDIA' ? 'media' : 'candidates';
   const extension = extensionForMimeType(parsed.mimeType);
@@ -75,9 +71,6 @@ export function buildPrivateObjectKey(
   return `${parsed.ownerUserId}/${namespace}/${parsed.ownerEntityId}/${parsed.objectId}.${extension}`;
 }
 
-export function objectKeyBelongsToUser(
-  objectKey: string,
-  userId: string,
-): boolean {
+export function objectKeyBelongsToUser(objectKey: string, userId: string): boolean {
   return objectKey.startsWith(`${userId}/`);
 }
