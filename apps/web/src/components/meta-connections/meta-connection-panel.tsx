@@ -229,6 +229,11 @@ export function MetaConnectionPanel() {
     }
   }
 
+  function beginReconnect(platform: string) {
+    if (!isMetaTarget(platform)) return;
+    void beginAuthorization([platform]);
+  }
+
   async function onStart(values: StartForm) {
     const parsed = StartFormSchema.safeParse(values);
     if (!parsed.success) {
@@ -367,7 +372,7 @@ export function MetaConnectionPanel() {
                           type="button"
                           variant="outline"
                           disabled={!health.configured || redirectingTarget !== null}
-                          onClick={() => void beginAuthorization([account.platform])}
+                          onClick={() => beginReconnect(account.platform)}
                         >
                           <RotateCcw className="mr-2 size-4" aria-hidden="true" />
                           {redirectingTarget === account.platform
