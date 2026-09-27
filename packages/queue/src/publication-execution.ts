@@ -74,11 +74,15 @@ export class PublicationRetryScheduledError extends Error {
   }
 }
 
-function validationFailure(issues: readonly ValidationIssue[]): PublicationExecutionErrorClassification {
+function validationFailure(
+  issues: readonly ValidationIssue[],
+): PublicationExecutionErrorClassification {
   const codes = [...new Set(issues.map((issue) => issue.code))].sort();
   return {
     code: 'PUBLICATION_VALIDATION_FAILED',
-    message: codes.length ? `Validation failed: ${codes.join(',')}` : 'Publication validation failed',
+    message: codes.length
+      ? `Validation failed: ${codes.join(',')}`
+      : 'Publication validation failed',
     retryable: false,
   };
 }
