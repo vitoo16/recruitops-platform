@@ -13,6 +13,7 @@
     "test": "turbo run test",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",
+    "secrets:check": "node tooling/scripts/check-secrets.mjs",
     "db:generate": "pnpm --filter @recruitops/database prisma:generate",
     "db:validate": "pnpm --filter @recruitops/database prisma:validate",
     "infra:setup": "node tooling/scripts/init-local-infra.mjs",
