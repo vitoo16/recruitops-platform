@@ -1,13 +1,5 @@
-import {
-  Worker,
-  type ConnectionOptions,
-  type Job,
-  type WorkerOptions,
-} from 'bullmq';
-import {
-  PublicationIdentitySchema,
-  buildPublicationIdempotencyKey,
-} from '@recruitops/contracts';
+import { PublicationIdentitySchema, buildPublicationIdempotencyKey } from '@recruitops/contracts';
+import { Worker, type ConnectionOptions, type Job, type WorkerOptions } from 'bullmq';
 import {
   PUBLICATION_JOB_NAME,
   PUBLICATION_QUEUE_NAME,
@@ -45,7 +37,10 @@ export function validatePublicationQueueJob(input: unknown): PublicationQueueJob
     throw new Error('PUBLICATION_IDEMPOTENCY_KEY_MISMATCH');
   }
 
-  if (typeof candidate.scheduledAt !== 'string' || Number.isNaN(Date.parse(candidate.scheduledAt))) {
+  if (
+    typeof candidate.scheduledAt !== 'string' ||
+    Number.isNaN(Date.parse(candidate.scheduledAt))
+  ) {
     throw new Error('PUBLICATION_SCHEDULED_AT_INVALID');
   }
 
