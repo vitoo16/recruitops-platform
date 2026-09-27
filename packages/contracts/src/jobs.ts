@@ -34,10 +34,12 @@ const JobInputBaseSchema = z.object({
   commissionNote: z.string().trim().max(2_000).optional(),
 });
 
-function validateSalaryRange(
-  value: { salaryMinMinor?: number; salaryMaxMinor?: number },
-  context: z.RefinementCtx,
-) {
+type SalaryRangeInput = {
+  salaryMinMinor?: number | undefined;
+  salaryMaxMinor?: number | undefined;
+};
+
+function validateSalaryRange(value: SalaryRangeInput, context: z.RefinementCtx) {
   if (
     value.salaryMinMinor !== undefined &&
     value.salaryMaxMinor !== undefined &&
