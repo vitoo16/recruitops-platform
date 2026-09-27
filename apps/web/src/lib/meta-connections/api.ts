@@ -62,13 +62,13 @@ async function requestJson<TSchema extends z.ZodType>(
   accessToken: string,
   init?: RequestInit,
 ): Promise<z.output<TSchema>> {
+  const headers = new Headers(init?.headers);
+  headers.set('authorization', `Bearer ${accessToken}`);
+  if (init?.body) headers.set('content-type', 'application/json');
+
   const response = await fetch(url, {
     ...init,
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      ...(init?.body ? { 'content-type': 'application/json' } : {}),
-      ...init?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) throw new Error(`meta_api_${response.status}`);
