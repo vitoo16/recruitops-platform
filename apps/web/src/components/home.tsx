@@ -5,6 +5,7 @@ import { NextIntlClientProvider, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AuthPanel } from '@/components/auth/auth-panel';
 import { CandidateCrm } from '@/components/candidates/candidate-crm';
+import { CandidateCvWorkspace } from '@/components/candidates/candidate-cv-workspace';
 import { JobHub } from '@/components/jobs/job-hub';
 import { Button } from '@/components/ui/button';
 import en from '@/messages/en.json';
@@ -61,6 +62,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
 
       <JobHub />
       <CandidateCrm />
+      <CandidateCvWorkspace />
     </main>
   );
 }
