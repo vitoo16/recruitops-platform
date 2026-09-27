@@ -2,15 +2,32 @@
   "home": {
     "eyebrow": "Nền tảng vận hành tuyển dụng đa kênh",
     "title": "Một nơi để quản lý nội dung tuyển dụng, lịch đăng và ứng viên.",
-    "description": "RecruitOps đang được xây dựng theo kiến trúc module, API chính thức và quy trình human-in-the-loop cho những nền tảng không hỗ trợ tự động hóa phù hợp.",
+    "description": "RecruitOps được xây dựng theo kiến trúc module, API chính thức và quy trình human-in-the-loop cho những nền tảng không hỗ trợ tự động hóa phù hợp.",
     "foundationLabel": "Trạng thái",
-    "foundationStatus": "Foundation đang được khởi tạo",
-    "foundationHint": "Bước tiếp theo là kết nối dữ liệu, xác thực và các adapter mạng xã hội theo Master Plan.",
+    "foundationStatus": "Foundation đang hoạt động",
+    "foundationHint": "Frontend, API và hạ tầng free-tier đã online. Phase hiện tại tập trung vào xác thực và phân quyền.",
+    "accessLabel": "Truy cập RecruitOps",
     "publishingTitle": "Social Publishing",
     "publishingDescription": "Soạn nội dung, tạo biến thể theo nền tảng, chọn điểm đăng và theo dõi trạng thái xuất bản.",
     "candidateTitle": "Candidate Operations",
     "candidateDescription": "Theo dõi nguồn ứng viên, CV, vòng tuyển dụng và hoa hồng trong một luồng thống nhất.",
     "capabilities": "Năng lực cốt lõi",
     "switchLanguage": "Chuyển ngôn ngữ"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Mật khẩu",
+    "signIn": "Đăng nhập",
+    "signingIn": "Đang đăng nhập...",
+    "signOut": "Đăng xuất",
+    "loading": "Đang kiểm tra phiên đăng nhập...",
+    "authenticated": "Đã xác thực",
+    "verifying": "Đang xác minh phiên với API...",
+    "verifiedRole": "API đã xác minh · Vai trò: {role}",
+    "sessionReady": "Phiên Supabase đã sẵn sàng; API chưa xác minh được.",
+    "invalidForm": "Vui lòng nhập email hợp lệ và mật khẩu tối thiểu 8 ký tự.",
+    "loginFailed": "Không thể đăng nhập. Kiểm tra tài khoản hoặc mật khẩu.",
+    "missingConfig": "Supabase Auth chưa được cấu hình cho môi trường này.",
+    "provisioningNote": "RecruitOps không mở đăng ký công khai. Tài khoản được cấp bởi quản trị viên."
   }
 }

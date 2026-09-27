@@ -2,15 +2,32 @@
   "home": {
     "eyebrow": "Multi-channel recruitment operations",
     "title": "One workspace for recruitment content, publishing schedules and candidates.",
-    "description": "RecruitOps is being built around modular boundaries, official APIs and human-in-the-loop workflows when a platform does not support compliant automation.",
+    "description": "RecruitOps is built around modular boundaries, official APIs and human-in-the-loop workflows when a platform does not support compliant automation.",
     "foundationLabel": "Status",
-    "foundationStatus": "Foundation is being initialized",
-    "foundationHint": "Next up: data, authentication and social adapters according to the Master Plan.",
+    "foundationStatus": "Foundation is online",
+    "foundationHint": "Frontend, API and free-tier infrastructure are online. The current phase focuses on authentication and authorization.",
+    "accessLabel": "RecruitOps access",
     "publishingTitle": "Social Publishing",
     "publishingDescription": "Draft content, create platform variants, choose destinations and track publication state.",
     "candidateTitle": "Candidate Operations",
     "candidateDescription": "Track candidate sources, CVs, recruitment stages and commissions in one workflow.",
     "capabilities": "Core capabilities",
     "switchLanguage": "Switch language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "signOut": "Sign out",
+    "loading": "Checking authentication session...",
+    "authenticated": "Authenticated",
+    "verifying": "Verifying session with the API...",
+    "verifiedRole": "Verified by API · Role: {role}",
+    "sessionReady": "Supabase session is ready; API verification is not available yet.",
+    "invalidForm": "Enter a valid email and a password of at least 8 characters.",
+    "loginFailed": "Sign-in failed. Check your account or password.",
+    "missingConfig": "Supabase Auth is not configured for this environment.",
+    "provisioningNote": "RecruitOps does not expose public sign-up. Accounts are provisioned by an administrator."
   }
 }

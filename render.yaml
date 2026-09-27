@@ -5,6 +5,13 @@ services:
     branch: main
     buildCommand: pnpm install --no-frozen-lockfile && pnpm --filter @recruitops/web build
     staticPublishPath: ./apps/web/out
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -31,7 +38,11 @@ services:
       - key: PORT
         value: 10000
       - key: CORS_ORIGINS
-        value: https://recruitops-frontend.onrender.com
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
