@@ -95,6 +95,7 @@ export function MetaConnectionPanel() {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [health, setHealth] = useState<MetaHealth | null>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
   const [selection, setSelection] = useState<MetaSelectionResponse | null>(null);
   const [returnState, setReturnState] = useState(readReturnState);
   const [loadingHealth, setLoadingHealth] = useState(false);
@@ -123,6 +124,7 @@ export function MetaConnectionPanel() {
       if (!nextSession) {
         setRole(null);
         setHealth(null);
+        setHealthError(null);
         setSelection(null);
       }
     });
@@ -159,12 +161,13 @@ export function MetaConnectionPanel() {
   const loadHealth = useCallback(async () => {
     if (!session?.access_token || !configuredApiUrl || !canManage) return;
     setLoadingHealth(true);
+    setHealthError(null);
     try {
       const result = await getIntegrationHealth(configuredApiUrl, session.access_token);
       setHealth(result.meta);
     } catch {
       setHealth(null);
-      setError(t('healthLoadFailed'));
+      setHealthError(t('healthLoadFailed'));
     } finally {
       setLoadingHealth(false);
     }
@@ -340,6 +343,15 @@ export function MetaConnectionPanel() {
 
         {loadingHealth && !health ? (
           <p className="text-sm text-neutral-500">{t('loadingHealth')}</p>
+        ) : null}
+
+        {healthError ? (
+          <p
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            role="alert"
+          >
+            {healthError}
+          </p>
         ) : null}
 
         {health ? (
