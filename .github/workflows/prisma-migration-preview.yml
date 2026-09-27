@@ -19,6 +19,9 @@ jobs:
           node-version-file: .node-version
       - run: pnpm install --no-frozen-lockfile
       - name: Generate initial migration SQL
+        env:
+          # Prisma config requires DATABASE_URL at module load. migrate diff --from-empty does not connect.
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: |
           mkdir -p /tmp/recruitops-migration
           pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > /tmp/recruitops-migration/migration.sql
