@@ -276,7 +276,7 @@ export function MetaConnectionPanel() {
         >
           <span>{statusMessage}</span>
           {!selection ? (
-            <Button type="button" variant="ghost" onClick={dismissReturnMessage}>
+            <Button type="button" variant="outline" onClick={dismissReturnMessage}>
               {t('dismiss')}
             </Button>
           ) : null}
