@@ -22,7 +22,10 @@ import {
   MetaConnectionsRepository,
   type MetaPromotionRecord,
 } from './meta-connections.repository.js';
-import { MetaOAuthSessionStore, type MetaDiscoveredAccount } from './meta-oauth-session.store.js';
+import {
+  MetaOAuthSessionStore,
+  type MetaDiscoveredAccount,
+} from './meta-oauth-session.store.js';
 
 const MetaConnectionTargetSchema = z.enum(['FACEBOOK', 'INSTAGRAM']);
 const MetaOAuthStartSchema = z
@@ -75,7 +78,9 @@ const MetaAccountSelectionSchema = z
   .object({
     connectionSessionId: z.uuid(),
     accounts: z
-      .array(z.discriminatedUnion('platform', [FacebookSelectionSchema, InstagramSelectionSchema]))
+      .array(
+        z.discriminatedUnion('platform', [FacebookSelectionSchema, InstagramSelectionSchema]),
+      )
       .min(1)
       .max(100)
       .refine(
@@ -92,7 +97,9 @@ const MetaAccountSelectionSchema = z
   })
   .strict();
 
-type MetaAccountSelection = z.infer<typeof MetaAccountSelectionSchema>['accounts'][number];
+type MetaAccountSelection = z.infer<
+  typeof MetaAccountSelectionSchema
+>['accounts'][number];
 
 function sanitizePage(page: MetaDiscoveredPage): MetaDiscoveredAccount {
   return {
@@ -216,7 +223,11 @@ export class MetaConnectionsService {
       });
     }
 
-    this.assertSelectionsBelongToSession(request.accounts, selectionSession.targets, selectionSession.accounts);
+    this.assertSelectionsBelongToSession(
+      request.accounts,
+      selectionSession.targets,
+      selectionSession.accounts,
+    );
 
     let userCredential;
     try {
@@ -310,7 +321,9 @@ export class MetaConnectionsService {
     targets: readonly MetaConnectionTarget[],
     discoveredAccounts: readonly MetaDiscoveredAccount[],
   ): void {
-    const discoveredByPageId = new Map(discoveredAccounts.map((account) => [account.pageId, account]));
+    const discoveredByPageId = new Map(
+      discoveredAccounts.map((account) => [account.pageId, account]),
+    );
 
     for (const selection of selections) {
       if (!targets.includes(selection.platform)) {
