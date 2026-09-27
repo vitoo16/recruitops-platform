@@ -92,9 +92,7 @@ export function buildMetaConnectionScopes(
   const scopes = new Set<string>();
   for (const target of targets) {
     const required =
-      target === 'FACEBOOK'
-        ? facebookPageConnectionScopes
-        : instagramFacebookLoginConnectionScopes;
+      target === 'FACEBOOK' ? facebookPageConnectionScopes : instagramFacebookLoginConnectionScopes;
     for (const scope of required) scopes.add(scope);
   }
   if (scopes.size === 0) throw new MetaConnectionError('META_CONNECTION_TARGET_REQUIRED');
@@ -187,9 +185,7 @@ export class MetaConnectionProvider {
     if (state.length < 32 || state.length > 512) {
       throw new MetaConnectionError('META_OAUTH_STATE_INVALID');
     }
-    const url = new URL(
-      `https://www.facebook.com/${this.config.graphApiVersion}/dialog/oauth`,
-    );
+    const url = new URL(`https://www.facebook.com/${this.config.graphApiVersion}/dialog/oauth`);
     url.searchParams.set('client_id', this.config.appId);
     url.searchParams.set('redirect_uri', this.config.redirectUri);
     url.searchParams.set('state', state);
@@ -250,9 +246,7 @@ export class MetaConnectionProvider {
     let after: string | undefined;
 
     for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
-      const url = new URL(
-        `https://graph.facebook.com/${this.config.graphApiVersion}/me/accounts`,
-      );
+      const url = new URL(`https://graph.facebook.com/${this.config.graphApiVersion}/me/accounts`);
       url.searchParams.set('fields', 'id,name,access_token,tasks');
       url.searchParams.set('limit', '100');
       if (after) url.searchParams.set('after', after);
