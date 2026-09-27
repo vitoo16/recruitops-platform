@@ -13,4 +13,6 @@
 
 The database `Publication.idempotencyKey` remains the authoritative application-level idempotency boundary. BullMQ job IDs provide an additional duplicate-suppression layer only while the matching queue job is retained.
 
+The BullMQ dependency is pinned through the repository `pnpm-lock.yaml`; the generic Lockfile Sync workflow keeps future workspace dependency changes reproducible instead of targeting a one-off feature branch.
+
 The package deliberately does not implement any social provider request. Provider adapters remain separate work under Phase 5.
