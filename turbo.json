@@ -2,8 +2,11 @@
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["DATABASE_URL", "REDIS_URL"],
   "tasks": {
+    "generate": {
+      "outputs": ["src/generated/**"]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["generate", "^build"],
       "outputs": ["dist/**", ".next/**", "out/**"]
     },
     "dev": {
@@ -11,11 +14,11 @@
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["generate", "^build"],
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["generate", "^build"],
       "outputs": ["coverage/**"]
     }
   }
