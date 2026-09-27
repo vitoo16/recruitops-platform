@@ -64,7 +64,9 @@ export class JobsRepository {
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
           : {}),
-        ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
+        ...(input.sourceRef !== undefined
+          ? { sourceRef: input.sourceRef }
+          : {}),
         ...(input.commissionNote !== undefined
           ? { commissionNote: input.commissionNote }
           : {}),
@@ -92,7 +94,10 @@ export class JobsRepository {
                 },
               },
               {
-                location: { contains: query.search, mode: 'insensitive' as const },
+                location: {
+                  contains: query.search,
+                  mode: 'insensitive' as const,
+                },
               },
             ],
           }
@@ -120,7 +125,10 @@ export class JobsRepository {
   async getById(id: string): Promise<Job> {
     const job = await this.database.client.job.findUnique({ where: { id } });
     if (!job) {
-      throw new NotFoundException({ code: 'JOB_NOT_FOUND', message: 'Job was not found' });
+      throw new NotFoundException({
+        code: 'JOB_NOT_FOUND',
+        message: 'Job was not found',
+      });
     }
     return mapDatabaseJob(job);
   }
@@ -132,8 +140,12 @@ export class JobsRepository {
       where: { id },
       data: {
         ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.companyName !== undefined ? { companyName: input.companyName } : {}),
-        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.companyName !== undefined
+          ? { companyName: input.companyName }
+          : {}),
+        ...(input.description !== undefined
+          ? { description: input.description }
+          : {}),
         ...(input.location !== undefined ? { location: input.location } : {}),
         ...(input.employmentType !== undefined
           ? { employmentType: input.employmentType }
@@ -146,7 +158,9 @@ export class JobsRepository {
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
           : {}),
-        ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
+        ...(input.sourceRef !== undefined
+          ? { sourceRef: input.sourceRef }
+          : {}),
         ...(input.commissionNote !== undefined
           ? { commissionNote: input.commissionNote }
           : {}),
