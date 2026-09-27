@@ -18,10 +18,7 @@ import {
   parseOAuthCredentialKeyring,
 } from '../social-credentials/oauth-credential-cipher.js';
 import { MetaConnectionClientFactory } from './meta-connection-client.factory.js';
-import {
-  MetaOAuthSessionStore,
-  type MetaDiscoveredAccount,
-} from './meta-oauth-session.store.js';
+import { MetaOAuthSessionStore, type MetaDiscoveredAccount } from './meta-oauth-session.store.js';
 
 const MetaConnectionTargetSchema = z.enum(['FACEBOOK', 'INSTAGRAM']);
 const MetaOAuthStartSchema = z
@@ -124,14 +121,8 @@ export class MetaConnectionsService {
 
     try {
       const shortLivedToken = await provider.exchangeAuthorizationCode(request.code!);
-      const longLivedToken = await provider.exchangeLongLivedUserToken(
-        shortLivedToken.accessToken,
-      );
-      const pages = await this.discoverPages(
-        provider,
-        pending.targets,
-        longLivedToken.accessToken,
-      );
+      const longLivedToken = await provider.exchangeLongLivedUserToken(shortLivedToken.accessToken);
+      const pages = await this.discoverPages(provider, pending.targets, longLivedToken.accessToken);
       const accounts = pages.map(sanitizePage);
       const scopes = buildMetaConnectionScopes(pending.targets);
       const tokenExpiresAt = longLivedToken.expiresInSeconds
