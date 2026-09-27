@@ -5,7 +5,7 @@
     "description": "RecruitOps is built around modular boundaries, official APIs and human-in-the-loop workflows when a platform does not support compliant automation.",
     "foundationLabel": "Status",
     "foundationStatus": "Foundation is online",
-    "foundationHint": "Frontend, API and free-tier infrastructure are online. The current phase focuses on authentication and authorization.",
+    "foundationHint": "Frontend, API and free-tier infrastructure are online. Job Hub now uses the authenticated server-side persistence API.",
     "accessLabel": "RecruitOps access",
     "publishingTitle": "Social Publishing",
     "publishingDescription": "Draft content, create platform variants, choose destinations and track publication state.",
@@ -29,5 +29,45 @@
     "loginFailed": "Sign-in failed. Check your account or password.",
     "missingConfig": "Supabase Auth is not configured for this environment.",
     "provisioningNote": "RecruitOps does not expose public sign-up. Accounts are provisioned by an administrator."
+  },
+  "jobs": {
+    "eyebrow": "Job Hub",
+    "title": "Manage recruitment jobs",
+    "searchLabel": "Search recruitment jobs",
+    "searchPlaceholder": "Job title, company or location",
+    "searchAction": "Search",
+    "refresh": "Refresh",
+    "createTitle": "Create a job",
+    "jobTitle": "Job title",
+    "company": "Company",
+    "location": "Location",
+    "employmentType": "Employment type",
+    "description": "Job description",
+    "createAction": "Create job",
+    "saving": "Saving...",
+    "loading": "Loading jobs...",
+    "empty": "No matching jobs yet.",
+    "readOnly": "VIEWER accounts can read Job Hub but cannot modify its data.",
+    "signInRequired": "Sign in to view Job Hub.",
+    "missingApiConfig": "The frontend API connection is not configured.",
+    "invalidForm": "Check the required fields before saving.",
+    "loadFailed": "Job Hub could not be loaded from the API.",
+    "saveFailed": "The change could not be saved. Try again.",
+    "forbidden": "The current account is not allowed to modify Job Hub.",
+    "statusLabel": "Status for {title}",
+    "employment": {
+      "FULL_TIME": "Full time",
+      "PART_TIME": "Part time",
+      "CONTRACT": "Contract",
+      "INTERNSHIP": "Internship",
+      "FREELANCE": "Freelance",
+      "OTHER": "Other"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "CLOSED": "Closed"
+    }
   }
 }
