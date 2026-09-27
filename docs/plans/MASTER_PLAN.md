@@ -118,7 +118,7 @@
 - [x] Implement candidate deduplication strategy.
 - [x] Implement candidate/application UI.
 - [x] Implement recruitment lifecycle.
-- [ ] Add PII authorization tests.
+- [x] Add PII authorization tests.
 - [x] Update ERD/security docs.
 
 ## Phase 7 — Commission ledger and reconciliation

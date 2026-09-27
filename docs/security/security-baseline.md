@@ -32,4 +32,16 @@
 - Duplicate matching returns internal candidate identifiers/signals; it must not expose another candidate's contact data to an unauthorized caller.
 - Retention/deletion policy must be finalized before production use of candidate records.
 
+## Authorization regression matrix
+
+Automated tests lock the current PII authorization policy so route decorators cannot silently broaden access:
+
+- Candidate/Application read routes: `OWNER`, `ADMIN`, `RECRUITER`, `VIEWER`.
+- Candidate/Application mutation routes: `OWNER`, `ADMIN`, `RECRUITER` only.
+- Duplicate-signal lookup: `OWNER`, `ADMIN`, `RECRUITER` only.
+- Candidate CV metadata registration/listing: `OWNER`, `ADMIN`, `RECRUITER` only; `VIEWER` excluded.
+- Private object signed URLs: recruiter own-prefix only; `OWNER`/`ADMIN` cross-prefix using trusted `app_metadata.recruitops_role`; unknown roles fail closed.
+
+These application tests complement, but do not replace, Supabase Storage RLS. Hosted RLS policy verification remains part of environment/security readiness checks.
+
 Security-sensitive implementation must load the OWASP security skill.
