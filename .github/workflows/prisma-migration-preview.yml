@@ -6,11 +6,16 @@ on:
       - 'packages/database/prisma/schema.prisma'
       - '.github/workflows/prisma-migration-preview.yml'
 
+permissions:
+  contents: write
+
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 12.6.0
@@ -23,10 +28,19 @@ jobs:
           # Prisma config requires DATABASE_URL at module load. migrate diff --from-empty does not connect.
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: |
-          mkdir -p /tmp/recruitops-migration
-          pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > /tmp/recruitops-migration/migration.sql
-          cat /tmp/recruitops-migration/migration.sql
-      - uses: actions/upload-artifact@v4
-        with:
-          name: prisma-initial-migration
-          path: /tmp/recruitops-migration/migration.sql
+          migration_dir='packages/database/prisma/migrations/20260927083000_initial_recruitops'
+          mkdir -p "$migration_dir"
+          pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > "$migration_dir/migration.sql"
+          printf 'provider = "postgresql"\n' > packages/database/prisma/migrations/migration_lock.toml
+          cat "$migration_dir/migration.sql"
+      - name: Commit generated migration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/database/prisma/migrations
+          if git diff --cached --quiet; then
+            echo 'Migration already matches the Prisma schema.'
+            exit 0
+          fi
+          git commit -m 'chore: add initial Prisma migration'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
