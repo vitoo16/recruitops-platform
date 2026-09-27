@@ -7,6 +7,12 @@ export interface StoredOAuthCredential extends EncryptedOAuthCredential {
   id: string;
 }
 
+function toDatabaseBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
+  const copy = new Uint8Array(value.byteLength);
+  copy.set(value);
+  return copy;
+}
+
 @Injectable()
 export class SocialCredentialsRepository {
   constructor(private readonly database: DatabaseService) {}
@@ -51,9 +57,9 @@ export class SocialCredentialsRepository {
         platform: encrypted.platform,
         keyId: encrypted.keyId,
         algorithm: encrypted.algorithm,
-        iv: encrypted.iv,
-        authTag: encrypted.authTag,
-        ciphertext: encrypted.ciphertext,
+        iv: toDatabaseBytes(encrypted.iv),
+        authTag: toDatabaseBytes(encrypted.authTag),
+        ciphertext: toDatabaseBytes(encrypted.ciphertext),
       };
 
       if (account.credentialRef) {
