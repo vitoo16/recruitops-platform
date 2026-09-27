@@ -110,16 +110,16 @@
 
 ## Phase 6 — Candidate CRM and CV handling
 
-- [ ] Implement Candidate domain.
-- [ ] Implement Application domain.
+- [x] Implement Candidate domain.
+- [x] Implement Application domain.
 - [ ] Implement private CV storage.
 - [ ] Implement validated CV upload/download flow.
-- [ ] Implement candidate source attribution.
-- [ ] Implement candidate deduplication strategy.
+- [x] Implement candidate source attribution.
+- [x] Implement candidate deduplication strategy.
 - [ ] Implement candidate/application UI.
-- [ ] Implement recruitment lifecycle.
+- [x] Implement recruitment lifecycle.
 - [ ] Add PII authorization tests.
-- [ ] Update ERD/security docs.
+- [x] Update ERD/security docs.
 
 ## Phase 7 — Commission ledger and reconciliation
 
