@@ -1,0 +1,29 @@
+name: Format Preview
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/content/content.repository.ts'
+      - 'apps/web/src/components/content/content-media-workspace.tsx'
+      - '.github/workflows/format-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --frozen-lockfile
+      - name: Apply Prettier locally in runner
+        run: pnpm exec prettier --write apps/api/src/content/content.repository.ts apps/web/src/components/content/content-media-workspace.tsx
+      - name: Print exact formatting diff
+        run: git diff -- apps/api/src/content/content.repository.ts apps/web/src/components/content/content-media-workspace.tsx
