@@ -297,11 +297,7 @@ export function MetaConnectionPanel() {
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold">{t('targetsLegend')}</legend>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
-              <input
-                className="mt-1 size-4"
-                type="checkbox"
-                {...startForm.register('facebook')}
-              />
+              <input className="mt-1 size-4" type="checkbox" {...startForm.register('facebook')} />
               <span>
                 <span className="flex items-center gap-2 font-medium">
                   <PanelsTopLeft className="size-4" aria-hidden="true" />
@@ -313,11 +309,7 @@ export function MetaConnectionPanel() {
               </span>
             </label>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
-              <input
-                className="mt-1 size-4"
-                type="checkbox"
-                {...startForm.register('instagram')}
-              />
+              <input className="mt-1 size-4" type="checkbox" {...startForm.register('instagram')} />
               <span>
                 <span className="flex items-center gap-2 font-medium">
                   <Camera className="size-4" aria-hidden="true" />
