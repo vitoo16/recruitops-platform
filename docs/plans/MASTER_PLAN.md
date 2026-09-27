@@ -51,10 +51,10 @@
 
 ## Phase 2 — Authentication, users and security foundation
 
-- [ ] Finalize auth approach via ADR if needed.
-- [ ] Implement authentication.
-- [ ] Implement RBAC.
-- [ ] Implement secure session/token handling.
+- [x] Finalize auth approach via ADR if needed.
+- [x] Implement authentication.
+- [x] Implement RBAC.
+- [x] Implement secure session/token handling.
 - [ ] Implement audit logging baseline.
 - [ ] Add secret-management/deployment rules.
 - [ ] Add private file-access strategy.
