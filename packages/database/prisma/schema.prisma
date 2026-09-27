@@ -71,6 +71,18 @@ enum PublicationState {
   CANCELLED
 }
 
+enum ApplicationStatus {
+  SOURCED
+  SUBMITTED
+  INTERVIEW_INVITED
+  INTERVIEWED
+  REJECTED
+  HIRED
+  WORKING
+  WORKED_30_DAYS
+  WITHDRAWN
+}
+
 model Job {
   id               String         @id @default(uuid()) @db.Uuid
   title            String
@@ -87,6 +99,7 @@ model Job {
   createdAt        DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt        DateTime       @updatedAt @db.Timestamptz(6)
   posts            Post[]
+  applications     Application[]
 
   @@index([status, updatedAt])
   @@index([employmentType])
@@ -150,20 +163,21 @@ model SocialAccount {
 }
 
 model Destination {
-  id              String          @id @default(uuid()) @db.Uuid
-  platform        SocialPlatform
-  type            DestinationType
-  name            String
-  externalId      String?
-  url             String?
-  postingMode     PostingMode
-  enabled         Boolean         @default(true)
-  tags            String[]        @default([])
-  socialAccountId String?         @db.Uuid
-  createdAt       DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime        @updatedAt @db.Timestamptz(6)
-  socialAccount   SocialAccount?  @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
-  publications    Publication[]
+  id                  String          @id @default(uuid()) @db.Uuid
+  platform            SocialPlatform
+  type                DestinationType
+  name                String
+  externalId          String?
+  url                 String?
+  postingMode         PostingMode
+  enabled             Boolean         @default(true)
+  tags                String[]        @default([])
+  socialAccountId     String?         @db.Uuid
+  createdAt           DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime        @updatedAt @db.Timestamptz(6)
+  socialAccount       SocialAccount?  @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
+  publications        Publication[]
+  sourcedApplications Application[]   @relation("ApplicationSourceDestination")
 
   @@index([platform, enabled])
   @@index([postingMode, enabled])
@@ -201,4 +215,49 @@ model Publication {
   @@index([socialAccountId])
   @@index([externalPostId])
   @@map("publications")
+}
+
+model Candidate {
+  id              String        @id @default(uuid()) @db.Uuid
+  fullName        String
+  email           String?
+  emailNormalized String?
+  phone           String?
+  phoneNormalized String?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+  applications    Application[]
+
+  @@index([emailNormalized])
+  @@index([phoneNormalized])
+  @@index([updatedAt])
+  @@map("candidates")
+}
+
+model Application {
+  id                  String            @id @default(uuid()) @db.Uuid
+  candidateId         String            @db.Uuid
+  jobId               String            @db.Uuid
+  status              ApplicationStatus @default(SOURCED)
+  sourcePlatform      SocialPlatform?
+  sourceDestinationId String?           @db.Uuid
+  sourceLabel         String?
+  sourcedAt           DateTime          @default(now()) @db.Timestamptz(6)
+  submittedAt         DateTime?         @db.Timestamptz(6)
+  interviewAt         DateTime?         @db.Timestamptz(6)
+  hiredAt             DateTime?         @db.Timestamptz(6)
+  startedAt           DateTime?         @db.Timestamptz(6)
+  worked30DaysAt      DateTime?         @db.Timestamptz(6)
+  createdAt           DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @db.Timestamptz(6)
+  candidate           Candidate         @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  job                 Job               @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  sourceDestination   Destination?      @relation("ApplicationSourceDestination", fields: [sourceDestinationId], references: [id], onDelete: SetNull)
+
+  @@index([candidateId, updatedAt])
+  @@index([jobId, status])
+  @@index([sourcePlatform])
+  @@index([sourceDestinationId])
+  @@index([status, updatedAt])
+  @@map("applications")
 }
