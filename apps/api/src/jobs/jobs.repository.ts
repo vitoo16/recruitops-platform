@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import type {
   CreateJobInput,
   Job,
@@ -64,12 +60,8 @@ export class JobsRepository {
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
           : {}),
-        ...(input.sourceRef !== undefined
-          ? { sourceRef: input.sourceRef }
-          : {}),
-        ...(input.commissionNote !== undefined
-          ? { commissionNote: input.commissionNote }
-          : {}),
+        ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
+        ...(input.commissionNote !== undefined ? { commissionNote: input.commissionNote } : {}),
       },
     });
 
@@ -140,16 +132,10 @@ export class JobsRepository {
       where: { id },
       data: {
         ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.companyName !== undefined
-          ? { companyName: input.companyName }
-          : {}),
-        ...(input.description !== undefined
-          ? { description: input.description }
-          : {}),
+        ...(input.companyName !== undefined ? { companyName: input.companyName } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
         ...(input.location !== undefined ? { location: input.location } : {}),
-        ...(input.employmentType !== undefined
-          ? { employmentType: input.employmentType }
-          : {}),
+        ...(input.employmentType !== undefined ? { employmentType: input.employmentType } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.currency !== undefined ? { currency: input.currency } : {}),
         ...(input.salaryMinMinor !== undefined
@@ -158,12 +144,8 @@ export class JobsRepository {
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
           : {}),
-        ...(input.sourceRef !== undefined
-          ? { sourceRef: input.sourceRef }
-          : {}),
-        ...(input.commissionNote !== undefined
-          ? { commissionNote: input.commissionNote }
-          : {}),
+        ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
+        ...(input.commissionNote !== undefined ? { commissionNote: input.commissionNote } : {}),
       },
     });
 
