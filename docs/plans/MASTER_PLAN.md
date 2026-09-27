@@ -91,7 +91,7 @@
 
 - [x] Implement vendor-neutral `SocialPublisher` contracts.
 - [x] Implement Publication model/state machine.
-- [ ] Implement BullMQ scheduling.
+- [x] Implement BullMQ scheduling primitive (delayed enqueue, duplicate-safe job identity, bounded retry/backoff; provider execution remains separately gated).
 - [x] Implement idempotency keys.
 - [x] Implement retry/backoff/terminal-failure behavior.
 - [ ] Implement rate-limit-aware worker boundaries.
