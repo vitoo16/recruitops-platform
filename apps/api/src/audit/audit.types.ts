@@ -6,10 +6,10 @@ export type SecurityAuditOutcome = 'SUCCESS' | 'DENIED' | 'FAILURE';
 export interface SecurityAuditEvent {
   eventType: SecurityAuditEventType;
   outcome: SecurityAuditOutcome;
-  requestId?: string;
-  actorId?: string;
-  actorRole?: string;
-  method?: string;
-  path?: string;
-  reasonCode?: string;
+  requestId?: string | undefined;
+  actorId?: string | undefined;
+  actorRole?: string | undefined;
+  method?: string | undefined;
+  path?: string | undefined;
+  reasonCode?: string | undefined;
 }
