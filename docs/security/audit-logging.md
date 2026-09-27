@@ -19,14 +19,17 @@ Where available, audit entries include:
 - request/correlation ID
 - stable actor ID
 - application role
-- HTTP method and route
+- HTTP method and route path
 - bounded machine-readable reason code
+
+Request logging uses the route path only. Query strings are removed before ordinary HTTP logs and authentication/authorization audit events are emitted. This is required because OAuth callbacks and other sensitive endpoints may carry short-lived secrets such as authorization codes or CSRF state in the query string.
 
 ## Sensitive-data rules
 
 Audit logs must never contain:
 
 - passwords
+- OAuth authorization codes or state values
 - OAuth access/refresh tokens
 - Supabase bearer tokens
 - API keys or service-role keys
@@ -58,4 +61,5 @@ Security regression tests must verify at minimum:
 - invalid access tokens are denied without the token appearing in the audit event;
 - valid authenticated principals are attached to request context;
 - role violations are denied and audited;
-- routes without role metadata are not incorrectly denied.
+- routes without role metadata are not incorrectly denied;
+- query strings containing OAuth callback material are removed from logged request paths.

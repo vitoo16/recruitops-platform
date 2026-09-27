@@ -23,8 +23,16 @@ const SupabaseAuthEnvSchema = z.object({
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
 });
 
+const MetaOAuthEnvSchema = z.object({
+  META_CLIENT_ID: z.string().trim().min(1),
+  META_CLIENT_SECRET: z.string().trim().min(1),
+  META_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/),
+  META_REDIRECT_URI: z.url(),
+});
+
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
 export type SupabaseAuthEnv = z.infer<typeof SupabaseAuthEnvSchema>;
+export type MetaOAuthEnv = z.infer<typeof MetaOAuthEnvSchema>;
 
 export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
@@ -32,4 +40,8 @@ export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
 
 export function parseSupabaseAuthEnv(input: Record<string, string | undefined>): SupabaseAuthEnv {
   return SupabaseAuthEnvSchema.parse(input);
+}
+
+export function parseMetaOAuthEnv(input: Record<string, string | undefined>): MetaOAuthEnv {
+  return MetaOAuthEnvSchema.parse(input);
 }

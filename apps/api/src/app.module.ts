@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { FilesModule } from './files/files.module.js';
 import { HealthController } from './health/health.controller.js';
 import { JobsModule } from './jobs/jobs.module.js';
+import { MetaConnectionsModule } from './meta-connections/meta-connections.module.js';
 import { SocialCredentialsModule } from './social-credentials/social-credentials.module.js';
 
 @Module({
@@ -18,6 +19,7 @@ import { SocialCredentialsModule } from './social-credentials/social-credentials
     DatabaseModule,
     FilesModule,
     JobsModule,
+    MetaConnectionsModule,
     SocialCredentialsModule,
   ],
   controllers: [HealthController],
