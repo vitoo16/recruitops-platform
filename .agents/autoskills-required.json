@@ -1,0 +1,47 @@
+{
+  "autoskillsVersion": "0.3.3",
+  "detectedTechnologies": [
+    "TypeScript",
+    "Turborepo",
+    "Node.js",
+    "Vitest",
+    "NestJS",
+    "React",
+    "Next.js",
+    "Tailwind CSS",
+    "shadcn/ui",
+    "React Hook Form",
+    "Zod",
+    "Supabase",
+    "Prisma"
+  ],
+  "requiredSkills": [
+    "typescript-advanced-types",
+    "turborepo",
+    "nodejs-backend-patterns",
+    "nodejs-best-practices",
+    "vitest",
+    "nestjs-best-practices",
+    "react-best-practices",
+    "composition-patterns",
+    "next-best-practices",
+    "next-cache-components",
+    "next-upgrade",
+    "tailwind-css-patterns",
+    "shadcn",
+    "react-hook-form",
+    "zod",
+    "supabase-postgres-best-practices",
+    "prisma-database-setup",
+    "prisma-client-api",
+    "prisma-cli",
+    "prisma-postgres",
+    "tailwind-v4-shadcn",
+    "frontend-design",
+    "accessibility",
+    "seo"
+  ],
+  "aliases": {
+    "react-best-practices": "vercel-react-best-practices"
+  }
+}
