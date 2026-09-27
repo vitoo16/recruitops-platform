@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { OAuthCredentialCipher, parseOAuthCredentialKeyring } from './oauth-credential-cipher.js';
+import {
+  OAuthCredentialCipher,
+  parseOAuthCredentialKeyring,
+} from './oauth-credential-cipher.js';
 
 const keyV1 = Buffer.alloc(32, 7).toString('base64');
 const keyV2 = Buffer.alloc(32, 9).toString('base64');
 
-function environment(activeKeyId = 'v1', keys: Record<string, string> = { v1: keyV1 }) {
+function environment(
+  activeKeyId = 'v1',
+  keys: Record<string, string> = { v1: keyV1 },
+) {
   return {
     OAUTH_CREDENTIAL_ACTIVE_KEY_ID: activeKeyId,
     OAUTH_CREDENTIAL_ENCRYPTION_KEYS: JSON.stringify(keys),
@@ -27,7 +33,9 @@ describe('OAuthCredentialCipher', () => {
     expect(encrypted.algorithm).toBe('aes-256-gcm');
     expect(encrypted.iv).toHaveLength(12);
     expect(encrypted.authTag).toHaveLength(16);
-    expect(Buffer.from(encrypted.ciphertext).toString('utf8')).not.toContain('access-token-secret');
+    expect(Buffer.from(encrypted.ciphertext).toString('utf8')).not.toContain(
+      'access-token-secret',
+    );
 
     expect(cipher.decrypt(encrypted, environment())).toEqual({
       ...payload,
@@ -48,7 +56,11 @@ describe('OAuthCredentialCipher', () => {
 
   it('rejects tampered ciphertext and a wrong decryption key without leaking crypto details', () => {
     const cipher = new OAuthCredentialCipher();
-    const encrypted = cipher.encrypt('TIKTOK', { accessToken: 'secret', scopes: [] }, environment());
+    const encrypted = cipher.encrypt(
+      'TIKTOK',
+      { accessToken: 'secret', scopes: [] },
+      environment(),
+    );
     const tampered = {
       ...encrypted,
       ciphertext: Uint8Array.from(encrypted.ciphertext),
@@ -65,7 +77,11 @@ describe('OAuthCredentialCipher', () => {
 
   it('retains old keys for decryption during key rotation', () => {
     const cipher = new OAuthCredentialCipher();
-    const encrypted = cipher.encrypt('ZALO', { accessToken: 'secret', scopes: [] }, environment());
+    const encrypted = cipher.encrypt(
+      'ZALO',
+      { accessToken: 'secret', scopes: [] },
+      environment(),
+    );
     const rotated = environment('v2', { v1: keyV1, v2: keyV2 });
 
     expect(cipher.decrypt(encrypted, rotated).accessToken).toBe('secret');
