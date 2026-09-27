@@ -80,7 +80,8 @@ function requireAccessToken(value: string): string {
 function requirePublicMediaUrl(value: string): string {
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password) throw new Error('unsafe media url');
+    if (url.protocol !== 'https:' || url.username || url.password)
+      throw new Error('unsafe media url');
     return url.toString();
   } catch {
     throw new MetaPublishingError('META_PUBLISH_MEDIA_URL_INVALID');
