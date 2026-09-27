@@ -28,15 +28,17 @@ const candidateWriteShape = {
   phone: phoneSchema,
 };
 
-export const CreateCandidateSchema = z.object(candidateWriteShape).superRefine((value, context) => {
-  if (!value.email && !value.phone) {
-    context.addIssue({
-      code: 'custom',
-      path: ['email'],
-      message: 'At least one contact method (email or phone) is required',
-    });
-  }
-});
+export const CreateCandidateSchema = z
+  .object(candidateWriteShape)
+  .superRefine((value, context) => {
+    if (!value.email && !value.phone) {
+      context.addIssue({
+        code: 'custom',
+        path: ['email'],
+        message: 'At least one contact method (email or phone) is required',
+      });
+    }
+  });
 
 export const UpdateCandidateSchema = z
   .object({
@@ -147,7 +149,10 @@ const applicationTransitions: Readonly<Record<ApplicationStatus, readonly Applic
   WITHDRAWN: [],
 };
 
-export function canTransitionApplicationStatus(from: ApplicationStatus, to: ApplicationStatus): boolean {
+export function canTransitionApplicationStatus(
+  from: ApplicationStatus,
+  to: ApplicationStatus,
+): boolean {
   return from === to || applicationTransitions[from].includes(to);
 }
 

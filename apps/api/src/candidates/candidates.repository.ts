@@ -12,10 +12,7 @@ import type {
   CreateCandidateInput,
   UpdateCandidateInput,
 } from '@recruitops/contracts';
-import {
-  normalizeCandidateEmail,
-  normalizeCandidatePhone,
-} from '@recruitops/contracts';
+import { normalizeCandidateEmail, normalizeCandidatePhone } from '@recruitops/contracts';
 import type {
   Application as DatabaseApplication,
   Candidate as DatabaseCandidate,
@@ -164,12 +161,8 @@ export class CandidatesRepository {
 
   async findDuplicateSignals(query: CandidateDuplicateSignalQuery): Promise<Candidate[]> {
     const clauses = [
-      ...(query.email
-        ? [{ emailNormalized: normalizeCandidateEmail(query.email) }]
-        : []),
-      ...(query.phone
-        ? [{ phoneNormalized: normalizeCandidatePhone(query.phone) }]
-        : []),
+      ...(query.email ? [{ emailNormalized: normalizeCandidateEmail(query.email) }] : []),
+      ...(query.phone ? [{ phoneNormalized: normalizeCandidatePhone(query.phone) }] : []),
     ];
 
     if (clauses.length === 0) return [];
@@ -185,8 +178,14 @@ export class CandidatesRepository {
 
   async createApplication(input: CreateApplicationInput): Promise<Application> {
     const [candidate, job, destination] = await Promise.all([
-      this.database.client.candidate.findUnique({ where: { id: input.candidateId }, select: { id: true } }),
-      this.database.client.job.findUnique({ where: { id: input.jobId }, select: { id: true } }),
+      this.database.client.candidate.findUnique({
+        where: { id: input.candidateId },
+        select: { id: true },
+      }),
+      this.database.client.job.findUnique({
+        where: { id: input.jobId },
+        select: { id: true },
+      }),
       input.sourceDestinationId
         ? this.database.client.destination.findUnique({
             where: { id: input.sourceDestinationId },
@@ -196,7 +195,10 @@ export class CandidatesRepository {
     ]);
 
     if (!candidate) {
-      throw new NotFoundException({ code: 'CANDIDATE_NOT_FOUND', message: 'Candidate was not found' });
+      throw new NotFoundException({
+        code: 'CANDIDATE_NOT_FOUND',
+        message: 'Candidate was not found',
+      });
     }
     if (!job) {
       throw new NotFoundException({ code: 'JOB_NOT_FOUND', message: 'Job was not found' });
