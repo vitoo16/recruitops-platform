@@ -1,7 +1,7 @@
 'use client';
 
 import type { Session } from '@supabase/supabase-js';
-import { Facebook, Instagram, Link2, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Camera, Link2, PanelsTopLeft, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -270,7 +270,10 @@ export function MetaConnectionPanel() {
       </div>
 
       {statusMessage ? (
-        <div className="flex items-start justify-between gap-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+        <div
+          className="flex items-start justify-between gap-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+          role="status"
+        >
           <span>{statusMessage}</span>
           {!selection ? (
             <Button type="button" variant="ghost" onClick={dismissReturnMessage}>
@@ -281,7 +284,10 @@ export function MetaConnectionPanel() {
       ) : null}
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -298,7 +304,7 @@ export function MetaConnectionPanel() {
               />
               <span>
                 <span className="flex items-center gap-2 font-medium">
-                  <Facebook className="size-4" aria-hidden="true" />
+                  <PanelsTopLeft className="size-4" aria-hidden="true" />
                   {t('facebook')}
                 </span>
                 <span className="mt-1 block text-sm leading-6 text-neutral-500">
@@ -314,7 +320,7 @@ export function MetaConnectionPanel() {
               />
               <span>
                 <span className="flex items-center gap-2 font-medium">
-                  <Instagram className="size-4" aria-hidden="true" />
+                  <Camera className="size-4" aria-hidden="true" />
                   {t('instagram')}
                 </span>
                 <span className="mt-1 block text-sm leading-6 text-neutral-500">
@@ -345,7 +351,9 @@ export function MetaConnectionPanel() {
                 <article key={account.pageId} className="space-y-3 rounded-xl border p-4">
                   <div>
                     <h3 className="font-semibold">{account.pageName}</h3>
-                    <p className="mt-1 text-xs text-neutral-500">{t('pageId', { id: account.pageId })}</p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {t('pageId', { id: account.pageId })}
+                    </p>
                   </div>
                   {selection.targets.includes('FACEBOOK') ? (
                     <label className="flex items-start gap-3">
@@ -357,7 +365,9 @@ export function MetaConnectionPanel() {
                       />
                       <span className="text-sm">
                         <span className="font-medium">{t('connectFacebookPage')}</span>
-                        <span className="mt-1 block text-neutral-500">{t('facebookDestinationHint')}</span>
+                        <span className="mt-1 block text-neutral-500">
+                          {t('facebookDestinationHint')}
+                        </span>
                       </span>
                     </label>
                   ) : null}
@@ -396,7 +406,12 @@ export function MetaConnectionPanel() {
             <Button type="submit" disabled={submitting || selection.accounts.length === 0}>
               {submitting ? t('connecting') : t('confirmAction')}
             </Button>
-            <Button type="button" variant="outline" onClick={dismissReturnMessage} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={dismissReturnMessage}
+              disabled={submitting}
+            >
               {t('cancel')}
             </Button>
           </div>
@@ -405,7 +420,10 @@ export function MetaConnectionPanel() {
 
       {loadingSelection ? (
         <p className="flex items-center gap-2 text-sm text-neutral-500" aria-live="polite">
-          <RefreshCw className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+          <RefreshCw
+            className="size-4 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           {t('loadingSelection')}
         </p>
       ) : null}
