@@ -47,9 +47,7 @@ export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
 export type CreateCandidateInput = z.infer<typeof CreateCandidateSchema>;
 export type CreateApplicationInput = z.infer<typeof CreateApplicationSchema>;
 
-const applicationTransitions: Readonly<
-  Record<ApplicationStatus, readonly ApplicationStatus[]>
-> = {
+const applicationTransitions: Readonly<Record<ApplicationStatus, readonly ApplicationStatus[]>> = {
   SOURCED: ['SUBMITTED', 'WITHDRAWN'],
   SUBMITTED: ['INTERVIEW_INVITED', 'REJECTED', 'WITHDRAWN'],
   INTERVIEW_INVITED: ['INTERVIEWED', 'REJECTED', 'WITHDRAWN'],
