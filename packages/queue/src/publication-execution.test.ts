@@ -19,7 +19,9 @@ const job: PublicationQueueJob = {
   scheduledAt: '2026-09-28T01:00:00.000Z',
 };
 
-function snapshot(overrides: Partial<PublicationExecutionSnapshot> = {}): PublicationExecutionSnapshot {
+function snapshot(
+  overrides: Partial<PublicationExecutionSnapshot> = {},
+): PublicationExecutionSnapshot {
   return {
     publicationId,
     state: 'PUBLISHING',
