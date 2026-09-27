@@ -63,7 +63,7 @@
 ## Phase 3 — Job Hub and content domain
 
 - [x] Implement Job schema/domain.
-- [ ] Implement Job API.
+- [x] Implement Job API.
 - [ ] Implement Job management UI.
 - [x] Implement content Post domain.
 - [x] Implement PostVariant domain.
