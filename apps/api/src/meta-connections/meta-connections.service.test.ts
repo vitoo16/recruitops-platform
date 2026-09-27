@@ -98,7 +98,7 @@ describe('MetaConnectionsService', () => {
   });
 
   it('persists Page and linked Instagram credentials without returning token material', async () => {
-    const { service, credentials } = createService();
+    const { service, credentials, audit } = createService();
     const result = await service.complete({ code: 'oauth-code', state: 'signed-state' });
 
     expect(result.connectedAccounts).toHaveLength(2);
@@ -107,10 +107,15 @@ describe('MetaConnectionsService', () => {
     expect(credentials.save).toHaveBeenCalledTimes(2);
     expect(JSON.stringify(result)).not.toContain('page-secret');
     expect(JSON.stringify(result)).not.toContain('user-token');
+    expect(audit.record).toHaveBeenCalledWith({
+      eventType: 'META_OAUTH_CONNECTION',
+      outcome: 'SUCCESS',
+      actorId: ACTOR_ID,
+    });
   });
 
   it('fails closed when required Page permissions are missing', async () => {
-    const { service, credentials } = createService({
+    const { service, credentials, audit } = createService({
       grantedPermissions: ['pages_show_list', 'pages_read_engagement'],
     });
 
@@ -119,6 +124,12 @@ describe('MetaConnectionsService', () => {
       response: expect.objectContaining({ code: 'META_PAGE_PERMISSIONS_MISSING' }),
     });
     expect(credentials.save).not.toHaveBeenCalled();
+    expect(audit.record).toHaveBeenCalledWith({
+      eventType: 'META_OAUTH_CONNECTION',
+      outcome: 'DENIED',
+      actorId: ACTOR_ID,
+      reasonCode: 'META_PAGE_PERMISSIONS_MISSING',
+    });
   });
 
   it('connects Facebook but warns when a linked Instagram account lacks IG permissions', async () => {
