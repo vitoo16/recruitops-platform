@@ -116,5 +116,31 @@
       "WORKED_30_DAYS": "Worked 30 days",
       "WITHDRAWN": "Withdrawn"
     }
+  },
+  "candidateCv": {
+    "eyebrow": "Private candidate files",
+    "title": "Candidate CV workspace",
+    "description": "Upload validated CV files to private storage, register their metadata with RecruitOps and review the documents already attached to a candidate.",
+    "candidate": "Candidate",
+    "chooseCandidate": "Choose a candidate",
+    "file": "CV file",
+    "fileHint": "PDF, DOC or DOCX only, up to 10 MB. Files remain private.",
+    "uploadAction": "Upload CV",
+    "uploading": "Uploading...",
+    "loading": "Loading candidate documents...",
+    "empty": "No CV documents are registered for this candidate yet.",
+    "refresh": "Refresh documents",
+    "download": "Open private copy",
+    "otherOwner": "This file was uploaded by another recruiter. Cross-recruiter signed download remains server-authorized future work.",
+    "loadFailed": "Candidate documents could not be loaded.",
+    "uploadFailed": "The CV could not be uploaded and registered. Try again.",
+    "invalidFile": "Choose a valid CV file.",
+    "invalidFileType": "Only PDF, DOC and DOCX CV files are allowed.",
+    "forbidden": "The current account is not allowed to access candidate CV metadata.",
+    "downloadOwnershipBoundary": "This browser session cannot sign a download URL for a file owned by another uploader.",
+    "storageUnavailable": "Private storage is not configured for this environment.",
+    "viewerRestricted": "VIEWER accounts cannot access candidate CV metadata because it contains sensitive candidate information.",
+    "signInRequired": "Sign in to manage candidate CVs.",
+    "missingApiConfig": "The frontend API connection is not configured."
   }
 }
