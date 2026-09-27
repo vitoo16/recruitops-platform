@@ -8,6 +8,7 @@ import { CandidateCrm } from '@/components/candidates/candidate-crm';
 import { CandidateCvWorkspace } from '@/components/candidates/candidate-cv-workspace';
 import { ContentMediaWorkspace } from '@/components/content/content-media-workspace';
 import { JobHub } from '@/components/jobs/job-hub';
+import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
 import { Button } from '@/components/ui/button';
 import en from '@/messages/en.json';
 import vi from '@/messages/vi.json';
@@ -61,6 +62,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         </article>
       </section>
 
+      <MetaConnectionPanel />
       <JobHub />
       <ContentMediaWorkspace />
       <CandidateCrm />
