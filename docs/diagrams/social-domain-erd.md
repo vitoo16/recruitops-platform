@@ -12,7 +12,7 @@ erDiagram
       text display_name
       enum status
       text_array scopes
-      text credential_ref UK_FK
+      text credential_ref FK, UK
       timestamptz expires_at
       timestamptz created_at
       timestamptz updated_at
