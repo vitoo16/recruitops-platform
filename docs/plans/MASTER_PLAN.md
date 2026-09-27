@@ -55,10 +55,10 @@
 - [x] Implement authentication.
 - [x] Implement RBAC.
 - [x] Implement secure session/token handling.
-- [ ] Implement audit logging baseline.
+- [x] Implement audit logging baseline.
 - [ ] Add secret-management/deployment rules.
 - [ ] Add private file-access strategy.
-- [ ] Add security regression tests.
+- [x] Add security regression tests.
 
 ## Phase 3 — Job Hub and content domain
 
