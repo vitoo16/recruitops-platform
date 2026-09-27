@@ -22,10 +22,7 @@ import {
   MetaConnectionsRepository,
   type MetaPromotionRecord,
 } from './meta-connections.repository.js';
-import {
-  MetaOAuthSessionStore,
-  type MetaDiscoveredAccount,
-} from './meta-oauth-session.store.js';
+import { MetaOAuthSessionStore, type MetaDiscoveredAccount } from './meta-oauth-session.store.js';
 
 const MetaConnectionTargetSchema = z.enum(['FACEBOOK', 'INSTAGRAM']);
 const MetaOAuthStartSchema = z
@@ -78,9 +75,7 @@ const MetaAccountSelectionSchema = z
   .object({
     connectionSessionId: z.uuid(),
     accounts: z
-      .array(
-        z.discriminatedUnion('platform', [FacebookSelectionSchema, InstagramSelectionSchema]),
-      )
+      .array(z.discriminatedUnion('platform', [FacebookSelectionSchema, InstagramSelectionSchema]))
       .min(1)
       .max(100)
       .refine(
@@ -97,9 +92,7 @@ const MetaAccountSelectionSchema = z
   })
   .strict();
 
-type MetaAccountSelection = z.infer<
-  typeof MetaAccountSelectionSchema
->['accounts'][number];
+type MetaAccountSelection = z.infer<typeof MetaAccountSelectionSchema>['accounts'][number];
 
 function sanitizePage(page: MetaDiscoveredPage): MetaDiscoveredAccount {
   return {
@@ -248,9 +241,7 @@ export class MetaConnectionsService {
         userCredential.accessToken,
       );
       const pageById = new Map(pages.map((page) => [page.id, page]));
-      const promotions = request.accounts.map((account) =>
-        this.buildPromotion(account, pageById),
-      );
+      const promotions = request.accounts.map((account) => this.buildPromotion(account, pageById));
       const connected = await this.repository.promote(promotions);
       await this.sessions.deleteSelection(request.connectionSessionId);
 
