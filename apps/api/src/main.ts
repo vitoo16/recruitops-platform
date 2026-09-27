@@ -7,6 +7,7 @@ import type { NextFunction, Response } from 'express';
 import { parseApiEnv } from '@recruitops/config';
 import { AppModule } from './app.module.js';
 import type { RequestWithContext } from './common/request-context.js';
+import { getSafeRequestPath } from './common/request-path.js';
 
 async function bootstrap() {
   const env = parseApiEnv(process.env);
@@ -36,7 +37,7 @@ async function bootstrap() {
         JSON.stringify({
           requestId,
           method: request.method,
-          path: request.originalUrl,
+          path: getSafeRequestPath(request),
           statusCode: response.statusCode,
           durationMs: Date.now() - startedAt,
         }),

@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import type { RequestWithContext } from '../common/request-context.js';
+import { getSafeRequestPath } from '../common/request-path.js';
 import type { AuthenticatedPrincipal } from './auth.types.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 
@@ -28,7 +29,7 @@ export class AuthGuard implements CanActivate {
     const auditContext = {
       requestId: request.requestId,
       method: request.method,
-      path: request.originalUrl,
+      path: getSafeRequestPath(request),
     };
 
     if (!accessToken) {
