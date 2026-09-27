@@ -28,6 +28,7 @@ const MetaOAuthEnvSchema = z.object({
   META_CLIENT_SECRET: z.string().trim().min(1),
   META_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/),
   META_REDIRECT_URI: z.url(),
+  META_FRONTEND_REDIRECT_URI: z.url(),
 });
 
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
