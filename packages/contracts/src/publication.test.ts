@@ -24,9 +24,10 @@ describe('publication contracts', () => {
   });
 
   it('validates the minimal queue payload', () => {
-    expect(
-      PublicationQueueJobSchema.parse({ publicationId, platform: 'LINKEDIN' }),
-    ).toEqual({ publicationId, platform: 'LINKEDIN' });
+    expect(PublicationQueueJobSchema.parse({ publicationId, platform: 'LINKEDIN' })).toEqual({
+      publicationId,
+      platform: 'LINKEDIN',
+    });
     expect(
       PublicationQueueJobSchema.safeParse({ publicationId, platform: 'UNKNOWN' }).success,
     ).toBe(false);

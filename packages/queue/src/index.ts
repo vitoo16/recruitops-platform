@@ -1,9 +1,4 @@
-import {
-  Queue,
-  Worker,
-  type ConnectionOptions,
-  type JobsOptions,
-} from 'bullmq';
+import { Queue, Worker, type ConnectionOptions, type JobsOptions } from 'bullmq';
 import {
   PublicationQueueJobSchema,
   buildPublicationQueueJobId,
@@ -243,9 +238,7 @@ export function createPublicationWorker(
       }
       const payload = PublicationQueueJobSchema.parse(job.data);
       if (payload.platform !== input.platform) {
-        throw new Error(
-          `PUBLICATION_PLATFORM_MISMATCH:${payload.platform}:${input.platform}`,
-        );
+        throw new Error(`PUBLICATION_PLATFORM_MISMATCH:${payload.platform}:${input.platform}`);
       }
       await input.processor(payload, {
         attempt: job.attemptsMade + 1,
