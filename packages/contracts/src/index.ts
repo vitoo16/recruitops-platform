@@ -3,3 +3,6 @@ export interface HealthResponse {
   service: 'recruitops-api';
   timestamp: string;
 }
+
+export * from './jobs.js';
+export * from './content.js';

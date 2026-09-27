@@ -62,16 +62,16 @@
 
 ## Phase 3 — Job Hub and content domain
 
-- [ ] Implement Job schema/domain.
+- [x] Implement Job schema/domain.
 - [ ] Implement Job API.
 - [ ] Implement Job management UI.
-- [ ] Implement content Post domain.
-- [ ] Implement PostVariant domain.
+- [x] Implement content Post domain.
+- [x] Implement PostVariant domain.
 - [ ] Implement media model/upload flow.
-- [ ] Implement draft workflow.
-- [ ] Implement platform preview model.
+- [x] Implement draft workflow.
+- [x] Implement platform preview model.
 - [x] Implement VI/EN application i18n baseline.
-- [ ] Implement job/content validation tests.
+- [x] Implement job/content validation tests.
 - [ ] Update ERD/API docs and diagrams.
 
 ## Phase 4 — Destinations and social account connections
