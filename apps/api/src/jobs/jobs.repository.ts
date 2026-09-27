@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import type {
   CreateJobInput,
   Job,
@@ -78,9 +82,18 @@ export class JobsRepository {
       ...(query.search
         ? {
             OR: [
-              { title: { contains: query.search, mode: 'insensitive' as const } },
-              { companyName: { contains: query.search, mode: 'insensitive' as const } },
-              { location: { contains: query.search, mode: 'insensitive' as const } },
+              {
+                title: { contains: query.search, mode: 'insensitive' as const },
+              },
+              {
+                companyName: {
+                  contains: query.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                location: { contains: query.search, mode: 'insensitive' as const },
+              },
             ],
           }
         : {}),
