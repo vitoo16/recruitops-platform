@@ -154,7 +154,9 @@ export class MetaOAuthClient {
   }
 
   async getGrantedPermissions(accessToken: string): Promise<string[]> {
-    const url = new URL(`https://graph.facebook.com/${graphApiVersion(this.config)}/me/permissions`);
+    const url = new URL(
+      `https://graph.facebook.com/${graphApiVersion(this.config)}/me/permissions`,
+    );
     const body = await this.requestJson(url, {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
     });
@@ -180,7 +182,9 @@ export class MetaOAuthClient {
     let after: string | undefined;
 
     for (let requestCount = 0; requestCount < 10; requestCount += 1) {
-      const url = new URL(`https://graph.facebook.com/${graphApiVersion(this.config)}/me/accounts`);
+      const url = new URL(
+        `https://graph.facebook.com/${graphApiVersion(this.config)}/me/accounts`,
+      );
       url.searchParams.set(
         'fields',
         'id,name,access_token,tasks,instagram_business_account{id,username,name}',
@@ -205,7 +209,9 @@ export class MetaOAuthClient {
           instagram && typeof instagram.id === 'string'
             ? {
                 id: instagram.id,
-                ...(typeof instagram.username === 'string' ? { username: instagram.username } : {}),
+                ...(typeof instagram.username === 'string'
+                  ? { username: instagram.username }
+                  : {}),
                 ...(typeof instagram.name === 'string' ? { name: instagram.name } : {}),
               }
             : undefined;
@@ -223,7 +229,8 @@ export class MetaOAuthClient {
 
       const paging = asRecord(root.paging);
       const cursors = paging ? asRecord(paging.cursors) : null;
-      const nextAfter = typeof cursors?.after === 'string' && paging?.next ? cursors.after : undefined;
+      const nextAfter =
+        typeof cursors?.after === 'string' && paging?.next ? cursors.after : undefined;
       if (!nextAfter) return pages;
       after = nextAfter;
     }
