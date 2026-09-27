@@ -4,6 +4,7 @@ import { Languages, Send, UsersRound } from 'lucide-react';
 import { NextIntlClientProvider, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AuthPanel } from '@/components/auth/auth-panel';
+import { CandidateCrm } from '@/components/candidates/candidate-crm';
 import { JobHub } from '@/components/jobs/job-hub';
 import { Button } from '@/components/ui/button';
 import en from '@/messages/en.json';
@@ -59,6 +60,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       </section>
 
       <JobHub />
+      <CandidateCrm />
     </main>
   );
 }
