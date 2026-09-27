@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { createClient } from 'redis';
 
-export type RecruitOpsRedisClient = ReturnType<typeof createClient>;
+function createRecruitOpsRedisClient(redisUrl: string) {
+  return createClient({ url: redisUrl });
+}
+
+export type RecruitOpsRedisClient = ReturnType<typeof createRecruitOpsRedisClient>;
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -26,12 +30,12 @@ export class RedisService implements OnModuleDestroy {
       });
     }
 
-    const client = createClient({ url: redisUrl });
+    const client = createRecruitOpsRedisClient(redisUrl);
     client.on('error', () => {
       this.logger.error('Redis client error');
     });
 
-    this.connecting = (async () => {
+    const connectionPromise = (async () => {
       try {
         await client.connect();
         this.client = client;
@@ -41,12 +45,17 @@ export class RedisService implements OnModuleDestroy {
           code: 'REDIS_UNAVAILABLE',
           message: 'Redis is unavailable',
         });
-      } finally {
-        this.connecting = undefined;
       }
     })();
 
-    return this.connecting;
+    this.connecting = connectionPromise;
+    try {
+      return await connectionPromise;
+    } finally {
+      if (this.connecting === connectionPromise) {
+        this.connecting = undefined;
+      }
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
