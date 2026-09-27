@@ -6,7 +6,10 @@ function configureMetaEnv() {
   vi.stubEnv('META_CLIENT_SECRET', 'meta-secret');
   vi.stubEnv('META_GRAPH_API_VERSION', 'v26.0');
   vi.stubEnv('META_REDIRECT_URI', 'https://api.example.com/api/integrations/meta/oauth/callback');
-  vi.stubEnv('META_FRONTEND_REDIRECT_URI', 'https://app.example.com/connect?source=settings#ignore');
+  vi.stubEnv(
+    'META_FRONTEND_REDIRECT_URI',
+    'https://app.example.com/connect?source=settings#ignore',
+  );
 }
 
 afterEach(() => {
