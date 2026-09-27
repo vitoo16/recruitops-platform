@@ -92,9 +92,11 @@ describe('FacebookPagePublisher', () => {
   });
 
   it('normalizes provider errors without copying provider response text', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      response({ error: { code: 190, message: 'secret provider detail' } }, 400),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        response({ error: { code: 190, message: 'secret provider detail' } }, 400),
+      );
     const publisher = new FacebookPagePublisher(
       { graphApiVersion: 'v26.0' },
       contextResolver('FACEBOOK'),
