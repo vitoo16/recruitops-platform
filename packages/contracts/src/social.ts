@@ -60,7 +60,10 @@ export type DestinationType = z.infer<typeof DestinationTypeSchema>;
 export type PostingMode = z.infer<typeof PostingModeSchema>;
 export type SocialAccountStatus = z.infer<typeof SocialAccountStatusSchema>;
 
-export function matchesDestinationFilter(destination: Destination, rawFilter: DestinationFilter): boolean {
+export function matchesDestinationFilter(
+  destination: Destination,
+  rawFilter: DestinationFilter,
+): boolean {
   const parsed = DestinationFilterSchema.safeParse(rawFilter);
   if (!parsed.success) return false;
 
