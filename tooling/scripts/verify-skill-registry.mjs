@@ -20,9 +20,16 @@ if (missingFromRegistry.length > 0) {
 
 if (dryRunPath) {
   const dryRun = readFileSync(dryRunPath, 'utf8');
-  const detected = new Set(
-    [...dryRun.matchAll(/^\s*\d+\.\s+[^›\n]+›\s+([^\s]+)\s+/gm)].map((match) => match[1]),
-  );
+  const detected = new Set();
+
+  for (const rawLine of dryRun.split(/\r?\n/)) {
+    const line = rawLine.replace(/\u001b\[[0-9;]*m/g, '').trim();
+    if (!/^\d+\./.test(line) || !line.includes('›')) continue;
+
+    const right = line.split('›', 2)[1]?.trim();
+    const skill = right?.split(/\s+/)[0];
+    if (skill) detected.add(skill);
+  }
 
   const unknownDetected = [...detected].filter((skill) => !required.requiredSkills.includes(skill));
   const noLongerDetected = required.requiredSkills.filter((skill) => !detected.has(skill));
