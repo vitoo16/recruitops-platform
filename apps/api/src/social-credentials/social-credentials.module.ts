@@ -7,6 +7,6 @@ import { SocialCredentialsRepository } from './social-credentials.repository.js'
 @Module({
   imports: [DatabaseModule],
   providers: [OAuthCredentialCipher, OAuthCredentialStore, SocialCredentialsRepository],
-  exports: [OAuthCredentialStore],
+  exports: [OAuthCredentialCipher, OAuthCredentialStore],
 })
 export class SocialCredentialsModule {}
