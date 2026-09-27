@@ -198,7 +198,9 @@ export function ContentMediaWorkspace() {
       form.setValue('baseContent', '');
     } catch (caught) {
       setError(
-        caught instanceof ContentApiError && caught.status === 403 ? t('forbidden') : t('saveFailed'),
+        caught instanceof ContentApiError && caught.status === 403
+          ? t('forbidden')
+          : t('saveFailed'),
       );
     }
   }
@@ -253,7 +255,8 @@ export function ContentMediaWorkspace() {
     } catch (caught) {
       if (caught instanceof PrivateFileAccessError) {
         setError(
-          caught.message.includes('MIME_TYPE_NOT_ALLOWED') || caught.message.includes('FILE_TOO_LARGE')
+          caught.message.includes('MIME_TYPE_NOT_ALLOWED') ||
+            caught.message.includes('FILE_TOO_LARGE')
             ? t('invalidMedia')
             : t('uploadFailed'),
         );
@@ -285,7 +288,10 @@ export function ContentMediaWorkspace() {
       </div>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -310,7 +316,11 @@ export function ContentMediaWorkspace() {
             </select>
 
             {canMutate ? (
-              <form className="mt-5 space-y-4" onSubmit={form.handleSubmit(onCreateDraft)} noValidate>
+              <form
+                className="mt-5 space-y-4"
+                onSubmit={form.handleSubmit(onCreateDraft)}
+                noValidate
+              >
                 <div className="flex items-center gap-2">
                   <Plus className="size-4" aria-hidden="true" />
                   <h3 className="font-semibold">{t('createDraft')}</h3>
@@ -369,7 +379,12 @@ export function ContentMediaWorkspace() {
                   ))}
                 </select>
               </div>
-              <Button type="button" variant="outline" disabled={!postId || loadingAssets} onClick={() => void loadAssets()}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!postId || loadingAssets}
+                onClick={() => void loadAssets()}
+              >
                 <RefreshCw className="size-4" aria-hidden="true" />
                 <span className="sr-only">{t('refreshMedia')}</span>
               </Button>
@@ -397,8 +412,17 @@ export function ContentMediaWorkspace() {
                   maxLength={500}
                   onChange={(event) => setAltText(event.target.value)}
                 />
-                {file ? <p className="text-sm text-neutral-600">{file.name} · {formatBytes(file.size)}</p> : null}
-                <Button className="w-full" type="button" disabled={!postId || !file || uploading} onClick={() => void uploadMedia()}>
+                {file ? (
+                  <p className="text-sm text-neutral-600">
+                    {file.name} · {formatBytes(file.size)}
+                  </p>
+                ) : null}
+                <Button
+                  className="w-full"
+                  type="button"
+                  disabled={!postId || !file || uploading}
+                  onClick={() => void uploadMedia()}
+                >
                   <Upload className="mr-2 size-4" aria-hidden="true" />
                   {uploading ? t('uploading') : t('uploadAction')}
                 </Button>
@@ -410,10 +434,14 @@ export function ContentMediaWorkspace() {
         <div className="space-y-3" aria-live="polite" aria-busy={loadingAssets}>
           {loadingAssets ? <p className="text-sm text-neutral-500">{t('loadingMedia')}</p> : null}
           {!loadingAssets && postId && assets.length === 0 ? (
-            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">{t('emptyMedia')}</div>
+            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">
+              {t('emptyMedia')}
+            </div>
           ) : null}
           {!postId ? (
-            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">{t('selectPost')}</div>
+            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">
+              {t('selectPost')}
+            </div>
           ) : null}
           {assets.map((asset) => (
             <article key={asset.id} className="rounded-2xl border bg-white p-5">
@@ -424,7 +452,9 @@ export function ContentMediaWorkspace() {
                   <p className="mt-1 text-sm text-neutral-500">
                     {t(`kind.${asset.kind}`)} · {formatBytes(asset.sizeBytes)}
                   </p>
-                  {asset.altText ? <p className="mt-2 text-sm leading-6 text-neutral-600">{asset.altText}</p> : null}
+                  {asset.altText ? (
+                    <p className="mt-2 text-sm leading-6 text-neutral-600">{asset.altText}</p>
+                  ) : null}
                 </div>
               </div>
             </article>

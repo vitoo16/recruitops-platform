@@ -1,10 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  CreatePostInput,
-  Post,
-  PostListQuery,
-  PostListResponse,
-} from '@recruitops/contracts';
+import type { CreatePostInput, Post, PostListQuery, PostListResponse } from '@recruitops/contracts';
 import type { Post as DatabasePost } from '@recruitops/database';
 import { DatabaseService } from '../database/database.service.js';
 
