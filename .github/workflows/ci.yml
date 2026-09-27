@@ -33,10 +33,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Format check
-        run: |
-          pnpm exec prettier --write apps/api/src/meta-connections/meta-connections.service.ts apps/api/src/meta-connections/meta-connections.repository.test.ts
-          git diff -- apps/api/src/meta-connections/meta-connections.service.ts apps/api/src/meta-connections/meta-connections.repository.test.ts
-          test -z "$(git status --short apps/api/src/meta-connections/meta-connections.service.ts apps/api/src/meta-connections/meta-connections.repository.test.ts)"
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
