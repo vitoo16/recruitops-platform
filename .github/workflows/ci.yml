@@ -32,12 +32,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Diagnose Meta formatter
-        run: |
-          pnpm exec prettier --write apps/api/src/meta-connections/meta-connections.service.ts
-          git diff -- apps/api/src/meta-connections/meta-connections.service.ts
-          test -z "$(git status --short apps/api/src/meta-connections/meta-connections.service.ts)"
-
       - name: Format check
         run: pnpm format:check
 
