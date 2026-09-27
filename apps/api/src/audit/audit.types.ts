@@ -1,7 +1,4 @@
-export type SecurityAuditEventType =
-  | 'AUTHENTICATION_SUCCESS'
-  | 'AUTHENTICATION_FAILURE'
-  | 'AUTHORIZATION_DENIED';
+export type SecurityAuditEventType = 'AUTHENTICATION_SUCCESS' | 'AUTHENTICATION_FAILURE' | 'AUTHORIZATION_DENIED';
 
 export type SecurityAuditOutcome = 'SUCCESS' | 'DENIED' | 'FAILURE';
 
