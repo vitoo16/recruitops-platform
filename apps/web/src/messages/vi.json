@@ -116,5 +116,31 @@
       "WORKED_30_DAYS": "Đã làm đủ 30 ngày",
       "WITHDRAWN": "Đã rút"
     }
+  },
+  "candidateCv": {
+    "eyebrow": "Tệp ứng viên riêng tư",
+    "title": "Khu vực quản lý CV ứng viên",
+    "description": "Tải CV đã được kiểm tra lên vùng lưu trữ riêng tư, đăng ký metadata với RecruitOps và xem các tài liệu đã gắn cho ứng viên.",
+    "candidate": "Ứng viên",
+    "chooseCandidate": "Chọn ứng viên",
+    "file": "Tệp CV",
+    "fileHint": "Chỉ PDF, DOC hoặc DOCX, tối đa 10 MB. Tệp luôn được lưu ở chế độ riêng tư.",
+    "uploadAction": "Tải CV lên",
+    "uploading": "Đang tải lên...",
+    "loading": "Đang tải danh sách tài liệu...",
+    "empty": "Ứng viên này chưa có CV nào được đăng ký.",
+    "refresh": "Tải lại tài liệu",
+    "download": "Mở bản riêng tư",
+    "otherOwner": "Tệp này do recruiter khác tải lên. Tải xuống chéo recruiter vẫn cần luồng signed download được server cấp quyền.",
+    "loadFailed": "Không thể tải tài liệu của ứng viên.",
+    "uploadFailed": "Không thể tải lên và đăng ký CV. Vui lòng thử lại.",
+    "invalidFile": "Hãy chọn một tệp CV hợp lệ.",
+    "invalidFileType": "Chỉ chấp nhận CV dạng PDF, DOC và DOCX.",
+    "forbidden": "Tài khoản hiện tại không có quyền truy cập metadata CV ứng viên.",
+    "downloadOwnershipBoundary": "Phiên trình duyệt này không thể tạo signed URL cho tệp do recruiter khác sở hữu.",
+    "storageUnavailable": "Private storage chưa được cấu hình cho môi trường này.",
+    "viewerRestricted": "Tài khoản VIEWER không được truy cập metadata CV vì đây là dữ liệu nhạy cảm của ứng viên.",
+    "signInRequired": "Đăng nhập để quản lý CV ứng viên.",
+    "missingApiConfig": "API chưa được cấu hình cho frontend này."
   }
 }
