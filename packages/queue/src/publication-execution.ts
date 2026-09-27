@@ -10,6 +10,7 @@ import {
   type SocialPostPayload,
   type SocialPublisher,
   type ValidationIssue,
+  type ValidationResult,
 } from '@recruitops/contracts';
 import type { PublicationQueueJob } from './publication-queue.js';
 
@@ -102,6 +103,33 @@ export function createPublicationExecutionHandler(input: {
   const retryPolicy = input.retryPolicy ?? defaultPublicationRetryPolicy;
   const now = input.now ?? (() => new Date());
 
+  async function handleExecutionFailure(
+    snapshot: PublicationExecutionSnapshot,
+    error: unknown,
+  ): Promise<PublicationExecutionOutcome> {
+    const failure = input.errors.classify(error);
+    const retryCount = snapshot.retryCount + 1;
+
+    if (shouldRetryPublication(retryCount, failure.retryable, retryPolicy)) {
+      const delayMs = calculateRetryDelayMs(retryCount, retryPolicy);
+      const nextRetryAt = new Date(now().getTime() + delayMs);
+      await input.store.markRetryWaiting(snapshot.publicationId, {
+        retryCount,
+        nextRetryAt,
+        errorCode: failure.code,
+        errorMessage: failure.message,
+      });
+      throw new PublicationRetryScheduledError(failure.code, nextRetryAt);
+    }
+
+    await input.store.markFailed(snapshot.publicationId, {
+      retryCount,
+      errorCode: failure.code,
+      errorMessage: failure.message,
+    });
+    return { outcome: 'FAILED', publicationId: snapshot.publicationId };
+  }
+
   return async function execute(job: PublicationQueueJob): Promise<PublicationExecutionOutcome> {
     const snapshot = await input.store.claimForPublishing(job.publicationId, job.idempotencyKey);
     if (!snapshot) {
@@ -115,13 +143,25 @@ export function createPublicationExecutionHandler(input: {
       throw new Error('PUBLICATION_EXECUTION_CLAIM_INTEGRITY_MISMATCH');
     }
 
-    const publisher = await input.publishers.resolve(snapshot.platform);
+    let publisher: SocialPublisher;
+    try {
+      publisher = await input.publishers.resolve(snapshot.platform);
+    } catch (error) {
+      return handleExecutionFailure(snapshot, error);
+    }
+
     if (publisher.platform !== snapshot.platform) {
-      throw new Error('PUBLICATION_PUBLISHER_PLATFORM_MISMATCH');
+      return handleExecutionFailure(snapshot, new Error('PUBLICATION_PUBLISHER_PLATFORM_MISMATCH'));
     }
 
     const command = buildCommand(snapshot);
-    const validation = await publisher.validate(command);
+    let validation: ValidationResult;
+    try {
+      validation = await publisher.validate(command);
+    } catch (error) {
+      return handleExecutionFailure(snapshot, error);
+    }
+
     if (!validation.valid) {
       const failure = validationFailure(validation.issues);
       const retryCount = snapshot.retryCount + 1;
@@ -133,37 +173,19 @@ export function createPublicationExecutionHandler(input: {
       return { outcome: 'FAILED', publicationId: snapshot.publicationId };
     }
 
+    let result: PublishResult;
     try {
-      const result = await publisher.publish(command);
-      if (result.status === 'PUBLISHED') {
-        await input.store.markPublished(snapshot.publicationId, result, now());
-        return { outcome: 'PUBLISHED', publicationId: snapshot.publicationId };
-      }
-
-      await input.store.markProcessing(snapshot.publicationId, result);
-      return { outcome: 'PROCESSING', publicationId: snapshot.publicationId };
+      result = await publisher.publish(command);
     } catch (error) {
-      const failure = input.errors.classify(error);
-      const retryCount = snapshot.retryCount + 1;
-
-      if (shouldRetryPublication(retryCount, failure.retryable, retryPolicy)) {
-        const delayMs = calculateRetryDelayMs(retryCount, retryPolicy);
-        const nextRetryAt = new Date(now().getTime() + delayMs);
-        await input.store.markRetryWaiting(snapshot.publicationId, {
-          retryCount,
-          nextRetryAt,
-          errorCode: failure.code,
-          errorMessage: failure.message,
-        });
-        throw new PublicationRetryScheduledError(failure.code, nextRetryAt);
-      }
-
-      await input.store.markFailed(snapshot.publicationId, {
-        retryCount,
-        errorCode: failure.code,
-        errorMessage: failure.message,
-      });
-      return { outcome: 'FAILED', publicationId: snapshot.publicationId };
+      return handleExecutionFailure(snapshot, error);
     }
+
+    if (result.status === 'PUBLISHED') {
+      await input.store.markPublished(snapshot.publicationId, result, now());
+      return { outcome: 'PUBLISHED', publicationId: snapshot.publicationId };
+    }
+
+    await input.store.markProcessing(snapshot.publicationId, result);
+    return { outcome: 'PROCESSING', publicationId: snapshot.publicationId };
   };
 }
