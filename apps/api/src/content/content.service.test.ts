@@ -40,11 +40,11 @@ describe('ContentService', () => {
     });
   });
 
-  it('rejects invalid pagination before repository access', async () => {
+  it('rejects invalid pagination before repository access', () => {
     const repository = { list: vi.fn() } as unknown as ContentRepository;
     const service = new ContentService(repository);
 
-    await expect(service.listPosts({ page: '0' })).rejects.toBeTruthy();
+    expect(() => service.listPosts({ page: '0' })).toThrow();
     expect(repository.list).not.toHaveBeenCalled();
   });
 });
