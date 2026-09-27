@@ -28,17 +28,15 @@ const candidateWriteShape = {
   phone: phoneSchema,
 };
 
-export const CreateCandidateSchema = z
-  .object(candidateWriteShape)
-  .superRefine((value, context) => {
-    if (!value.email && !value.phone) {
-      context.addIssue({
-        code: 'custom',
-        path: ['email'],
-        message: 'At least one contact method (email or phone) is required',
-      });
-    }
-  });
+export const CreateCandidateSchema = z.object(candidateWriteShape).superRefine((value, context) => {
+  if (!value.email && !value.phone) {
+    context.addIssue({
+      code: 'custom',
+      path: ['email'],
+      message: 'At least one contact method (email or phone) is required',
+    });
+  }
+});
 
 export const UpdateCandidateSchema = z
   .object({
