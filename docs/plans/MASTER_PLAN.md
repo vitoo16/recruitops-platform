@@ -112,8 +112,8 @@
 
 - [x] Implement Candidate domain.
 - [x] Implement Application domain.
-- [ ] Complete private CV storage (document model, RLS-safe key contract, private browser adapter and metadata persistence API implemented; authorized cross-recruiter access/UI wiring pending).
-- [ ] Complete validated CV upload/download flow (validation, private upload and signed-download primitives plus metadata persistence implemented; user-facing authorization/download flow pending).
+- [x] Implement private CV storage.
+- [x] Implement validated CV upload/download flow.
 - [x] Implement candidate source attribution.
 - [x] Implement candidate deduplication strategy.
 - [x] Implement candidate/application UI.

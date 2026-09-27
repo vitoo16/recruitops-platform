@@ -62,6 +62,7 @@ export function CandidateCvWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const configuredApiUrl = useMemo(apiUrl, []);
   const canManage = role === 'OWNER' || role === 'ADMIN' || role === 'RECRUITER';
+  const canAdministerPrivateFiles = role === 'OWNER' || role === 'ADMIN';
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -206,7 +207,7 @@ export function CandidateCvWorkspace() {
     }
   }
 
-  async function downloadOwnDocument(item: CandidateDocument) {
+  async function downloadDocument(item: CandidateDocument) {
     const supabase = getSupabaseBrowserClient();
     if (!supabase || !session) return;
     setError(null);
@@ -327,6 +328,7 @@ export function CandidateCvWorkspace() {
           ) : null}
           {documents.map((item) => {
             const ownedByCurrentUser = item.storageKey.startsWith(`${session.user.id}/`);
+            const canDownload = ownedByCurrentUser || canAdministerPrivateFiles;
             return (
               <article key={item.id} className="rounded-2xl border bg-white p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -339,11 +341,11 @@ export function CandidateCvWorkspace() {
                       {item.mimeType} · {formatBytes(item.sizeBytes)}
                     </p>
                   </div>
-                  {ownedByCurrentUser ? (
+                  {canDownload ? (
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => void downloadOwnDocument(item)}
+                      onClick={() => void downloadDocument(item)}
                     >
                       <Download className="mr-2 size-4" aria-hidden="true" />
                       {t('download')}
