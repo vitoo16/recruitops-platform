@@ -23,24 +23,24 @@ jobs:
         with:
           node-version-file: .node-version
       - run: pnpm install --no-frozen-lockfile
-      - name: Generate initial migration SQL
+      - name: Generate hosted schema migration SQL
         env:
           # Prisma config requires DATABASE_URL at module load. migrate diff --from-empty does not connect.
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: |
-          migration_dir='packages/database/prisma/migrations/20260927083000_initial_recruitops'
-          mkdir -p "$migration_dir"
-          pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > "$migration_dir/migration.sql"
-          printf 'provider = "postgresql"\n' > packages/database/prisma/migrations/migration_lock.toml
-          cat "$migration_dir/migration.sql"
-      - name: Commit generated migration
+          migration_path='infra/supabase/migrations/20260927_initial_recruitops_schema.sql'
+          mkdir -p infra/supabase/migrations
+          pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > "$migration_path"
+          rm -rf packages/database/prisma/migrations
+          cat "$migration_path"
+      - name: Commit generated hosted migration
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add packages/database/prisma/migrations
+          git add -A infra/supabase/migrations packages/database/prisma/migrations
           if git diff --cached --quiet; then
-            echo 'Migration already matches the Prisma schema.'
+            echo 'Hosted migration already matches the Prisma schema.'
             exit 0
           fi
-          git commit -m 'chore: add initial Prisma migration'
+          git commit -m 'chore: add initial Supabase schema migration'
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
