@@ -207,7 +207,7 @@ describe('InstagramProfessionalPublisher', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(response({ id: '18270815569115548' }))
-      .mockResolvedValue(response({ status_code: 'IN_PROGRESS' }));
+      .mockImplementation(() => Promise.resolve(response({ status_code: 'IN_PROGRESS' })));
     const publisher = new InstagramProfessionalPublisher(
       {
         graphApiVersion: 'v26.0',
