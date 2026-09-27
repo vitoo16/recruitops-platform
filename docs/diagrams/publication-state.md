@@ -2,15 +2,25 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Draft
-    Draft --> Scheduled
-    Draft --> Publishing
+    [*] --> Pending
+    Pending --> Scheduled
+    Pending --> Publishing
+    Pending --> Cancelled
     Scheduled --> Publishing
+    Scheduled --> Cancelled
+    Publishing --> Processing
     Publishing --> Published
     Publishing --> RetryWaiting
-    RetryWaiting --> Publishing
     Publishing --> Failed
-    Failed --> Publishing: Manual retry
-    Draft --> Cancelled
-    Scheduled --> Cancelled
+    Processing --> Published
+    Processing --> RetryWaiting
+    Processing --> Failed
+    RetryWaiting --> Publishing
+    RetryWaiting --> Cancelled
+    Failed --> Publishing: manual retry
+    Failed --> Cancelled
+    Published --> [*]
+    Cancelled --> [*]
 ```
+
+The shared contract in `@recruitops/contracts` is the executable source for allowed state transitions. This diagram documents that contract and must change in the same PR if transition rules change.
