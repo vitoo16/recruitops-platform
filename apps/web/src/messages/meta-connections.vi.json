@@ -2,6 +2,41 @@
   "eyebrow": "Kết nối tài khoản mạng xã hội",
   "title": "Kết nối Facebook Page và Instagram Professional",
   "description": "RecruitOps sử dụng luồng ủy quyền chính thức của Meta. Token của nền tảng luôn ở phía server và chỉ những tài khoản bạn chủ động chọn mới được đưa vào danh sách điểm đăng.",
+  "healthTitle": "Tình trạng kết nối Meta",
+  "healthStatusLabel": "Trạng thái",
+  "refreshHealth": "Kiểm tra lại",
+  "loadingHealth": "Đang kiểm tra tình trạng kết nối Meta...",
+  "healthLoadFailed": "RecruitOps không thể tải tình trạng integration. Hãy thử kiểm tra lại.",
+  "runtimeNotConfigured": "Cấu hình runtime cho Meta OAuth hoặc mã hóa credential chưa đầy đủ. Chức năng kết nối tạm thời bị khóa cho đến khi server được cấu hình xong.",
+  "noConnectedAccounts": "Chưa có tài khoản Meta nào được kết nối.",
+  "reconnect": "Kết nối lại",
+  "credentialExpiry": "Credential hết hạn: {value}",
+  "healthStatus": {
+    "NOT_CONFIGURED": "Runtime chưa cấu hình đủ",
+    "DISCONNECTED": "Sẵn sàng kết nối",
+    "HEALTHY": "Đã kết nối và hoạt động tốt",
+    "RECONNECT_REQUIRED": "Cần kết nối lại"
+  },
+  "accountPlatform": {
+    "FACEBOOK": "Facebook",
+    "INSTAGRAM": "Instagram",
+    "THREADS": "Threads",
+    "LINKEDIN": "LinkedIn",
+    "TIKTOK": "TikTok",
+    "ZALO": "Zalo"
+  },
+  "accountStatus": {
+    "CONNECTED": "Đã kết nối",
+    "EXPIRED": "Đã hết hạn",
+    "REVOKED": "Đã thu hồi quyền",
+    "ERROR": "Có lỗi"
+  },
+  "reconnectReason": {
+    "MISSING_CREDENTIAL": "Credential lưu trữ không còn tồn tại. Hãy cấp quyền lại cho tài khoản này trước khi đăng bài.",
+    "EXPIRED": "Credential đã hết hạn. Hãy cấp quyền lại cho tài khoản này trước khi đăng bài.",
+    "REVOKED": "Quyền truy cập từ nền tảng đã bị thu hồi. Hãy cấp quyền lại để khôi phục kết nối.",
+    "ERROR": "Tài khoản đang ở trạng thái lỗi integration. Hãy cấp quyền lại để khôi phục kết nối sạch."
+  },
   "targetsLegend": "Chọn khả năng Meta cần cấp quyền",
   "facebook": "Facebook Page",
   "facebookHint": "Tìm các Page bạn quản lý và chỉ kết nối những Page được chọn thành điểm đăng qua API.",
