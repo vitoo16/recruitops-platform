@@ -7,7 +7,7 @@ services:
     staticPublishPath: ./apps/web/out
     envVars:
       - key: SKIP_INSTALL_DEPS
-        value: "true"
+        value: 'true'
       - key: NEXT_PUBLIC_API_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_URL
