@@ -318,7 +318,12 @@ export function MetaConnectionPanel() {
             <Activity className="size-4" aria-hidden="true" />
             <h3 className="font-semibold">{t('healthTitle')}</h3>
           </div>
-          <Button type="button" variant="outline" onClick={() => void loadHealth()} disabled={loadingHealth}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void loadHealth()}
+            disabled={loadingHealth}
+          >
             <RefreshCw
               className="mr-2 size-4 data-[loading=true]:animate-spin motion-reduce:animate-none"
               data-loading={loadingHealth}
@@ -328,7 +333,9 @@ export function MetaConnectionPanel() {
           </Button>
         </div>
 
-        {loadingHealth && !health ? <p className="text-sm text-neutral-500">{t('loadingHealth')}</p> : null}
+        {loadingHealth && !health ? (
+          <p className="text-sm text-neutral-500">{t('loadingHealth')}</p>
+        ) : null}
 
         {health ? (
           <div className="space-y-3">
@@ -351,7 +358,8 @@ export function MetaConnectionPanel() {
                       <div className="min-w-0">
                         <p className="truncate font-medium">{account.displayName}</p>
                         <p className="mt-1 text-xs text-neutral-500">
-                          {t(`accountPlatform.${account.platform}`)} · {t(`accountStatus.${account.status}`)}
+                          {t(`accountPlatform.${account.platform}`)} ·{' '}
+                          {t(`accountStatus.${account.status}`)}
                         </p>
                       </div>
                       {account.requiresReconnect && isMetaTarget(account.platform) ? (
@@ -362,7 +370,9 @@ export function MetaConnectionPanel() {
                           onClick={() => void beginAuthorization([account.platform])}
                         >
                           <RotateCcw className="mr-2 size-4" aria-hidden="true" />
-                          {redirectingTarget === account.platform ? t('redirecting') : t('reconnect')}
+                          {redirectingTarget === account.platform
+                            ? t('redirecting')
+                            : t('reconnect')}
                         </Button>
                       ) : null}
                     </div>
