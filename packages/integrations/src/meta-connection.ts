@@ -92,7 +92,9 @@ export function buildMetaConnectionScopes(
   const scopes = new Set<string>();
   for (const target of targets) {
     const required =
-      target === 'FACEBOOK' ? facebookPageConnectionScopes : instagramFacebookLoginConnectionScopes;
+      target === 'FACEBOOK'
+        ? facebookPageConnectionScopes
+        : instagramFacebookLoginConnectionScopes;
     for (const scope of required) scopes.add(scope);
   }
   if (scopes.size === 0) throw new MetaConnectionError('META_CONNECTION_TARGET_REQUIRED');
@@ -206,11 +208,16 @@ export class MetaConnectionProvider {
     const url = new URL(
       `https://graph.facebook.com/${this.config.graphApiVersion}/oauth/access_token`,
     );
-    const payload = await requestJson<unknown>(this.fetchFn, url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body,
-    }, 'TOKEN_EXCHANGE');
+    const payload = await requestJson<unknown>(
+      this.fetchFn,
+      url,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body,
+      },
+      'TOKEN_EXCHANGE',
+    );
     return parseAccessToken(payload, 'TOKEN_EXCHANGE');
   }
 
@@ -224,11 +231,16 @@ export class MetaConnectionProvider {
     const url = new URL(
       `https://graph.facebook.com/${this.config.graphApiVersion}/oauth/access_token`,
     );
-    const payload = await requestJson<unknown>(this.fetchFn, url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body,
-    }, 'LONG_LIVED_TOKEN_EXCHANGE');
+    const payload = await requestJson<unknown>(
+      this.fetchFn,
+      url,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body,
+      },
+      'LONG_LIVED_TOKEN_EXCHANGE',
+    );
     return parseAccessToken(payload, 'LONG_LIVED_TOKEN_EXCHANGE');
   }
 
@@ -238,7 +250,9 @@ export class MetaConnectionProvider {
     let after: string | undefined;
 
     for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
-      const url = new URL(`https://graph.facebook.com/${this.config.graphApiVersion}/me/accounts`);
+      const url = new URL(
+        `https://graph.facebook.com/${this.config.graphApiVersion}/me/accounts`,
+      );
       url.searchParams.set('fields', 'id,name,access_token,tasks');
       url.searchParams.set('limit', '100');
       if (after) url.searchParams.set('after', after);
@@ -246,9 +260,14 @@ export class MetaConnectionProvider {
       const payload = await requestJson<{
         data?: unknown[];
         paging?: { cursors?: { after?: string } };
-      }>(this.fetchFn, url, {
-        headers: { authorization: `Bearer ${token}` },
-      }, 'PAGE_DISCOVERY');
+      }>(
+        this.fetchFn,
+        url,
+        {
+          headers: { authorization: `Bearer ${token}` },
+        },
+        'PAGE_DISCOVERY',
+      );
 
       if (!Array.isArray(payload.data)) {
         throw new MetaConnectionError('META_PAGE_DISCOVERY_RESPONSE_INVALID');
@@ -292,9 +311,14 @@ export class MetaConnectionProvider {
     const token = requireNonEmpty('ACCESS_TOKEN', pageAccessToken);
     const url = new URL(`https://graph.facebook.com/${this.config.graphApiVersion}/${id}`);
     url.searchParams.set('fields', 'instagram_business_account{id,username,name}');
-    const payload = await requestJson<Record<string, unknown>>(this.fetchFn, url, {
-      headers: { authorization: `Bearer ${token}` },
-    }, 'INSTAGRAM_DISCOVERY');
+    const payload = await requestJson<Record<string, unknown>>(
+      this.fetchFn,
+      url,
+      {
+        headers: { authorization: `Bearer ${token}` },
+      },
+      'INSTAGRAM_DISCOVERY',
+    );
 
     const raw = payload.instagram_business_account;
     if (raw === undefined || raw === null) return null;
