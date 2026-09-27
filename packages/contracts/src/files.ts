@@ -6,6 +6,7 @@ export const mediaAssetKindValues = ['IMAGE', 'VIDEO', 'DOCUMENT'] as const;
 export const candidateDocumentKindValues = ['CV', 'OTHER'] as const;
 export const MediaAssetKindSchema = z.enum(mediaAssetKindValues);
 export const CandidateDocumentKindSchema = z.enum(candidateDocumentKindValues);
+export const PrivateFileEntityIdSchema = z.uuid();
 
 const storageKeySchema = z
   .string()
