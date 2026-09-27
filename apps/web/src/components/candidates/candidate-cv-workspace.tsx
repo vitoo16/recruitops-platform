@@ -14,11 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { listCandidates } from '@/lib/candidates/api';
-import {
-  FilesApiError,
-  listCandidateDocuments,
-  registerCandidateDocument,
-} from '@/lib/files/api';
+import { FilesApiError, listCandidateDocuments, registerCandidateDocument } from '@/lib/files/api';
 import {
   PrivateFileAccessError,
   createPrivateDownloadUrl,
@@ -188,18 +184,18 @@ export function CandidateCvWorkspace() {
         mimeType: file.type,
         sizeBytes: file.size,
       });
-      await registerCandidateDocument(
-        configuredApiUrl,
-        session.access_token,
-        registration,
-      );
+      await registerCandidateDocument(configuredApiUrl, session.access_token, registration);
       setFile(null);
       const input = document.getElementById('candidate-cv-file') as HTMLInputElement | null;
       if (input) input.value = '';
       await loadDocuments(candidateId);
     } catch (caught) {
       if (caught instanceof PrivateFileAccessError) {
-        setError(caught.message.includes('MIME_TYPE_NOT_ALLOWED') ? t('invalidFileType') : t('uploadFailed'));
+        setError(
+          caught.message.includes('MIME_TYPE_NOT_ALLOWED')
+            ? t('invalidFileType')
+            : t('uploadFailed'),
+        );
       } else if (caught instanceof FilesApiError && caught.status === 403) {
         setError(t('forbidden'));
       } else {
@@ -265,7 +261,10 @@ export function CandidateCvWorkspace() {
       </div>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -322,7 +321,9 @@ export function CandidateCvWorkspace() {
         <div className="space-y-3" aria-live="polite" aria-busy={loading}>
           {loading ? <p className="text-sm text-neutral-500">{t('loading')}</p> : null}
           {!loading && documents.length === 0 ? (
-            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">{t('empty')}</div>
+            <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-500">
+              {t('empty')}
+            </div>
           ) : null}
           {documents.map((item) => {
             const ownedByCurrentUser = item.storageKey.startsWith(`${session.user.id}/`);
@@ -339,7 +340,11 @@ export function CandidateCvWorkspace() {
                     </p>
                   </div>
                   {ownedByCurrentUser ? (
-                    <Button type="button" variant="outline" onClick={() => void downloadOwnDocument(item)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void downloadOwnDocument(item)}
+                    >
                       <Download className="mr-2 size-4" aria-hidden="true" />
                       {t('download')}
                     </Button>
