@@ -80,10 +80,15 @@ export async function startMetaConnection(
   accessToken: string,
   targets: readonly MetaConnectionTarget[],
 ) {
-  return requestJson(MetaStartResponseSchema, `${apiUrl}/integrations/meta/oauth/start`, accessToken, {
-    method: 'POST',
-    body: JSON.stringify({ targets }),
-  });
+  return requestJson(
+    MetaStartResponseSchema,
+    `${apiUrl}/integrations/meta/oauth/start`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify({ targets }),
+    },
+  );
 }
 
 export async function getMetaSelection(
