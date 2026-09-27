@@ -6,6 +6,8 @@ services:
     buildCommand: pnpm install --no-frozen-lockfile && pnpm --filter @recruitops/web build
     staticPublishPath: ./apps/web/out
     envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
       - key: NEXT_PUBLIC_API_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_URL
