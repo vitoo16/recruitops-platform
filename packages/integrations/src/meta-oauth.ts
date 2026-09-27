@@ -133,7 +133,7 @@ export class MetaOAuthClient {
     });
     const record = asRecord(body);
     const accessToken = record?.access_token;
-    if (typeof accessToken !== 'string' || accessToken.length === 0) {
+    if (!record || typeof accessToken !== 'string' || accessToken.length === 0) {
       throw new MetaProviderError('META_TOKEN_RESPONSE_INVALID');
     }
 
@@ -241,9 +241,10 @@ export class MetaOAuthClient {
 
     const body = await parseJson(response);
     if (!response.ok) {
+      const code = providerErrorCode(body);
       throw new MetaProviderError('META_PROVIDER_REQUEST_FAILED', {
         httpStatus: response.status,
-        providerCode: providerErrorCode(body),
+        ...(code !== undefined ? { providerCode: code } : {}),
       });
     }
     return body;
