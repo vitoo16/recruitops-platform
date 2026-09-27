@@ -31,7 +31,9 @@ export const PostVariantSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
-const allowedPostTransitions: Readonly<Record<(typeof postStatusValues)[number], readonly (typeof postStatusValues)[number][]>> = {
+const allowedPostTransitions: Readonly<
+  Record<(typeof postStatusValues)[number], readonly (typeof postStatusValues)[number][]>
+> = {
   DRAFT: ['READY', 'ARCHIVED'],
   READY: ['DRAFT', 'ARCHIVED'],
   ARCHIVED: [],
