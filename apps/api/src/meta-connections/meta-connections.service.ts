@@ -56,6 +56,8 @@ const MetaOAuthCallbackSchema = z
     }
   });
 
+const MetaSelectionLookupSchema = z.object({ connectionSessionId: z.uuid() }).strict();
+
 const FacebookSelectionSchema = z
   .object({
     platform: z.literal('FACEBOOK'),
@@ -201,6 +203,27 @@ export class MetaConnectionsService {
     } catch (error) {
       this.rethrowProviderError(error);
     }
+  }
+
+  async getSelection(userId: string, input: unknown) {
+    const request = parseRequest(MetaSelectionLookupSchema, input);
+    const selectionSession = await this.sessions.getSelectionForUser(
+      request.connectionSessionId,
+      userId,
+    );
+    if (!selectionSession) {
+      throw new BadRequestException({
+        code: 'META_OAUTH_SELECTION_INVALID_OR_EXPIRED',
+        message: 'Meta account-selection session is invalid or expired',
+      });
+    }
+
+    return {
+      connectionSessionId: request.connectionSessionId,
+      expiresAt: selectionSession.expiresAt,
+      targets: selectionSession.targets,
+      accounts: selectionSession.accounts,
+    };
   }
 
   async select(userId: string, input: unknown) {

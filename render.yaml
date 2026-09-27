@@ -69,6 +69,8 @@ services:
         sync: false
       - key: META_REDIRECT_URI
         sync: false
+      - key: META_FRONTEND_REDIRECT_URI
+        sync: false
       - key: LINKEDIN_CLIENT_ID
         sync: false
       - key: LINKEDIN_CLIENT_SECRET
