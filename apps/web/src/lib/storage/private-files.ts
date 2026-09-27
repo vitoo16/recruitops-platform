@@ -16,7 +16,9 @@ export class PrivateFileAccessError extends Error {
   }
 }
 
-async function requireAuthenticatedUserId(client: SupabaseClient): Promise<string> {
+async function requireAuthenticatedUserId(
+  client: SupabaseClient,
+): Promise<string> {
   const { data, error } = await client.auth.getUser();
   if (error || !data.user) {
     throw new PrivateFileAccessError('AUTHENTICATION_REQUIRED');
@@ -41,15 +43,20 @@ export async function uploadPrivateFile(input: {
     throw new PrivateFileAccessError(validation.issues.join(','));
   }
 
-  if (input.file.size !== input.intent.sizeBytes || input.file.type !== input.intent.mimeType) {
+  if (
+    input.file.size !== input.intent.sizeBytes ||
+    input.file.type !== input.intent.mimeType
+  ) {
     throw new PrivateFileAccessError('FILE_METADATA_MISMATCH');
   }
 
   const objectKey = buildPrivateObjectKey(input.intent);
-  const { error } = await input.client.storage.from(PRIVATE_STORAGE_BUCKET).upload(objectKey, input.file, {
-    contentType: input.intent.mimeType,
-    upsert: false,
-  });
+  const { error } = await input.client.storage
+    .from(PRIVATE_STORAGE_BUCKET)
+    .upload(objectKey, input.file, {
+      contentType: input.intent.mimeType,
+      upsert: false,
+    });
 
   if (error) {
     throw new PrivateFileAccessError(`UPLOAD_FAILED:${error.message}`);
@@ -68,7 +75,11 @@ export async function createPrivateDownloadUrl(input: {
     throw new PrivateFileAccessError('OBJECT_NOT_OWNED_BY_USER');
   }
 
-  if (!Number.isInteger(input.expiresInSeconds) || input.expiresInSeconds < 1 || input.expiresInSeconds > 900) {
+  if (
+    !Number.isInteger(input.expiresInSeconds) ||
+    input.expiresInSeconds < 1 ||
+    input.expiresInSeconds > 900
+  ) {
     throw new PrivateFileAccessError('INVALID_SIGNED_URL_TTL');
   }
 
@@ -77,7 +88,9 @@ export async function createPrivateDownloadUrl(input: {
     .createSignedUrl(input.objectKey, input.expiresInSeconds);
 
   if (error || !data.signedUrl) {
-    throw new PrivateFileAccessError(`SIGNED_URL_FAILED:${error?.message ?? 'UNKNOWN'}`);
+    throw new PrivateFileAccessError(
+      `SIGNED_URL_FAILED:${error?.message ?? 'UNKNOWN'}`,
+    );
   }
 
   return data.signedUrl;
