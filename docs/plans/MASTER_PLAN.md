@@ -94,7 +94,7 @@
 - [x] Implement BullMQ scheduling primitive (delayed enqueue, duplicate-safe job identity, bounded retry/backoff; provider execution remains separately gated).
 - [x] Implement idempotency keys.
 - [x] Implement retry/backoff/terminal-failure behavior.
-- [ ] Implement rate-limit-aware worker boundaries.
+- [x] Implement rate-limit-aware worker boundary (validated queue payloads, configurable concurrency and BullMQ limiter; provider handlers remain separately gated).
 - [ ] Implement Facebook Page adapter for currently supported official capabilities.
 - [ ] Implement Instagram adapter for currently supported official capabilities.
 - [ ] Implement Threads adapter for currently supported official capabilities.
