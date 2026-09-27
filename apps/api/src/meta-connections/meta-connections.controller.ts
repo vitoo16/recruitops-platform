@@ -24,4 +24,12 @@ export class MetaConnectionsController {
   callback(@Query() query: Record<string, unknown>) {
     return this.metaConnections.callback(query);
   }
+
+  @Post('select')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  @Header('Cache-Control', 'no-store')
+  select(@CurrentUser() user: AuthenticatedPrincipal, @Body() body: unknown) {
+    return this.metaConnections.select(user.id, body);
+  }
 }

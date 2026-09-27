@@ -2,11 +2,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MetaConnectionError } from '@recruitops/integrations';
 import type { OAuthCredentialCipher } from '../social-credentials/oauth-credential-cipher.js';
 import type { MetaConnectionClientFactory } from './meta-connection-client.factory.js';
+import type { MetaConnectionsRepository } from './meta-connections.repository.js';
 import { MetaConnectionsService } from './meta-connections.service.js';
 import type { MetaOAuthSessionStore } from './meta-oauth-session.store.js';
 
 const userId = '11111111-1111-4111-8111-111111111111';
 const validState = 's'.repeat(43);
+const connectionSessionId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+function encrypted(platform: 'FACEBOOK' | 'INSTAGRAM') {
+  return {
+    platform,
+    keyId: 'key-1',
+    algorithm: 'aes-256-gcm' as const,
+    iv: Uint8Array.from([1]),
+    authTag: Uint8Array.from([2]),
+    ciphertext: Uint8Array.from([3]),
+  };
+}
 
 function createHarness() {
   const sessions = {
@@ -17,9 +30,25 @@ function createHarness() {
       createdAt: '2026-09-28T12:00:00.000Z',
     }),
     createSelection: vi.fn().mockResolvedValue({
-      connectionSessionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      connectionSessionId,
       expiresAt: '2026-09-28T12:15:00.000Z',
     }),
+    getSelectionForUser: vi.fn().mockResolvedValue({
+      userId,
+      targets: ['FACEBOOK'],
+      encryptedUserToken: encrypted('FACEBOOK'),
+      accounts: [
+        {
+          pageId: '123',
+          pageName: 'RecruitOps Page',
+          tasks: ['PROFILE_PLUS_CREATE_CONTENT'],
+          instagramProfessionalAccount: null,
+        },
+      ],
+      createdAt: '2026-09-28T12:00:00.000Z',
+      expiresAt: '2026-09-28T12:15:00.000Z',
+    }),
+    deleteSelection: vi.fn().mockResolvedValue(undefined),
   };
   const provider = {
     buildAuthorizationUrl: vi.fn().mockReturnValue('https://www.facebook.com/oauth'),
@@ -47,22 +76,34 @@ function createHarness() {
     create: vi.fn().mockReturnValue(provider),
   };
   const cipher = {
-    encrypt: vi.fn().mockReturnValue({
-      platform: 'FACEBOOK',
-      keyId: 'key-1',
-      algorithm: 'aes-256-gcm',
-      iv: Uint8Array.from([1]),
-      authTag: Uint8Array.from([2]),
-      ciphertext: Uint8Array.from([3]),
+    encrypt: vi
+      .fn()
+      .mockImplementation((platform: 'FACEBOOK' | 'INSTAGRAM') => encrypted(platform)),
+    decrypt: vi.fn().mockReturnValue({
+      accessToken: 'long-user-token',
+      tokenType: 'bearer',
+      scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
     }),
+  };
+  const repository = {
+    promote: vi.fn().mockResolvedValue([
+      {
+        socialAccountId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        destinationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+        platform: 'FACEBOOK',
+        externalAccountId: '123',
+        displayName: 'RecruitOps Page',
+      },
+    ]),
   };
   const service = new MetaConnectionsService(
     sessions as unknown as MetaOAuthSessionStore,
     cipher as unknown as OAuthCredentialCipher,
     clients as unknown as MetaConnectionClientFactory,
+    repository as unknown as MetaConnectionsRepository,
   );
 
-  return { service, sessions, provider, clients, cipher };
+  return { service, sessions, provider, clients, cipher, repository };
 }
 
 beforeEach(() => {
@@ -164,6 +205,132 @@ describe('MetaConnectionsService', () => {
       pageId: '123',
       instagramProfessionalAccount: { id: '456', username: 'recruitops' },
     });
+  });
+
+  it('promotes only the explicitly selected Facebook Page with a rediscovered Page token', async () => {
+    const { service, sessions, provider, cipher, repository } = createHarness();
+
+    const result = await service.select(userId, {
+      connectionSessionId,
+      accounts: [{ platform: 'FACEBOOK', pageId: '123' }],
+    });
+
+    expect(sessions.getSelectionForUser).toHaveBeenCalledWith(connectionSessionId, userId);
+    expect(cipher.decrypt).toHaveBeenCalledWith(encrypted('FACEBOOK'));
+    expect(provider.listManagedPages).toHaveBeenCalledWith('long-user-token');
+    expect(cipher.encrypt).toHaveBeenCalledWith(
+      'FACEBOOK',
+      expect.objectContaining({
+        accessToken: 'page-access-token',
+        scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
+      }),
+    );
+    expect(repository.promote).toHaveBeenCalledWith([
+      expect.objectContaining({
+        platform: 'FACEBOOK',
+        externalAccountId: '123',
+        destinationType: 'PAGE',
+        destinationExternalId: '123',
+      }),
+    ]);
+    expect(sessions.deleteSelection).toHaveBeenCalledWith(connectionSessionId);
+    expect(JSON.stringify(result)).not.toContain('page-access-token');
+    expect(JSON.stringify(result)).not.toContain('long-user-token');
+  });
+
+  it('promotes a selected Instagram Professional account using its linked Page token', async () => {
+    const { service, sessions, provider, cipher, repository } = createHarness();
+    sessions.getSelectionForUser.mockResolvedValue({
+      userId,
+      targets: ['INSTAGRAM'],
+      encryptedUserToken: encrypted('FACEBOOK'),
+      accounts: [
+        {
+          pageId: '123',
+          pageName: 'RecruitOps Page',
+          tasks: ['PROFILE_PLUS_CREATE_CONTENT'],
+          instagramProfessionalAccount: {
+            id: '456',
+            username: 'recruitops',
+            name: 'RecruitOps',
+          },
+        },
+      ],
+      createdAt: '2026-09-28T12:00:00.000Z',
+      expiresAt: '2026-09-28T12:15:00.000Z',
+    });
+    provider.discoverAccounts.mockResolvedValue([
+      {
+        id: '123',
+        name: 'RecruitOps Page',
+        accessToken: 'fresh-page-access-token',
+        tasks: ['PROFILE_PLUS_CREATE_CONTENT'],
+        instagramProfessionalAccount: {
+          id: '456',
+          username: 'recruitops',
+          name: 'RecruitOps',
+        },
+      },
+    ]);
+
+    await service.select(userId, {
+      connectionSessionId,
+      accounts: [{ platform: 'INSTAGRAM', pageId: '123', instagramAccountId: '456' }],
+    });
+
+    expect(provider.discoverAccounts).toHaveBeenCalledWith('long-user-token');
+    expect(cipher.encrypt).toHaveBeenCalledWith(
+      'INSTAGRAM',
+      expect.objectContaining({
+        accessToken: 'fresh-page-access-token',
+        scopes: [
+          'pages_show_list',
+          'pages_read_engagement',
+          'instagram_basic',
+          'instagram_content_publish',
+        ],
+      }),
+    );
+    expect(repository.promote).toHaveBeenCalledWith([
+      expect.objectContaining({
+        platform: 'INSTAGRAM',
+        externalAccountId: '456',
+        destinationType: 'PROFILE',
+        destinationExternalId: '456',
+      }),
+    ]);
+  });
+
+  it('rejects selections that were not discovered in the authenticated session', async () => {
+    const { service, provider, repository } = createHarness();
+
+    await expect(
+      service.select(userId, {
+        connectionSessionId,
+        accounts: [{ platform: 'FACEBOOK', pageId: '999' }],
+      }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'META_ACCOUNT_SELECTION_NOT_DISCOVERED' }),
+    });
+    expect(provider.listManagedPages).not.toHaveBeenCalled();
+    expect(repository.promote).not.toHaveBeenCalled();
+  });
+
+  it('keeps the selection session when provider promotion fails so the user can retry', async () => {
+    const { service, provider, sessions } = createHarness();
+    provider.listManagedPages.mockRejectedValue(
+      new MetaConnectionError('META_PAGE_DISCOVERY_FAILED_PROVIDER_190', 400),
+    );
+
+    await expect(
+      service.select(userId, {
+        connectionSessionId,
+        accounts: [{ platform: 'FACEBOOK', pageId: '123' }],
+      }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'META_PAGE_DISCOVERY_FAILED_PROVIDER_190' }),
+    });
+    expect(sessions.deleteSelection).not.toHaveBeenCalled();
   });
 
   it('rejects replayed, expired, or unknown state before contacting Meta', async () => {
