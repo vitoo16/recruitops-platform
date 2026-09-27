@@ -73,6 +73,26 @@ A publishable Supabase key is designed for public clients. Never place service-r
 
 The auth-enabled main commit was verified live on both Render services after CI passed.
 
+## Meta connection deployment boundary
+
+The Meta connection code expects the API service to receive these server-side values before live activation:
+
+```text
+META_CLIENT_ID=<Meta app id>
+META_CLIENT_SECRET=<secret>
+META_GRAPH_API_VERSION=v26.0
+META_REDIRECT_URI=https://recruitops-api.onrender.com/api/integrations/meta/oauth/callback
+META_FRONTEND_REDIRECT_URI=https://recruitops-frontend.onrender.com/
+OAUTH_CREDENTIAL_ACTIVE_KEY_ID=<active key id>
+OAUTH_CREDENTIAL_ENCRYPTION_KEYS=<server-only JSON keyring>
+```
+
+`META_REDIRECT_URI` is the provider callback registered with Meta. `META_FRONTEND_REDIRECT_URI` is a separate fixed browser return destination used only after the API has validated the OAuth state and completed provider discovery. The browser does not supply this URL dynamically.
+
+`render.yaml` declares the new Meta values using `sync: false`; this keeps secrets/configuration out of source control. On an already-created Render service, adding a new `sync: false` entry to the Blueprint does not automatically populate its value. Set or verify the value explicitly in the existing `recruitops-api` environment before attempting a live OAuth flow.
+
+Do not mark Meta production-active until the hosted `social_credentials` migration has also been applied, the encryption keyring is provisioned, the Meta app has the required access, and a real-provider integration/E2E pass succeeds.
+
 ## Supabase
 
 The project is provisioned in Singapore (`ap-southeast-1`).
