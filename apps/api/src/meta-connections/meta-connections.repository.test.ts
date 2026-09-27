@@ -94,9 +94,7 @@ describe('MetaConnectionsRepository', () => {
   it('updates an existing account credential and destination instead of duplicating them', async () => {
     const transaction = {
       socialAccount: {
-        findFirst: vi
-          .fn()
-          .mockResolvedValue({ id: 'social-1', credentialRef: 'credential-1' }),
+        findFirst: vi.fn().mockResolvedValue({ id: 'social-1', credentialRef: 'credential-1' }),
         create: vi.fn(),
         update: vi.fn().mockResolvedValue(undefined),
       },
