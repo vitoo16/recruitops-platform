@@ -67,12 +67,12 @@
 - [x] Implement Job management UI.
 - [x] Implement content Post domain.
 - [x] Implement PostVariant domain.
-- [ ] Complete media model/upload flow (model, safe object-key contract, private browser upload adapter and metadata persistence API implemented; user-facing media UI wiring pending).
+- [x] Complete media model/upload flow.
 - [x] Implement draft workflow.
 - [x] Implement platform preview model.
 - [x] Implement VI/EN application i18n baseline.
 - [x] Implement job/content validation tests.
-- [ ] Update ERD/API docs and diagrams.
+- [x] Update ERD/API docs and diagrams.
 
 ## Phase 4 — Destinations and social account connections
 
