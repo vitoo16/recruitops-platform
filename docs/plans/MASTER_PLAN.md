@@ -80,7 +80,7 @@
 - [x] Implement destination tagging/filtering.
 - [x] Implement SocialAccount domain.
 - [ ] Implement secure OAuth credential storage (code, tests and hosted migration definition verified; production migration execution and runtime encryption-key provisioning remain pending explicit production authorization).
-- [ ] Verify current Meta official APIs/scopes and implement supported connection flow.
+- [ ] Verify current Meta official APIs/scopes and implement supported connection flow (provider boundary, one-time OAuth state, encrypted discovery session, authenticated explicit account promotion and tests implemented; frontend account picker, production Meta/runtime configuration, hosted credential migration/key provisioning and real-provider E2E verification remain).
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
 - [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.
 - [ ] Verify current Zalo official APIs/scopes and implement supported connection flow.
