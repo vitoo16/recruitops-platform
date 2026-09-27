@@ -116,7 +116,7 @@
 - [ ] Complete validated CV upload/download flow (validation, private upload and signed-download primitives plus metadata persistence implemented; user-facing authorization/download flow pending).
 - [x] Implement candidate source attribution.
 - [x] Implement candidate deduplication strategy.
-- [ ] Implement candidate/application UI.
+- [x] Implement candidate/application UI.
 - [x] Implement recruitment lifecycle.
 - [ ] Add PII authorization tests.
 - [x] Update ERD/security docs.
