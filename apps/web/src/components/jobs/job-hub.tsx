@@ -153,7 +153,9 @@ export function JobHub() {
       form.reset();
       await load();
     } catch (caught) {
-      setError(caught instanceof JobsApiError && caught.status === 403 ? t('forbidden') : t('saveFailed'));
+      setError(
+        caught instanceof JobsApiError && caught.status === 403 ? t('forbidden') : t('saveFailed'),
+      );
     }
   }
 
@@ -161,15 +163,12 @@ export function JobHub() {
     if (!session?.access_token || !configuredApiUrl || status === job.status) return;
     setError(null);
     try {
-      const updated = await updateJobStatus(
-        configuredApiUrl,
-        session.access_token,
-        job.id,
-        status,
-      );
+      const updated = await updateJobStatus(configuredApiUrl, session.access_token, job.id, status);
       setJobs((current) => current.map((item) => (item.id === updated.id ? updated : item)));
     } catch (caught) {
-      setError(caught instanceof JobsApiError && caught.status === 403 ? t('forbidden') : t('saveFailed'));
+      setError(
+        caught instanceof JobsApiError && caught.status === 403 ? t('forbidden') : t('saveFailed'),
+      );
     }
   }
 
@@ -209,21 +208,34 @@ export function JobHub() {
           <Button type="submit" variant="outline" disabled={loading} aria-label={t('searchAction')}>
             <Search className="size-4" aria-hidden="true" />
           </Button>
-          <Button type="button" variant="outline" onClick={() => void load()} disabled={loading} aria-label={t('refresh')}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void load()}
+            disabled={loading}
+            aria-label={t('refresh')}
+          >
             <RefreshCw className="size-4" aria-hidden="true" />
           </Button>
         </form>
       </div>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.8fr]">
         {canMutate ? (
-          <form className="space-y-4 rounded-2xl border bg-white p-6" onSubmit={form.handleSubmit(onCreate)} noValidate>
+          <form
+            className="space-y-4 rounded-2xl border bg-white p-6"
+            onSubmit={form.handleSubmit(onCreate)}
+            noValidate
+          >
             <div className="flex items-center gap-2">
               <Plus className="size-4" aria-hidden="true" />
               <h3 className="font-semibold">{t('createTitle')}</h3>
@@ -263,7 +275,9 @@ export function JobHub() {
             </Button>
           </form>
         ) : (
-          <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">{t('readOnly')}</div>
+          <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">
+            {t('readOnly')}
+          </div>
         )}
 
         <div className="space-y-3" aria-live="polite" aria-busy={loading}>
@@ -283,7 +297,9 @@ export function JobHub() {
                     {job.companyName}
                     {job.location ? ` · ${job.location}` : ''}
                   </p>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">{job.description}</p>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">
+                    {job.description}
+                  </p>
                 </div>
                 <div className="shrink-0">
                   <label className="sr-only" htmlFor={`job-status-${job.id}`}>

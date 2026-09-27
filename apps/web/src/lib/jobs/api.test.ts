@@ -24,11 +24,12 @@ afterEach(() => {
 
 describe('jobs API client', () => {
   it('sends the bearer token and normalized search query', async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response(JSON.stringify({ items: [job], page: 1, pageSize: 50, total: 1 }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ items: [job], page: 1, pageSize: 50, total: 1 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -46,21 +47,17 @@ describe('jobs API client', () => {
   it('surfaces stable API errors for authorization failures', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () =>
-        new Response(JSON.stringify({ code: 'FORBIDDEN' }), {
-          status: 403,
-          headers: { 'content-type': 'application/json' },
-        }),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ code: 'FORBIDDEN' }), {
+            status: 403,
+            headers: { 'content-type': 'application/json' },
+          }),
       ),
     );
 
     await expect(
-      updateJobStatus(
-        'https://api.example.test/api',
-        'viewer-token',
-        job.id,
-        'CLOSED',
-      ),
+      updateJobStatus('https://api.example.test/api', 'viewer-token', job.id, 'CLOSED'),
     ).rejects.toEqual(expect.objectContaining<Partial<JobsApiError>>({ status: 403 }));
   });
 });
