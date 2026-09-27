@@ -97,7 +97,10 @@ describe('Meta connection frontend API client', () => {
   });
 
   it('rejects malformed provider-facing API payloads instead of trusting raw JSON', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ authorizationUrl: 'not-a-url' })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ authorizationUrl: 'not-a-url' })),
+    );
 
     await expect(startMetaConnection(apiUrl, accessToken, ['FACEBOOK'])).rejects.toThrow();
   });
