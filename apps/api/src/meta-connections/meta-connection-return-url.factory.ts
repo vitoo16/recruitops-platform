@@ -1,6 +1,10 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { parseMetaOAuthEnv } from '@recruitops/config';
 
+function isLocalhost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+}
+
 @Injectable()
 export class MetaConnectionReturnUrlFactory {
   assertConfigured(): void {
@@ -25,6 +29,11 @@ export class MetaConnectionReturnUrlFactory {
     try {
       const env = parseMetaOAuthEnv(process.env);
       const url = new URL(env.META_FRONTEND_REDIRECT_URI);
+      const secureProtocol = url.protocol === 'https:';
+      const localDevelopment = url.protocol === 'http:' && isLocalhost(url.hostname);
+      if ((!secureProtocol && !localDevelopment) || url.username || url.password) {
+        throw new Error('META_FRONTEND_REDIRECT_URI_INVALID');
+      }
       url.hash = '';
       return url;
     } catch {
