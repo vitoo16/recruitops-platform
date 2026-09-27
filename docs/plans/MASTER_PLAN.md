@@ -90,10 +90,10 @@
 ## Phase 5 — Publishing and scheduling core
 
 - [x] Implement vendor-neutral `SocialPublisher` contracts.
-- [ ] Implement Publication model/state machine.
+- [x] Implement Publication model/state machine.
 - [ ] Implement BullMQ scheduling.
-- [ ] Implement idempotency keys.
-- [ ] Implement retry/backoff/terminal-failure behavior.
+- [x] Implement idempotency keys.
+- [x] Implement retry/backoff/terminal-failure behavior.
 - [ ] Implement rate-limit-aware worker boundaries.
 - [ ] Implement Facebook Page adapter for currently supported official capabilities.
 - [ ] Implement Instagram adapter for currently supported official capabilities.

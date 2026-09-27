@@ -60,6 +60,17 @@ enum SocialAccountStatus {
   ERROR
 }
 
+enum PublicationState {
+  PENDING
+  SCHEDULED
+  PUBLISHING
+  PROCESSING
+  PUBLISHED
+  RETRY_WAITING
+  FAILED
+  CANCELLED
+}
+
 enum ApplicationStatus {
   SOURCED
   SUBMITTED
@@ -113,16 +124,17 @@ model Post {
 }
 
 model PostVariant {
-  id        String         @id @default(uuid()) @db.Uuid
-  postId    String         @db.Uuid
-  platform  SocialPlatform
-  text      String
-  hashtags  String[]       @default([])
-  link      String?
-  metadata  Json           @default("{}")
-  createdAt DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime       @updatedAt @db.Timestamptz(6)
-  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid()) @db.Uuid
+  postId       String        @db.Uuid
+  platform     SocialPlatform
+  text         String
+  hashtags     String[]      @default([])
+  link         String?
+  metadata     Json          @default("{}")
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  publications Publication[]
 
   @@unique([postId, platform])
   @@index([postId])
@@ -142,6 +154,7 @@ model SocialAccount {
   createdAt         DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(6)
   destinations      Destination[]
+  publications      Publication[]
 
   @@unique([platform, externalAccountId])
   @@index([platform, status])
@@ -163,12 +176,45 @@ model Destination {
   createdAt           DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt           DateTime        @updatedAt @db.Timestamptz(6)
   socialAccount       SocialAccount?  @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
+  publications        Publication[]
   sourcedApplications Application[]   @relation("ApplicationSourceDestination")
 
   @@index([platform, enabled])
   @@index([postingMode, enabled])
   @@index([socialAccountId])
   @@map("destinations")
+}
+
+model Publication {
+  id                String           @id @default(uuid()) @db.Uuid
+  postVariantId     String           @db.Uuid
+  destinationId     String           @db.Uuid
+  socialAccountId   String?          @db.Uuid
+  state             PublicationState @default(PENDING)
+  idempotencyKey    String           @unique
+  scheduledAt       DateTime?        @db.Timestamptz(6)
+  publishedAt       DateTime?        @db.Timestamptz(6)
+  nextRetryAt       DateTime?        @db.Timestamptz(6)
+  retryCount        Int              @default(0)
+  externalPostId    String?
+  externalUrl       String?
+  providerRequestId String?
+  correlationId     String?
+  lastErrorCode     String?
+  lastErrorMessage  String?
+  createdAt         DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(6)
+  postVariant       PostVariant      @relation(fields: [postVariantId], references: [id], onDelete: Restrict)
+  destination       Destination      @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+  socialAccount     SocialAccount?   @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
+
+  @@index([state, scheduledAt])
+  @@index([state, nextRetryAt])
+  @@index([postVariantId])
+  @@index([destinationId])
+  @@index([socialAccountId])
+  @@index([externalPostId])
+  @@map("publications")
 }
 
 model Candidate {
