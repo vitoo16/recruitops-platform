@@ -46,25 +46,49 @@ describe('OAuthCredentialCipher', () => {
     expect(Buffer.from(first.ciphertext).equals(Buffer.from(second.ciphertext))).toBe(false);
   });
 
-  it('rejects tampered ciphertext and a wrong decryption key without leaking crypto details', () => {
+  it('rejects tampered ciphertext, tampered auth tags and wrong keys', () => {
     const cipher = new OAuthCredentialCipher();
     const encrypted = cipher.encrypt(
       'TIKTOK',
       { accessToken: 'secret', scopes: [] },
       environment(),
     );
-    const tampered = {
+    const tamperedCiphertext = {
       ...encrypted,
       ciphertext: Uint8Array.from(encrypted.ciphertext),
     };
-    tampered.ciphertext[0] = (tampered.ciphertext[0] ?? 0) ^ 1;
+    tamperedCiphertext.ciphertext[0] = (tamperedCiphertext.ciphertext[0] ?? 0) ^ 1;
 
-    expect(() => cipher.decrypt(tampered, environment())).toThrow(
+    const tamperedAuthTag = {
+      ...encrypted,
+      authTag: Uint8Array.from(encrypted.authTag),
+    };
+    tamperedAuthTag.authTag[0] = (tamperedAuthTag.authTag[0] ?? 0) ^ 1;
+
+    expect(() => cipher.decrypt(tamperedCiphertext, environment())).toThrow(
+      'OAUTH_CREDENTIAL_DECRYPTION_FAILED',
+    );
+    expect(() => cipher.decrypt(tamperedAuthTag, environment())).toThrow(
       'OAUTH_CREDENTIAL_DECRYPTION_FAILED',
     );
     expect(() => cipher.decrypt(encrypted, environment('v1', { v1: keyV2 }))).toThrow(
       'OAUTH_CREDENTIAL_DECRYPTION_FAILED',
     );
+  });
+
+  it('fails closed when the encrypted key ID is no longer available', () => {
+    const cipher = new OAuthCredentialCipher();
+    const encrypted = cipher.encrypt('THREADS', { accessToken: 'secret', scopes: [] }, environment());
+
+    expect(() =>
+      cipher.decrypt(
+        {
+          ...encrypted,
+          keyId: 'retired-key',
+        },
+        environment(),
+      ),
+    ).toThrow('OAUTH_CREDENTIAL_KEY_NOT_AVAILABLE');
   });
 
   it('retains old keys for decryption during key rotation', () => {
