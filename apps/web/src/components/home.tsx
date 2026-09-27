@@ -4,6 +4,7 @@ import { Languages, Send, UsersRound } from 'lucide-react';
 import { NextIntlClientProvider, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AuthPanel } from '@/components/auth/auth-panel';
+import { JobHub } from '@/components/jobs/job-hub';
 import { Button } from '@/components/ui/button';
 import en from '@/messages/en.json';
 import vi from '@/messages/vi.json';
@@ -14,7 +15,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
   const t = useTranslations('home');
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center gap-10 px-6 py-16">
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16">
       <div className="flex items-center justify-between gap-4">
         <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
         <Button variant="outline" onClick={onLocaleChange} aria-label={t('switchLanguage')}>
@@ -56,6 +57,8 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
           <p className="mt-2 text-sm leading-6 text-neutral-600">{t('candidateDescription')}</p>
         </article>
       </section>
+
+      <JobHub />
     </main>
   );
 }

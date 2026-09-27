@@ -64,7 +64,7 @@
 
 - [x] Implement Job schema/domain.
 - [x] Implement Job API.
-- [ ] Implement Job management UI.
+- [x] Implement Job management UI.
 - [x] Implement content Post domain.
 - [x] Implement PostVariant domain.
 - [ ] Complete media model/upload flow (model, safe object-key contract and private browser upload adapter implemented; persistence API/UI wiring pending).

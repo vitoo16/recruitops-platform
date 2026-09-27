@@ -5,7 +5,7 @@
     "description": "RecruitOps được xây dựng theo kiến trúc module, API chính thức và quy trình human-in-the-loop cho những nền tảng không hỗ trợ tự động hóa phù hợp.",
     "foundationLabel": "Trạng thái",
     "foundationStatus": "Foundation đang hoạt động",
-    "foundationHint": "Frontend, API và hạ tầng free-tier đã online. Phase hiện tại tập trung vào xác thực và phân quyền.",
+    "foundationHint": "Frontend, API và hạ tầng free-tier đã online. Job Hub hiện sử dụng API xác thực và persistence server-side.",
     "accessLabel": "Truy cập RecruitOps",
     "publishingTitle": "Social Publishing",
     "publishingDescription": "Soạn nội dung, tạo biến thể theo nền tảng, chọn điểm đăng và theo dõi trạng thái xuất bản.",
@@ -29,5 +29,45 @@
     "loginFailed": "Không thể đăng nhập. Kiểm tra tài khoản hoặc mật khẩu.",
     "missingConfig": "Supabase Auth chưa được cấu hình cho môi trường này.",
     "provisioningNote": "RecruitOps không mở đăng ký công khai. Tài khoản được cấp bởi quản trị viên."
+  },
+  "jobs": {
+    "eyebrow": "Job Hub",
+    "title": "Quản lý vị trí tuyển dụng",
+    "searchLabel": "Tìm vị trí tuyển dụng",
+    "searchPlaceholder": "Tên vị trí, công ty hoặc địa điểm",
+    "searchAction": "Tìm kiếm",
+    "refresh": "Tải lại",
+    "createTitle": "Tạo vị trí mới",
+    "jobTitle": "Tên vị trí",
+    "company": "Công ty",
+    "location": "Địa điểm",
+    "employmentType": "Hình thức làm việc",
+    "description": "Mô tả công việc",
+    "createAction": "Tạo vị trí",
+    "saving": "Đang lưu...",
+    "loading": "Đang tải danh sách vị trí...",
+    "empty": "Chưa có vị trí phù hợp.",
+    "readOnly": "Tài khoản VIEWER có quyền xem Job Hub nhưng không thể thay đổi dữ liệu.",
+    "signInRequired": "Đăng nhập để xem Job Hub.",
+    "missingApiConfig": "API chưa được cấu hình cho frontend này.",
+    "invalidForm": "Kiểm tra lại các trường bắt buộc trước khi lưu.",
+    "loadFailed": "Không thể tải Job Hub từ API.",
+    "saveFailed": "Không thể lưu thay đổi. Vui lòng thử lại.",
+    "forbidden": "Tài khoản hiện tại không có quyền thay đổi Job Hub.",
+    "statusLabel": "Trạng thái của {title}",
+    "employment": {
+      "FULL_TIME": "Toàn thời gian",
+      "PART_TIME": "Bán thời gian",
+      "CONTRACT": "Hợp đồng",
+      "INTERNSHIP": "Thực tập",
+      "FREELANCE": "Freelance",
+      "OTHER": "Khác"
+    },
+    "status": {
+      "DRAFT": "Nháp",
+      "ACTIVE": "Đang tuyển",
+      "PAUSED": "Tạm dừng",
+      "CLOSED": "Đã đóng"
+    }
   }
 }
