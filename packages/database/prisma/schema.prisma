@@ -7,3 +7,91 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+  OTHER
+}
+
+enum PostStatus {
+  DRAFT
+  READY
+  ARCHIVED
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  THREADS
+  LINKEDIN
+  TIKTOK
+  ZALO
+}
+
+model Job {
+  id               String         @id @default(uuid()) @db.Uuid
+  title            String
+  companyName      String
+  description      String
+  location         String?
+  employmentType   EmploymentType
+  status           JobStatus      @default(DRAFT)
+  currency         String         @default("VND")
+  salaryMinMinor   BigInt?
+  salaryMaxMinor   BigInt?
+  sourceRef        String?
+  commissionNote   String?
+  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @db.Timestamptz(6)
+  posts            Post[]
+
+  @@index([status, updatedAt])
+  @@index([employmentType])
+  @@map("jobs")
+}
+
+model Post {
+  id          String       @id @default(uuid()) @db.Uuid
+  jobId       String       @db.Uuid
+  title       String
+  baseContent String
+  language    String
+  status      PostStatus   @default(DRAFT)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  variants    PostVariant[]
+
+  @@index([jobId])
+  @@index([status, updatedAt])
+  @@map("posts")
+}
+
+model PostVariant {
+  id        String         @id @default(uuid()) @db.Uuid
+  postId    String         @db.Uuid
+  platform  SocialPlatform
+  text      String
+  hashtags  String[]       @default([])
+  link      String?
+  metadata  Json           @default("{}")
+  createdAt DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime       @updatedAt @db.Timestamptz(6)
+  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, platform])
+  @@index([postId])
+  @@index([platform])
+  @@map("post_variants")
+}
