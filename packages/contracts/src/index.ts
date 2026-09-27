@@ -6,3 +6,4 @@ export interface HealthResponse {
 
 export * from './jobs.js';
 export * from './content.js';
+export * from './social.js';

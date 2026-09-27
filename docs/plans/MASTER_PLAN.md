@@ -76,9 +76,9 @@
 
 ## Phase 4 — Destinations and social account connections
 
-- [ ] Implement Destination domain.
-- [ ] Implement destination tagging/filtering.
-- [ ] Implement SocialAccount domain.
+- [x] Implement Destination domain.
+- [x] Implement destination tagging/filtering.
+- [x] Implement SocialAccount domain.
 - [ ] Implement secure OAuth credential storage.
 - [ ] Verify current Meta official APIs/scopes and implement supported connection flow.
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
@@ -89,7 +89,7 @@
 
 ## Phase 5 — Publishing and scheduling core
 
-- [ ] Implement vendor-neutral `SocialPublisher` contracts.
+- [x] Implement vendor-neutral `SocialPublisher` contracts.
 - [ ] Implement Publication model/state machine.
 - [ ] Implement BullMQ scheduling.
 - [ ] Implement idempotency keys.
