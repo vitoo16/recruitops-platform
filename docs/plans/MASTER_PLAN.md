@@ -79,8 +79,8 @@
 - [x] Implement Destination domain.
 - [x] Implement destination tagging/filtering.
 - [x] Implement SocialAccount domain.
-- [ ] Implement secure OAuth credential storage (code, tests and hosted migration definition verified; production migration execution and runtime encryption-key provisioning remain pending explicit production authorization).
-- [ ] Verify current Meta official APIs/scopes and implement supported connection flow (provider boundary, one-time OAuth state, encrypted discovery session, fixed frontend callback handoff, localized explicit account picker, authenticated credential promotion and regression tests implemented; production Meta/runtime values, hosted credential migration/key provisioning and real-provider integration/E2E verification remain pending).
+- [x] Implement secure OAuth credential storage (encrypted storage code/tests, hosted `social_credentials` migration, RLS/browser-role revocation and production encryption keyring verified).
+- [ ] Verify current Meta official APIs/scopes and implement supported connection flow (provider boundary, one-time OAuth state, encrypted discovery session, fixed frontend callback handoff, localized explicit account picker, authenticated credential promotion, reconnect UX and regression tests implemented; hosted credential migration/keyring and frontend/API deploys are verified, while production `DATABASE_URL`, real `META_CLIENT_ID`/`META_CLIENT_SECRET`, Meta app access configuration and real-provider integration/E2E verification remain pending).
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
 - [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.
 - [ ] Verify current Zalo official APIs/scopes and implement supported connection flow.
@@ -95,8 +95,8 @@
 - [x] Implement idempotency keys.
 - [x] Implement retry/backoff/terminal-failure behavior.
 - [x] Implement rate-limit-aware worker boundary (validated queue payloads, configurable concurrency and BullMQ limiter; provider handlers remain separately gated).
-- [ ] Implement Facebook Page adapter for currently supported official capabilities.
-- [ ] Implement Instagram adapter for currently supported official capabilities.
+- [x] Implement Facebook Page adapter for currently supported official capabilities (verified text/link Page feed publishing slice; private-media publishing remains a later capability).
+- [x] Implement Instagram adapter for currently supported official capabilities (single-image and Reel container/publish flow with bounded Reel readiness polling and private-media resolver boundary).
 - [ ] Implement Threads adapter for currently supported official capabilities.
 - [ ] Implement LinkedIn adapter for currently supported official capabilities.
 - [ ] Implement TikTok adapter for currently supported official capabilities.
