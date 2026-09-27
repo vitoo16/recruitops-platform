@@ -32,5 +32,6 @@
 - `security/authentication.md`
 - `security/audit-logging.md`
 - `security/secrets-management.md`
+- `security/private-file-access.md`
 
 There is only one implementation checklist: `plans/MASTER_PLAN.md`.
