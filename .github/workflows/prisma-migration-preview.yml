@@ -1,0 +1,29 @@
+name: Prisma Migration Preview
+
+on:
+  pull_request:
+    paths:
+      - 'packages/database/prisma/schema.prisma'
+      - '.github/workflows/prisma-migration-preview.yml'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --no-frozen-lockfile
+      - name: Generate initial migration SQL
+        run: |
+          mkdir -p /tmp/recruitops-migration
+          pnpm --filter @recruitops/database exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > /tmp/recruitops-migration/migration.sql
+          cat /tmp/recruitops-migration/migration.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prisma-initial-migration
+          path: /tmp/recruitops-migration/migration.sql
