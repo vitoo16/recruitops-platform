@@ -33,10 +33,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Format check
-        run: |
-          pnpm exec prettier --write packages/integrations/src/meta-publishing.ts packages/integrations/src/meta-publishing.test.ts
-          git diff -- packages/integrations/src/meta-publishing.ts packages/integrations/src/meta-publishing.test.ts
-          test -z "$(git status --short packages/integrations/src/meta-publishing.ts packages/integrations/src/meta-publishing.test.ts)"
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
