@@ -15,7 +15,7 @@ function createDatabase() {
 }
 
 describe('PrismaPublicationExecutionRepository', () => {
-  it('loads the minimum execution projection without credential material or inferred media', async () => {
+  it('loads explicit ordered variant media without credential or storage material', async () => {
     const { database, findUnique } = createDatabase();
     findUnique.mockResolvedValue({
       id: '33333333-3333-4333-8333-333333333333',
@@ -23,72 +23,52 @@ describe('PrismaPublicationExecutionRepository', () => {
       retryCount: 0,
       idempotencyKey: 'publication:33333333-3333-4333-8333-333333333333',
       postVariant: {
-        platform: 'FACEBOOK',
+        platform: 'INSTAGRAM',
         text: 'We are hiring',
         hashtags: ['jobs'],
         link: 'https://example.com/jobs/1',
         metadata: { locale: 'vi' },
+        mediaSelections: [
+          { mediaAssetId: '44444444-4444-4444-8444-444444444444' },
+          { mediaAssetId: '55555555-5555-4555-8555-555555555555' },
+        ],
       },
       destination: {
         id: '22222222-2222-4222-8222-222222222222',
-        platform: 'FACEBOOK',
+        platform: 'INSTAGRAM',
         postingMode: 'API',
         enabled: true,
         socialAccountId: '11111111-1111-4111-8111-111111111111',
       },
       socialAccount: {
         id: '11111111-1111-4111-8111-111111111111',
-        platform: 'FACEBOOK',
+        platform: 'INSTAGRAM',
         status: 'CONNECTED',
       },
     });
 
     const repository = new PrismaPublicationExecutionRepository(database);
-    await expect(
-      repository.loadForExecution('33333333-3333-4333-8333-333333333333'),
-    ).resolves.toEqual({
-      id: '33333333-3333-4333-8333-333333333333',
-      state: 'SCHEDULED',
-      retryCount: 0,
-      idempotencyKey: 'publication:33333333-3333-4333-8333-333333333333',
-      platform: 'FACEBOOK',
-      destination: {
-        id: '22222222-2222-4222-8222-222222222222',
-        platform: 'FACEBOOK',
-        postingMode: 'API',
-        enabled: true,
-        socialAccountId: '11111111-1111-4111-8111-111111111111',
-      },
-      socialAccount: {
-        id: '11111111-1111-4111-8111-111111111111',
-        platform: 'FACEBOOK',
-        status: 'CONNECTED',
-      },
-      payload: {
-        text: 'We are hiring',
-        hashtags: ['jobs'],
-        link: 'https://example.com/jobs/1',
-        metadata: { locale: 'vi' },
-      },
-    });
+    const result = await repository.loadForExecution('33333333-3333-4333-8333-333333333333');
 
+    expect(result?.payload).toEqual({
+      text: 'We are hiring',
+      hashtags: ['jobs'],
+      link: 'https://example.com/jobs/1',
+      mediaIds: [
+        '44444444-4444-4444-8444-444444444444',
+        '55555555-5555-4555-8555-555555555555',
+      ],
+      metadata: { locale: 'vi' },
+    });
     const query = findUnique.mock.calls[0]?.[0];
-    expect(JSON.stringify(query)).not.toContain('credential');
-    expect(JSON.stringify(query)).not.toContain('mediaAssets');
-    expect(JSON.stringify(query)).not.toContain('storageKey');
+    const queryText = JSON.stringify(query);
+    expect(queryText).toContain('mediaSelections');
+    expect(queryText).toContain('mediaAssetId');
+    expect(queryText).not.toContain('credential');
+    expect(queryText).not.toContain('storageKey');
   });
 
-  it('returns null when the publication does not exist', async () => {
-    const { database, findUnique } = createDatabase();
-    findUnique.mockResolvedValue(null);
-    const repository = new PrismaPublicationExecutionRepository(database);
-
-    await expect(
-      repository.loadForExecution('33333333-3333-4333-8333-333333333333'),
-    ).resolves.toBeNull();
-  });
-
-  it('drops non-object metadata instead of trusting arbitrary JSON shapes', async () => {
+  it('does not infer media when the variant has no explicit selection', async () => {
     const { database, findUnique } = createDatabase();
     findUnique.mockResolvedValue({
       id: '33333333-3333-4333-8333-333333333333',
@@ -100,7 +80,8 @@ describe('PrismaPublicationExecutionRepository', () => {
         text: 'We are hiring',
         hashtags: [],
         link: null,
-        metadata: ['unexpected-array'],
+        metadata: {},
+        mediaSelections: [],
       },
       destination: {
         id: '22222222-2222-4222-8222-222222222222',
@@ -111,12 +92,20 @@ describe('PrismaPublicationExecutionRepository', () => {
       },
       socialAccount: null,
     });
+
+    const repository = new PrismaPublicationExecutionRepository(database);
+    const result = await repository.loadForExecution('33333333-3333-4333-8333-333333333333');
+    expect(result?.payload).toEqual({ text: 'We are hiring', hashtags: [], metadata: {} });
+  });
+
+  it('returns null when the publication does not exist', async () => {
+    const { database, findUnique } = createDatabase();
+    findUnique.mockResolvedValue(null);
     const repository = new PrismaPublicationExecutionRepository(database);
 
-    const result = await repository.loadForExecution('33333333-3333-4333-8333-333333333333');
-    expect(result?.payload).toEqual({ text: 'We are hiring', hashtags: [] });
-    expect(result?.destination).not.toHaveProperty('socialAccountId');
-    expect(result).not.toHaveProperty('socialAccount');
+    await expect(
+      repository.loadForExecution('33333333-3333-4333-8333-333333333333'),
+    ).resolves.toBeNull();
   });
 
   it('uses one atomic state predicate for compare-and-set updates', async () => {

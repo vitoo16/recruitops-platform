@@ -28,6 +28,10 @@ export class PrismaPublicationExecutionRepository implements PublicationExecutio
             hashtags: true,
             link: true,
             metadata: true,
+            mediaSelections: {
+              orderBy: { position: 'asc' },
+              select: { mediaAssetId: true },
+            },
           },
         },
         destination: {
@@ -52,6 +56,9 @@ export class PrismaPublicationExecutionRepository implements PublicationExecutio
     if (!publication) return null;
 
     const metadata = normalizeMetadata(publication.postVariant.metadata);
+    const mediaIds = publication.postVariant.mediaSelections.map(
+      (selection) => selection.mediaAssetId,
+    );
     return {
       id: publication.id,
       state: publication.state,
@@ -80,6 +87,7 @@ export class PrismaPublicationExecutionRepository implements PublicationExecutio
         text: publication.postVariant.text,
         hashtags: publication.postVariant.hashtags,
         ...(publication.postVariant.link ? { link: publication.postVariant.link } : {}),
+        ...(mediaIds.length > 0 ? { mediaIds } : {}),
         ...(metadata ? { metadata } : {}),
       },
     };
