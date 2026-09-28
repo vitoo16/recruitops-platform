@@ -92,11 +92,7 @@ export function PostDraftPanel({
               <option value="en">{t('languageEn')}</option>
             </select>
           </div>
-          <Button
-            className="min-h-11 w-full"
-            type="submit"
-            disabled={form.formState.isSubmitting}
-          >
+          <Button className="min-h-11 w-full" type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? t('saving') : t('createAction')}
           </Button>
         </form>
