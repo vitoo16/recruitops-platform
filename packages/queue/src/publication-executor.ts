@@ -141,7 +141,11 @@ export async function executePublication(
   const record = await repository.loadForExecution(job.publicationId);
   if (!record) return { status: 'FAILED', code: 'PUBLICATION_NOT_FOUND' };
 
-  if (record.state === 'PUBLISHED' || record.state === 'CANCELLED' || record.state === 'PROCESSING') {
+  if (
+    record.state === 'PUBLISHED' ||
+    record.state === 'CANCELLED' ||
+    record.state === 'PROCESSING'
+  ) {
     return { status: 'NOOP', reason: `PUBLICATION_ALREADY_${record.state}` };
   }
 
