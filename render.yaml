@@ -71,6 +71,14 @@ services:
         sync: false
       - key: META_FRONTEND_REDIRECT_URI
         sync: false
+      - key: THREADS_APP_ID
+        sync: false
+      - key: THREADS_APP_SECRET
+        sync: false
+      - key: THREADS_REDIRECT_URI
+        sync: false
+      - key: THREADS_FRONTEND_REDIRECT_URI
+        sync: false
       - key: LINKEDIN_CLIENT_ID
         sync: false
       - key: LINKEDIN_CLIENT_SECRET
