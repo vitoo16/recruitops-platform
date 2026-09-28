@@ -9,12 +9,15 @@ import { CandidateCvWorkspace } from '@/components/candidates/candidate-cv-works
 import { ContentMediaWorkspace } from '@/components/content/content-media-workspace';
 import { JobHub } from '@/components/jobs/job-hub';
 import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
+import { ThreadsConnectionPanel } from '@/components/threads-connections/threads-connection-panel';
 import { Button } from '@/components/ui/button';
 import contentStudioEn from '@/messages/content-studio.en.json';
 import contentStudioVi from '@/messages/content-studio.vi.json';
 import en from '@/messages/en.json';
 import metaEn from '@/messages/meta-connections.en.json';
 import metaVi from '@/messages/meta-connections.vi.json';
+import threadsEn from '@/messages/threads-connections.en.json';
+import threadsVi from '@/messages/threads-connections.vi.json';
 import vi from '@/messages/vi.json';
 
 type Locale = 'vi' | 'en';
@@ -78,6 +81,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         </section>
 
         <MetaConnectionPanel />
+        <ThreadsConnectionPanel />
         <JobHub />
         <ContentMediaWorkspace />
         <CandidateCrm />
@@ -93,6 +97,7 @@ export function Home() {
   const messages = {
     ...baseMessages,
     metaConnections: locale === 'vi' ? metaVi : metaEn,
+    threadsConnections: locale === 'vi' ? threadsVi : threadsEn,
     contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
   };
 
