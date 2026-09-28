@@ -1,13 +1,16 @@
-import type { PublicationState, PrismaClient } from '@recruitops/database';
-import type { PublishCommand, PublishResult, SocialPlatform, SocialPublisher } from '@recruitops/contracts';
+import type {
+  PublishCommand,
+  PublishResult,
+  SocialPlatform,
+  SocialPublisher,
+} from '@recruitops/contracts';
+import type { PrismaClient } from '@recruitops/database';
 import {
   FacebookPagePublisher,
   InstagramProfessionalPublisher,
   OAuthCredentialCipher,
   ThreadsPublisher,
   type EncryptedOAuthCredential,
-  type MetaPublishingMediaSource,
-  type ThreadsPublishingMediaSource,
 } from '@recruitops/integrations';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { PublicationWorkerEnv } from '@recruitops/config';
@@ -19,7 +22,7 @@ import type {
   PublicationPublisherFactory,
 } from './publication-executor.js';
 
-const RUNNABLE_STATES: readonly PublicationState[] = ['PENDING', 'SCHEDULED', 'RETRY_WAITING'];
+const RUNNABLE_STATES = ['PENDING', 'SCHEDULED', 'RETRY_WAITING'] as const;
 const SAFE_FAILURE_MESSAGE = 'Publication provider execution failed';
 
 function executionError(code: string): Error & { code: string } {
@@ -32,16 +35,14 @@ function toMetadata(value: unknown): Readonly<Record<string, unknown>> {
 }
 
 function toCredential(
-  input:
-    | {
-        platform: SocialPlatform;
-        keyId: string;
-        algorithm: string;
-        iv: Uint8Array;
-        authTag: Uint8Array;
-        ciphertext: Uint8Array;
-      }
-    | null,
+  input: {
+    platform: SocialPlatform;
+    keyId: string;
+    algorithm: string;
+    iv: Uint8Array;
+    authTag: Uint8Array;
+    ciphertext: Uint8Array;
+  } | null,
 ): EncryptedOAuthCredential | undefined {
   if (!input) return undefined;
   if (input.algorithm !== 'aes-256-gcm') {
@@ -173,10 +174,7 @@ export class PrismaPublicationExecutionRepository implements PublicationExecutio
     });
   }
 
-  async markFailed(
-    publicationId: string,
-    failure: PublicationExecutionFailure,
-  ): Promise<void> {
+  async markFailed(publicationId: string, failure: PublicationExecutionFailure): Promise<void> {
     await this.database.publication.update({
       where: { id: publicationId },
       data: {
@@ -225,7 +223,9 @@ export class SupabaseProviderMediaSigner implements ProviderMediaSigner {
   }
 }
 
-function assertExecutableContext(context: PublicationExecutionContext): asserts context is PublicationExecutionContext & {
+function assertExecutableContext(
+  context: PublicationExecutionContext,
+): asserts context is PublicationExecutionContext & {
   socialAccountId: string;
   socialAccountPlatform: SocialPlatform;
   socialAccountStatus: 'CONNECTED';
@@ -249,6 +249,12 @@ function assertExecutableContext(context: PublicationExecutionContext): asserts 
   if (context.credential.platform !== context.platform) {
     throw executionError('PUBLICATION_CREDENTIAL_PLATFORM_MISMATCH');
   }
+}
+
+interface ResolvedProviderMedia {
+  mediaId: string;
+  kind: 'IMAGE' | 'VIDEO';
+  publicUrl: string;
 }
 
 export class DefaultPublicationPublisherFactory implements PublicationPublisherFactory {
@@ -281,10 +287,8 @@ export class DefaultPublicationPublisherFactory implements PublicationPublisherF
       },
     };
 
-    const resolveMedia = async (
-      mediaIds: readonly string[],
-    ): Promise<readonly (MetaPublishingMediaSource | ThreadsPublishingMediaSource)[]> => {
-      const sources = [];
+    const resolveMedia = async (mediaIds: readonly string[]): Promise<readonly ResolvedProviderMedia[]> => {
+      const sources: ResolvedProviderMedia[] = [];
       for (const mediaId of mediaIds) {
         const source = context.media.find((item) => item.id === mediaId);
         if (!source) throw executionError('PUBLICATION_MEDIA_NOT_FOUND');
