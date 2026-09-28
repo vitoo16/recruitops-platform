@@ -127,5 +127,7 @@ export function createProductionPublisherRegistry(input: {
     contextResolver,
   );
 
-  return new MapPublisherRegistry(new Map<SocialPlatform, SocialPublisher>([['FACEBOOK', facebook]]));
+  return new MapPublisherRegistry(
+    new Map<SocialPlatform, SocialPublisher>([['FACEBOOK', facebook]]),
+  );
 }
