@@ -3,7 +3,7 @@ name: Persist Lockfile
 on:
   push:
     branches:
-      - feat/auth-foundation
+      - feat/publication-prisma-runtime
     paths:
       - package.json
       - pnpm-workspace.yaml
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/auth-foundation
+          ref: feat/publication-prisma-runtime
       - uses: pnpm/action-setup@v4
         with:
           version: 12.6.0
@@ -39,4 +39,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pnpm-lock.yaml
           git commit -m "chore: add reproducible pnpm lockfile"
-          git push origin HEAD:feat/auth-foundation
+          git push origin HEAD:feat/publication-prisma-runtime
