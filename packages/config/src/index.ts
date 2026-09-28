@@ -31,9 +31,17 @@ const MetaOAuthEnvSchema = z.object({
   META_FRONTEND_REDIRECT_URI: z.url(),
 });
 
+const ThreadsOAuthEnvSchema = z.object({
+  THREADS_APP_ID: z.string().trim().min(1),
+  THREADS_APP_SECRET: z.string().trim().min(1),
+  THREADS_REDIRECT_URI: z.url(),
+  THREADS_FRONTEND_REDIRECT_URI: z.url(),
+});
+
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
 export type SupabaseAuthEnv = z.infer<typeof SupabaseAuthEnvSchema>;
 export type MetaOAuthEnv = z.infer<typeof MetaOAuthEnvSchema>;
+export type ThreadsOAuthEnv = z.infer<typeof ThreadsOAuthEnvSchema>;
 
 export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
@@ -45,4 +53,8 @@ export function parseSupabaseAuthEnv(input: Record<string, string | undefined>):
 
 export function parseMetaOAuthEnv(input: Record<string, string | undefined>): MetaOAuthEnv {
   return MetaOAuthEnvSchema.parse(input);
+}
+
+export function parseThreadsOAuthEnv(input: Record<string, string | undefined>): ThreadsOAuthEnv {
+  return ThreadsOAuthEnvSchema.parse(input);
 }
