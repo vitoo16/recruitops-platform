@@ -161,6 +161,23 @@ describe('PublicationExecutor', () => {
     expect(repo.markRetryWaiting).not.toHaveBeenCalled();
   });
 
+  it('does not relabel a database persistence failure as a provider failure', async () => {
+    const repo = repository(context());
+    repo.markPublished.mockRejectedValueOnce(new Error('database unavailable'));
+    const executor = new PublicationExecutor(repo, {
+      create: vi.fn().mockReturnValue(
+        publisher(async () => ({
+          status: 'PUBLISHED',
+          externalPostId: 'provider-post-1',
+        })),
+      ),
+    });
+
+    await expect(executor.execute(publicationId, 1)).rejects.toThrow('database unavailable');
+    expect(repo.markFailed).not.toHaveBeenCalled();
+    expect(repo.markRetryWaiting).not.toHaveBeenCalled();
+  });
+
   it('skips duplicate delivery of the same queue attempt when claim returns null', async () => {
     const repo = repository(null);
     const create = vi.fn();
