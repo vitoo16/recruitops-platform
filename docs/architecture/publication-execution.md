@@ -49,6 +49,14 @@ Media IDs must be supplied only after the product model exposes an explicit, val
 
 The handler is intentionally composition-only. It does not construct provider adapters or decrypt credentials.
 
+## Worker OAuth credential resolution
+
+`WorkerOAuthCredentialResolver` is the worker-side credential boundary. It loads the related `SocialAccount -> SocialCredential` envelope only after the durable publication/account relationship has been validated by the execution path.
+
+It fails closed on missing accounts or credentials, platform mismatches, disconnected accounts and expired account/credential metadata. The canonical AES-256-GCM cipher/keyring is shared with the API through `@recruitops/integrations`, so both runtimes use the same authenticated credential-envelope format and rotation rules.
+
+The resolver returns only the provider access token required by a publishing context resolver. Refresh tokens and encrypted envelope fields do not enter queue payloads, browser contracts or the publication executor model.
+
 ## Retry behavior
 
 The existing publication retry policy remains authoritative:
@@ -121,9 +129,8 @@ sequenceDiagram
 
 ## Runtime wiring still required
 
-Execution semantics, Prisma persistence and queue-handler composition are implemented and unit-tested. Production worker activation remains intentionally gated until all remaining runtime boundaries are available:
+Execution semantics, Prisma persistence, queue-handler composition and shared worker OAuth credential decryption are implemented and unit-tested. Production worker activation remains intentionally gated until all remaining runtime boundaries are available:
 
-- credential resolvers that decrypt `SocialCredential` only at the execution point;
 - publisher registry wiring for production-enabled providers;
 - explicit media-selection semantics plus approved private-media URL resolution for media providers;
 - worker startup/shutdown wiring and graceful Redis/Prisma cleanup;
