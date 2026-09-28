@@ -34,7 +34,11 @@ export class ContentService {
     return this.content.listVariants(parseRequest(PrivateFileEntityIdSchema, postId));
   }
 
-  upsertPostVariant(postId: unknown, platform: unknown, input: unknown): Promise<PostVariantRecord> {
+  upsertPostVariant(
+    postId: unknown,
+    platform: unknown,
+    input: unknown,
+  ): Promise<PostVariantRecord> {
     return this.content.upsertVariant(
       parseRequest(PrivateFileEntityIdSchema, postId),
       parseRequest(SocialPlatformSchema, platform),

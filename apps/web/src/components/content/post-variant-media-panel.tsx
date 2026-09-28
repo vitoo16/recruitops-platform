@@ -222,7 +222,9 @@ export function PostVariantMediaPanel({
                         disabled={!canMutate}
                         onChange={() => onToggleMedia(asset.id)}
                       />
-                      <span className="min-w-0 flex-1 truncate text-sm">{asset.originalFileName}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm">
+                        {asset.originalFileName}
+                      </span>
                     </label>
                   ))}
                 </fieldset>

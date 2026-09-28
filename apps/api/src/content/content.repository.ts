@@ -9,7 +9,10 @@ import type {
   SocialPlatform,
   UpsertPostVariantInput,
 } from '@recruitops/contracts';
-import type { Post as DatabasePost, PostVariant as DatabasePostVariant } from '@recruitops/database';
+import type {
+  Post as DatabasePost,
+  PostVariant as DatabasePostVariant,
+} from '@recruitops/database';
 import { DatabaseService } from '../database/database.service.js';
 
 function mapDatabasePost(post: DatabasePost): Post {

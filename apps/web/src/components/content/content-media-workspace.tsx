@@ -21,7 +21,10 @@ export function ContentMediaWorkspace() {
     <section className="space-y-6" aria-labelledby="content-media-title">
       <header>
         <p className="text-sm font-medium text-[var(--content-secondary)]">{t('eyebrow')}</p>
-        <h2 id="content-media-title" className="mt-1 text-2xl font-semibold tracking-tight text-balance">
+        <h2
+          id="content-media-title"
+          className="mt-1 text-2xl font-semibold tracking-tight text-balance"
+        >
           {t('title')}
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--content-secondary)]">

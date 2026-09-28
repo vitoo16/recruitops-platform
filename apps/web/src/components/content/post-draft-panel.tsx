@@ -59,12 +59,7 @@ export function PostDraftPanel({
             <label className="block text-sm font-medium" htmlFor="content-title">
               {t('postTitle')}
             </label>
-            <Input
-              id="content-title"
-              autoComplete="off"
-              required
-              {...form.register('title')}
-            />
+            <Input id="content-title" autoComplete="off" required {...form.register('title')} />
           </div>
           <div>
             <label className="block text-sm font-medium" htmlFor="content-body">

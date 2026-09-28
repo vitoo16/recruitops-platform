@@ -30,11 +30,7 @@ import { FilesApiError, listMediaAssets, registerMediaAsset } from '@/lib/files/
 import { listJobs } from '@/lib/jobs/api';
 import { PrivateFileAccessError, uploadPrivateFile } from '@/lib/storage/private-files';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import {
-  MEDIA_UPLOAD_POLICY,
-  configuredApiUrl,
-  parseHashtags,
-} from './content-studio-utils';
+import { MEDIA_UPLOAD_POLICY, configuredApiUrl, parseHashtags } from './content-studio-utils';
 
 const PrincipalSchema = z.object({
   id: z.string().min(1),
@@ -398,7 +394,9 @@ export function useContentStudio() {
 
   async function saveMediaSelection() {
     if (!selectedVariant || !session?.access_token || !apiUrl || !canMutate) return;
-    const parsed = ReplacePostVariantMediaSelectionSchema.safeParse({ mediaAssetIds: selectedMediaIds });
+    const parsed = ReplacePostVariantMediaSelectionSchema.safeParse({
+      mediaAssetIds: selectedMediaIds,
+    });
     if (!parsed.success) {
       setError(variantT('invalidSelection'));
       return;

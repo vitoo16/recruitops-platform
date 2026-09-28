@@ -54,10 +54,7 @@ describe('PrismaPublicationExecutionRepository', () => {
       text: 'We are hiring',
       hashtags: ['jobs'],
       link: 'https://example.com/jobs/1',
-      mediaIds: [
-        '44444444-4444-4444-8444-444444444444',
-        '55555555-5555-4555-8555-555555555555',
-      ],
+      mediaIds: ['44444444-4444-4444-8444-444444444444', '55555555-5555-4555-8555-555555555555'],
       metadata: { locale: 'vi' },
     });
     const query = findUnique.mock.calls[0]?.[0];

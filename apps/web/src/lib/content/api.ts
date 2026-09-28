@@ -87,9 +87,7 @@ export async function listPostVariants(
   token: string,
   postId: string,
 ): Promise<PostVariantRecord[]> {
-  return PostVariantListSchema.parse(
-    await requestJson(apiUrl, token, `/posts/${postId}/variants`),
-  );
+  return PostVariantListSchema.parse(await requestJson(apiUrl, token, `/posts/${postId}/variants`));
 }
 
 export async function upsertPostVariant(

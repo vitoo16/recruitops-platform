@@ -95,11 +95,15 @@ export function MediaWorkspacePanel({
       ) : null}
 
       <div className="mt-6 space-y-3 border-t pt-6" aria-live="polite" aria-busy={loading}>
-        {loading ? <p className="text-sm text-[var(--content-secondary)]">{t('loadingMedia')}</p> : null}
+        {loading ? (
+          <p className="text-sm text-[var(--content-secondary)]">{t('loadingMedia')}</p>
+        ) : null}
         {!loading && postId && assets.length === 0 ? (
           <p className="text-sm text-[var(--content-secondary)]">{t('emptyMedia')}</p>
         ) : null}
-        {!postId ? <p className="text-sm text-[var(--content-secondary)]">{t('selectPost')}</p> : null}
+        {!postId ? (
+          <p className="text-sm text-[var(--content-secondary)]">{t('selectPost')}</p>
+        ) : null}
         {assets.map((asset) => (
           <article key={asset.id} className="rounded-xl border bg-[var(--surface-subtle)] p-4">
             <div className="flex items-start gap-3">
