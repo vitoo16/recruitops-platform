@@ -21,9 +21,11 @@ function createHarness() {
       tokenType: 'bearer',
       expiresInSeconds: 5_184_000,
     }),
-    getProfile: vi
-      .fn()
-      .mockResolvedValue({ id: '123', username: 'recruitops', name: 'RecruitOps' }),
+    getProfile: vi.fn().mockResolvedValue({
+      id: '123',
+      username: 'recruitops',
+      name: 'RecruitOps',
+    }),
   };
   const clients = { create: vi.fn().mockReturnValue(provider) };
   const sessions = {
@@ -57,11 +59,11 @@ function createHarness() {
     cipher as unknown as OAuthCredentialCipher,
   );
 
-  return { service, provider, clients, sessions, cipher, repository, encryptedCredential };
+  return { service, provider, sessions, cipher, repository, encryptedCredential };
 }
 
 describe('ThreadsConnectionsService', () => {
-  it('creates one-time state before returning the authorization URL', async () => {
+  it('creates one-time state before authorization', async () => {
     const { service, sessions, provider } = createHarness();
     const result = await service.start(userId);
 
@@ -73,59 +75,53 @@ describe('ThreadsConnectionsService', () => {
     expect(result.authorizationUrl).toContain('threads.net/oauth/authorize');
   });
 
-  it(
-    'promotes the verified app-scoped Threads profile with encrypted long-lived credentials',
-    async () => {
-      const { service, cipher, repository, encryptedCredential } = createHarness();
-      const result = await service.callback({ code: 'oauth-code', state: 'oauth-state' });
+  it('promotes a verified Threads profile', async () => {
+    const { service, cipher, repository, encryptedCredential } = createHarness();
+    const result = await service.callback({ code: 'oauth-code', state: 'oauth-state' });
 
-      expect(cipher.encrypt).toHaveBeenCalledWith(
-        'THREADS',
-        expect.objectContaining({
-          accessToken: 'long-token',
-          tokenType: 'bearer',
-          scopes: ['threads_basic', 'threads_content_publish'],
-          expiresAt: expect.any(String),
-        }),
-      );
-      expect(repository.promote).toHaveBeenCalledWith(
-        expect.objectContaining({
-          externalAccountId: '123',
-          displayName: 'RecruitOps',
-          scopes: ['threads_basic', 'threads_content_publish'],
-          credential: encryptedCredential,
-        }),
-      );
-      expect(result.connectedByUserId).toBe(userId);
-    },
-  );
+    expect(cipher.encrypt).toHaveBeenCalledWith(
+      'THREADS',
+      expect.objectContaining({
+        accessToken: 'long-token',
+        tokenType: 'bearer',
+        scopes: ['threads_basic', 'threads_content_publish'],
+        expiresAt: expect.any(String),
+      }),
+    );
+    expect(repository.promote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalAccountId: '123',
+        displayName: 'RecruitOps',
+        scopes: ['threads_basic', 'threads_content_publish'],
+        credential: encryptedCredential,
+      }),
+    );
+    expect(result.connectedByUserId).toBe(userId);
+  });
 
-  it('rejects expired or replayed state before provider token exchange', async () => {
+  it('rejects expired or replayed state', async () => {
     const { service, sessions, provider } = createHarness();
     sessions.consumePending.mockResolvedValueOnce(null);
+    const action = service.callback({ code: 'oauth-code', state: 'expired' });
 
-    await expect(service.callback({ code: 'oauth-code', state: 'expired' })).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(action).rejects.toBeInstanceOf(UnauthorizedException);
     expect(provider.exchangeCode).not.toHaveBeenCalled();
   });
 
-  it('fails closed when the exchanged user and app-scoped profile do not match', async () => {
+  it('rejects a mismatched Threads profile', async () => {
     const { service, provider, repository } = createHarness();
     provider.getProfile.mockResolvedValueOnce({ id: '999', username: 'other' });
+    const action = service.callback({ code: 'oauth-code', state: 'oauth-state' });
 
-    await expect(
-      service.callback({ code: 'oauth-code', state: 'oauth-state' }),
-    ).rejects.toBeInstanceOf(BadGatewayException);
+    await expect(action).rejects.toBeInstanceOf(BadGatewayException);
     expect(repository.promote).not.toHaveBeenCalled();
   });
 
-  it('normalizes provider denial without attempting token exchange', async () => {
+  it('normalizes provider denial', async () => {
     const { service, provider } = createHarness();
+    const action = service.callback({ error: 'access_denied' });
 
-    await expect(service.callback({ error: 'access_denied' })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(action).rejects.toBeInstanceOf(BadRequestException);
     expect(provider.exchangeCode).not.toHaveBeenCalled();
   });
 });
