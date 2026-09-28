@@ -1,0 +1,29 @@
+{
+  "eyebrow": "Threads connection",
+  "title": "Connect a Threads account",
+  "description": "RecruitOps uses the official Threads OAuth flow. Access tokens stay server-side, are encrypted before durable storage, and are never returned to the browser.",
+  "connect": "Connect Threads",
+  "reconnect": "Reconnect",
+  "redirecting": "Redirecting to Threads...",
+  "refresh": "Refresh accounts",
+  "loading": "Loading connected Threads accounts...",
+  "noAccounts": "No Threads account is connected yet.",
+  "connectedNotice": "Threads authorization completed and the account connection was refreshed.",
+  "deniedNotice": "Threads authorization was cancelled. No account was changed.",
+  "dismiss": "Dismiss",
+  "loadFailed": "RecruitOps could not load Threads accounts. Try refreshing.",
+  "startFailed": "RecruitOps could not start Threads authorization. Check the server configuration and try again.",
+  "missingApiConfig": "The frontend API connection is not configured.",
+  "signInRequired": "Sign in to connect Threads.",
+  "ownerAdminRequired": "Only OWNER and ADMIN accounts can manage Threads connections.",
+  "accountId": "Threads user ID: {id}",
+  "status": "Status: {value}",
+  "expires": "Credential expiry: {value}",
+  "scopes": "Granted publishing scopes: {value}",
+  "statusValues": {
+    "CONNECTED": "Connected",
+    "EXPIRED": "Expired",
+    "REVOKED": "Revoked",
+    "ERROR": "Error"
+  }
+}
