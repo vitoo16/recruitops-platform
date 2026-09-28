@@ -54,7 +54,7 @@ function context(
 }
 
 describe('PrismaPublicationExecutionRepository', () => {
-  it('does not read provider context when another worker already claimed the publication', async () => {
+  it('does not read provider context when the same BullMQ attempt already claimed the publication', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 0 });
     const findUnique = vi.fn();
     const database = {
@@ -62,11 +62,19 @@ describe('PrismaPublicationExecutionRepository', () => {
     } as unknown as PrismaClient;
     const repository = new PrismaPublicationExecutionRepository(database);
 
-    await expect(repository.claim(publicationId)).resolves.toBeNull();
+    await expect(repository.claim(publicationId, 2)).resolves.toBeNull();
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: publicationId,
+          retryCount: { lt: 2 },
+        }),
+      }),
+    );
     expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it('maps the claimed durable publication context without exposing plaintext credentials', async () => {
+  it('allows a later BullMQ attempt to reclaim a PUBLISHING record left by a crashed attempt', async () => {
     const credential = encryptedCredential('FACEBOOK');
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
     const findUnique = vi.fn().mockResolvedValue({
@@ -108,17 +116,18 @@ describe('PrismaPublicationExecutionRepository', () => {
     } as unknown as PrismaClient;
     const repository = new PrismaPublicationExecutionRepository(database);
 
-    const claimed = await repository.claim(publicationId);
+    const claimed = await repository.claim(publicationId, 2);
 
     expect(updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           id: publicationId,
-          state: { in: ['PENDING', 'SCHEDULED', 'RETRY_WAITING'] },
-        }),
+          state: { in: ['PENDING', 'SCHEDULED', 'RETRY_WAITING', 'PUBLISHING'] },
+          retryCount: { lt: 2 },
+        },
         data: expect.objectContaining({
           state: 'PUBLISHING',
-          retryCount: { increment: 1 },
+          retryCount: 2,
         }),
       }),
     );
