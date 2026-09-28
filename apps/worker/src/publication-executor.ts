@@ -142,18 +142,11 @@ export class PublicationExecutor {
     const context = await this.repository.claim(publicationId, attemptNumber);
     if (!context) return { status: 'SKIPPED' };
 
+    let result: PublishResult;
     try {
       const publisher = await this.publishers.create(context);
       const command = buildCommand(context);
-      const result = await publisher.publish(command);
-
-      if (result.status === 'PROCESSING') {
-        await this.repository.markProcessing(publicationId, result);
-        return { status: 'PROCESSING', result };
-      }
-
-      await this.repository.markPublished(publicationId, result);
-      return { status: 'PUBLISHED', result };
+      result = await publisher.publish(command);
     } catch (error) {
       const failure = classifyPublicationFailure(error);
       if (failure.retryable && context.attemptNumber < defaultPublicationRetryPolicy.maxAttempts) {
@@ -167,5 +160,13 @@ export class PublicationExecutor {
       await this.repository.markFailed(publicationId, failure);
       return { status: 'FAILED', failure };
     }
+
+    if (result.status === 'PROCESSING') {
+      await this.repository.markProcessing(publicationId, result);
+      return { status: 'PROCESSING', result };
+    }
+
+    await this.repository.markPublished(publicationId, result);
+    return { status: 'PUBLISHED', result };
   }
 }
