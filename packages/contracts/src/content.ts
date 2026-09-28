@@ -50,7 +50,7 @@ export const PostListResponseSchema = z.object({
 
 const VariantTextSchema = z.string().trim().min(1).max(10_000);
 const VariantHashtagsSchema = z.array(z.string().trim().min(1).max(100)).max(30).default([]);
-const VariantMetadataSchema = z.record(z.string(), z.unknown()).default({});
+const VariantMetadataSchema = z.record(z.string(), z.json()).default({});
 
 export const PostVariantSchema = z.object({
   platform: SocialPlatformSchema,
