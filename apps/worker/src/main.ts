@@ -33,14 +33,15 @@ async function bootstrap(): Promise<void> {
 
   const runtime = await createPublicationWorkerRuntime({
     redisUrl: env.REDIS_URL,
-    handler: async (job) => {
-      const outcome = await executor.execute(job.publicationId);
+    handler: async (job, execution) => {
+      const outcome = await executor.execute(job.publicationId, execution.attemptNumber);
       console.log(
         JSON.stringify({
           level: 'info',
           service: 'recruitops-worker',
           event: 'publication_execution_complete',
           publicationId: job.publicationId,
+          attemptNumber: execution.attemptNumber,
           outcome: outcome.status,
         }),
       );
