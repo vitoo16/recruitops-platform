@@ -32,14 +32,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Format preview
-        run: |
-          pnpm exec prettier --write apps/api/src/threads-connections/threads-connections.service.test.ts
-          echo 'PRETTIER_OUTPUT_BEGIN'
-          base64 -w0 apps/api/src/threads-connections/threads-connections.service.test.ts
-          echo
-          echo 'PRETTIER_OUTPUT_END'
-          exit 1
+      - name: Format check
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
