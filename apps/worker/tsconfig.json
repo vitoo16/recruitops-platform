@@ -6,7 +6,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "isolatedModules": false,
-    "noEmit": false
+    "noEmit": false,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }
