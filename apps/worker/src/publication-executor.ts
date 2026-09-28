@@ -153,10 +153,7 @@ export class PublicationExecutor {
       return { status: 'PUBLISHED', result };
     } catch (error) {
       const failure = classifyPublicationFailure(error);
-      if (
-        failure.retryable &&
-        context.attemptNumber < defaultPublicationRetryPolicy.maxAttempts
-      ) {
+      if (failure.retryable && context.attemptNumber < defaultPublicationRetryPolicy.maxAttempts) {
         const nextRetryAt = new Date(
           Date.now() + calculateRetryDelayMs(context.attemptNumber, defaultPublicationRetryPolicy),
         );
