@@ -55,7 +55,9 @@ describe('ThreadsPublisher', () => {
     const [createUrl, createInit] = fetchMock.mock.calls[0] as [URL, RequestInit];
     expect(createUrl.toString()).toBe('https://graph.threads.net/v1.0/me/threads');
     expect(createUrl.toString()).not.toContain('threads-access-token');
-    expect(new Headers(createInit.headers).get('authorization')).toBe('Bearer threads-access-token');
+    expect(new Headers(createInit.headers).get('authorization')).toBe(
+      'Bearer threads-access-token',
+    );
     const createBody = new URLSearchParams(String(createInit.body));
     expect(createBody.get('media_type')).toBe('TEXT');
     expect(createBody.get('text')).toBe('We are hiring\n\n#jobs #cantho');
@@ -177,7 +179,9 @@ describe('ThreadsPublisher', () => {
     );
     const { publisher } = createHarness(fetchMock as unknown as typeof fetch);
 
-    await expect(publisher.publish(baseCommand)).rejects.toMatchObject<Partial<ThreadsPublishingError>>({
+    await expect(publisher.publish(baseCommand)).rejects.toMatchObject<
+      Partial<ThreadsPublishingError>
+    >({
       code: 'THREADS_CREATE_CONTAINER_FAILED_PROVIDER_190',
       status: 401,
     });
