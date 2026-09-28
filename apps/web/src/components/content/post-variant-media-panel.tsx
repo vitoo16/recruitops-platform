@@ -121,6 +121,7 @@ export function PostVariantMediaPanel({
                 <Input
                   id="variant-hashtags"
                   name="variantHashtags"
+                  className="h-11"
                   autoComplete="off"
                   placeholder={t('hashtagsPlaceholder')}
                   value={variantHashtags}
@@ -135,6 +136,7 @@ export function PostVariantMediaPanel({
                 <Input
                   id="variant-link"
                   name="variantLink"
+                  className="h-11"
                   type="url"
                   inputMode="url"
                   autoComplete="off"
@@ -146,7 +148,12 @@ export function PostVariantMediaPanel({
               </div>
             </div>
             {canMutate ? (
-              <Button type="button" disabled={savingVariant} onClick={onSaveVariant}>
+              <Button
+                className="min-h-11"
+                type="button"
+                disabled={savingVariant}
+                onClick={onSaveVariant}
+              >
                 {savingVariant ? t('savingVariant') : t('saveVariant')}
               </Button>
             ) : null}
@@ -231,6 +238,7 @@ export function PostVariantMediaPanel({
 
                 {canMutate ? (
                   <Button
+                    className="min-h-11"
                     type="button"
                     variant="outline"
                     disabled={savingSelection}

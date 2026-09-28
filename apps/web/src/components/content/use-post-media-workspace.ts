@@ -26,6 +26,13 @@ interface UsePostMediaWorkspaceInput {
   reportError: ContentStudioErrorReporter;
 }
 
+const emptyPostForm: ContentStudioPostForm = {
+  jobId: '',
+  title: '',
+  baseContent: '',
+  language: 'vi',
+};
+
 export function usePostMediaWorkspace({
   session,
   apiUrl,
@@ -38,13 +45,12 @@ export function usePostMediaWorkspace({
   const [postId, setPostId] = useState('');
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [file, setFile] = useState<File | null>(null);
+  const [fileInputVersion, setFileInputVersion] = useState(0);
   const [altText, setAltText] = useState('');
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const form = useForm<ContentStudioPostForm>({
-    defaultValues: { jobId: '', title: '', baseContent: '', language: 'vi' },
-  });
+  const form = useForm<ContentStudioPostForm>({ defaultValues: emptyPostForm });
   const selectedJobId = form.watch('jobId');
   const selectedPost = posts.find((post) => post.id === postId);
 
@@ -59,8 +65,12 @@ export function usePostMediaWorkspace({
       setPosts([]);
       setAssets([]);
       setPostId('');
+      setFile(null);
+      setAltText('');
+      setFileInputVersion((current) => current + 1);
+      form.reset(emptyPostForm);
     }
-  }, [session]);
+  }, [form, session]);
 
   const loadPostsForJob = useCallback(
     async (jobId: string) => {
@@ -186,6 +196,7 @@ export function usePostMediaWorkspace({
       await registerMediaAsset(apiUrl, session.access_token, registration);
       setFile(null);
       setAltText('');
+      setFileInputVersion((current) => current + 1);
       await loadAssets(postId);
     } catch (caught) {
       if (caught instanceof PrivateFileAccessError) {
@@ -214,6 +225,7 @@ export function usePostMediaWorkspace({
     assets,
     file,
     setFile,
+    fileInputVersion,
     altText,
     setAltText,
     loadingPosts,

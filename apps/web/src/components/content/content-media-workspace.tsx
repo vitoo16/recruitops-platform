@@ -57,6 +57,7 @@ export function ContentMediaWorkspace() {
           postId={studio.postId}
           assets={studio.assets}
           file={studio.file}
+          fileInputVersion={studio.fileInputVersion}
           altText={studio.altText}
           loading={studio.loadingAssets}
           uploading={studio.uploading}

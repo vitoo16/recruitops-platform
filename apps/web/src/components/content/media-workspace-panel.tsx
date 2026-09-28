@@ -11,6 +11,7 @@ interface MediaWorkspacePanelProps {
   postId: string;
   assets: MediaAsset[];
   file: File | null;
+  fileInputVersion: number;
   altText: string;
   loading: boolean;
   uploading: boolean;
@@ -25,6 +26,7 @@ export function MediaWorkspacePanel({
   postId,
   assets,
   file,
+  fileInputVersion,
   altText,
   loading,
   uploading,
@@ -58,11 +60,12 @@ export function MediaWorkspacePanel({
             {t('mediaFile')}
           </label>
           <input
+            key={fileInputVersion}
             id="content-media-file"
             name="contentMediaFile"
             type="file"
             accept="image/jpeg,image/png,image/webp,video/mp4"
-            className="block w-full text-sm file:mr-4 file:min-h-11 file:rounded-md file:border file:bg-[var(--surface-panel)] file:px-3 file:py-2 file:text-sm file:font-medium"
+            className="block min-h-11 w-full text-sm file:mr-4 file:min-h-11 file:rounded-md file:border file:bg-[var(--surface-panel)] file:px-3 file:py-2 file:text-sm file:font-medium"
             onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
           />
           <p className="text-xs leading-5 text-[var(--content-secondary)]">{t('mediaHint')}</p>
@@ -72,6 +75,7 @@ export function MediaWorkspacePanel({
           <Input
             id="content-media-alt"
             name="contentMediaAlt"
+            className="h-11"
             autoComplete="off"
             value={altText}
             maxLength={500}
@@ -83,7 +87,7 @@ export function MediaWorkspacePanel({
             </p>
           ) : null}
           <Button
-            className="w-full"
+            className="min-h-11 w-full"
             type="button"
             disabled={!postId || !file || uploading}
             onClick={onUpload}
