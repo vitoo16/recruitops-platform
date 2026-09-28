@@ -33,10 +33,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Format check
-        run: |
-          pnpm exec prettier --write apps/worker/src/oauth-credential-resolver.ts
-          git diff -- apps/worker/src/oauth-credential-resolver.ts
-          test -z "$(git status --short apps/worker/src/oauth-credential-resolver.ts)"
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
