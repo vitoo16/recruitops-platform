@@ -43,6 +43,15 @@ function safeRuntimeErrorCode(error: unknown): string {
   return 'RUNTIME_ERROR';
 }
 
+export function buildPublicationJobExecutionContext(
+  attemptsMade: number,
+): PublicationJobExecutionContext {
+  if (!Number.isInteger(attemptsMade) || attemptsMade < 0) {
+    throw new RangeError('attemptsMade must be a non-negative integer');
+  }
+  return { attemptNumber: attemptsMade + 1 };
+}
+
 export function validatePublicationQueueJob(input: unknown): PublicationQueueJob {
   if (!input || typeof input !== 'object') {
     throw new TypeError('publication queue job must be an object');
@@ -119,11 +128,7 @@ export function createPublicationWorker(input: {
       }
 
       const data = validatePublicationQueueJob(job.data);
-      const attemptNumber = job.attemptsMade + 1;
-      if (!Number.isInteger(attemptNumber) || attemptNumber < 1) {
-        throw new Error('PUBLICATION_ATTEMPT_NUMBER_INVALID');
-      }
-      await input.handler(data, { attemptNumber });
+      await input.handler(data, buildPublicationJobExecutionContext(job.attemptsMade));
     },
     buildPublicationWorkerOptions(input.connection, input.limits),
   );
