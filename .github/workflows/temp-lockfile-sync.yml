@@ -1,0 +1,35 @@
+name: Temporary Lockfile Sync
+
+on:
+  push:
+    branches: [feat/shared-oauth-credential-runtime]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/shared-oauth-credential-runtime
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Commit canonical lockfile when changed
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "Lockfile already canonical."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore: sync pnpm lockfile"
+          git push origin HEAD:feat/shared-oauth-credential-runtime
