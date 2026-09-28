@@ -31,7 +31,7 @@ function mapDatabasePost(post: DatabasePost): Post {
 function mapPostVariant(variant: DatabasePostVariant): PostVariantRecord {
   const metadata =
     variant.metadata && typeof variant.metadata === 'object' && !Array.isArray(variant.metadata)
-      ? (variant.metadata as Record<string, unknown>)
+      ? (variant.metadata as PostVariantRecord['metadata'])
       : {};
 
   return {
