@@ -287,7 +287,9 @@ export class DefaultPublicationPublisherFactory implements PublicationPublisherF
       },
     };
 
-    const resolveMedia = async (mediaIds: readonly string[]): Promise<readonly ResolvedProviderMedia[]> => {
+    const resolveMedia = async (
+      mediaIds: readonly string[],
+    ): Promise<readonly ResolvedProviderMedia[]> => {
       const sources: ResolvedProviderMedia[] = [];
       for (const mediaId of mediaIds) {
         const source = context.media.find((item) => item.id === mediaId);
