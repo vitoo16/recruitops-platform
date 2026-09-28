@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildPublicationJobExecutionContext,
   buildPublicationWorkerOptions,
   normalizePublicationWorkerLimits,
   validatePublicationQueueJob,
@@ -38,6 +39,13 @@ describe('publication worker boundary', () => {
       concurrency: 3,
       limiter: { max: 8, duration: 1_500 },
     });
+  });
+
+  it('maps zero-based BullMQ attemptsMade to a one-based execution attempt', () => {
+    expect(buildPublicationJobExecutionContext(0)).toEqual({ attemptNumber: 1 });
+    expect(buildPublicationJobExecutionContext(2)).toEqual({ attemptNumber: 3 });
+    expect(() => buildPublicationJobExecutionContext(-1)).toThrow(RangeError);
+    expect(() => buildPublicationJobExecutionContext(1.5)).toThrow(RangeError);
   });
 
   it('rejects queue payloads whose idempotency key does not match the publication id', () => {
