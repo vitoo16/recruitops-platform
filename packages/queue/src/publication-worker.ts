@@ -25,8 +25,12 @@ export const defaultPublicationWorkerLimits: Readonly<PublicationWorkerLimits> =
   durationMs: 1_000,
 };
 
+export interface PublicationJobExecutionContext {
+  attemptNumber: number;
+}
+
 export interface PublicationJobHandler {
-  (job: PublicationQueueJob): Promise<void>;
+  (job: PublicationQueueJob, context: PublicationJobExecutionContext): Promise<void>;
 }
 
 function safeRuntimeErrorCode(error: unknown): string {
@@ -115,7 +119,11 @@ export function createPublicationWorker(input: {
       }
 
       const data = validatePublicationQueueJob(job.data);
-      await input.handler(data);
+      const attemptNumber = job.attemptsMade + 1;
+      if (!Number.isInteger(attemptNumber) || attemptNumber < 1) {
+        throw new Error('PUBLICATION_ATTEMPT_NUMBER_INVALID');
+      }
+      await input.handler(data, { attemptNumber });
     },
     buildPublicationWorkerOptions(input.connection, input.limits),
   );
