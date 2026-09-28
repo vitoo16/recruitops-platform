@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@recruitops/database": "workspace:*",
+    "@recruitops/integrations": "workspace:*",
     "@recruitops/queue": "workspace:*"
   },
   "devDependencies": {
