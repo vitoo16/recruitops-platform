@@ -2,12 +2,12 @@
 
 ## Verified official basis
 
-This slice implements the documented Meta Threads API single-post flow using the official `graph.threads.net` surface:
+This slice implements the documented Meta Threads API single-post flow using the official unversioned API host `https://graph.threads.net`:
 
 1. create a media container with `POST /{threads-user-id}/threads` (RecruitOps uses `/me/threads`);
 2. publish the returned container with `POST /{threads-user-id}/threads_publish` (RecruitOps uses `/me/threads_publish`).
 
-The adapter is intentionally vendor-isolated behind the shared `SocialPublisher` contract.
+The adapter is intentionally vendor-isolated behind the shared `SocialPublisher` contract. It does not prepend a Facebook Graph API version segment because Meta's current official Threads workspace defines the Threads `api_host` directly as `https://graph.threads.net`.
 
 ## Supported in this slice
 
