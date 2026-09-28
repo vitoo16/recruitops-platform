@@ -34,7 +34,7 @@ function createHarness(fetchFn: typeof fetch) {
   const media = {
     resolve: vi.fn().mockResolvedValue([]),
   };
-  const publisher = new ThreadsPublisher({ apiVersion: 'v1.0' }, contexts, media, fetchFn);
+  const publisher = new ThreadsPublisher(contexts, media, fetchFn);
   return { publisher, contexts, media };
 }
 
@@ -53,7 +53,7 @@ describe('ThreadsPublisher', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const [createUrl, createInit] = fetchMock.mock.calls[0] as [URL, RequestInit];
-    expect(createUrl.toString()).toBe('https://graph.threads.net/v1.0/me/threads');
+    expect(createUrl.toString()).toBe('https://graph.threads.net/me/threads');
     expect(createUrl.toString()).not.toContain('threads-access-token');
     expect(new Headers(createInit.headers).get('authorization')).toBe(
       'Bearer threads-access-token',
@@ -63,7 +63,7 @@ describe('ThreadsPublisher', () => {
     expect(createBody.get('text')).toBe('We are hiring\n\n#jobs #cantho');
 
     const [publishUrl, publishInit] = fetchMock.mock.calls[1] as [URL, RequestInit];
-    expect(publishUrl.toString()).toBe('https://graph.threads.net/v1.0/me/threads_publish');
+    expect(publishUrl.toString()).toBe('https://graph.threads.net/me/threads_publish');
     expect(new URLSearchParams(String(publishInit.body)).get('creation_id')).toBe('container-1');
   });
 
@@ -185,17 +185,5 @@ describe('ThreadsPublisher', () => {
       code: 'THREADS_CREATE_CONTAINER_FAILED_PROVIDER_190',
       status: 401,
     });
-  });
-
-  it('fails closed on invalid API versions', () => {
-    expect(
-      () =>
-        new ThreadsPublisher(
-          { apiVersion: 'latest' },
-          { resolve: vi.fn() },
-          { resolve: vi.fn() },
-          vi.fn() as unknown as typeof fetch,
-        ),
-    ).toThrow('THREADS_API_VERSION_INVALID');
   });
 });
