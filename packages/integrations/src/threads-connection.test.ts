@@ -79,7 +79,6 @@ describe('ThreadsConnectionProvider', () => {
       id: '123',
       username: 'recruitops',
       name: 'RecruitOps',
-      profilePictureUrl: undefined,
     });
 
     const profileInit = fetchImpl.mock.calls[1]?.[1] as RequestInit;
