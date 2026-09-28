@@ -10,7 +10,10 @@ export class WorkerOAuthCredentialResolver {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async resolveAccessToken(socialAccountId: string, expectedPlatform: SocialPlatform): Promise<string> {
+  async resolveAccessToken(
+    socialAccountId: string,
+    expectedPlatform: SocialPlatform,
+  ): Promise<string> {
     const account = await this.prisma.socialAccount.findUnique({
       where: { id: socialAccountId },
       select: {
