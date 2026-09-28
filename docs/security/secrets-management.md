@@ -22,7 +22,7 @@ Examples include:
 
 - database connection URLs containing credentials;
 - Redis credential-bearing connection URLs;
-- Supabase secret/service-role keys;
+- Supabase secret/service-role keys, including `SUPABASE_SECRET_KEY` used by the provider-media worker boundary;
 - S3 access key IDs and secret access keys;
 - OAuth client secrets and refresh/access tokens;
 - OAuth credential-encryption keys;
@@ -71,6 +71,24 @@ The `social_credentials` table is API-owned. Browser roles receive no direct pol
 
 Provider-specific OAuth code must use the server-side credential store rather than persisting or returning raw tokens through public/shared contracts.
 
+## Provider-readable private media
+
+Instagram and Threads provider ingestion requires an HTTPS URL their servers can fetch. RecruitOps keeps the canonical bucket private and creates a short-lived signed URL only inside the publishing worker after the publication projection has already supplied explicit MediaAsset UUIDs.
+
+The resolver boundary must:
+
+- load only the requested `MediaAsset` records from PostgreSQL;
+- accept publishable media kinds only (`IMAGE` / `VIDEO`);
+- preserve the explicit PostVariant media order;
+- use a server-only Supabase secret key to create the signed URL;
+- reject URLs that do not resolve to the configured HTTPS Supabase origin;
+- keep signed URLs in memory only for the immediate provider request;
+- never persist or log the signed URL, its token/query string, the private `storageKey`, or the Supabase secret key.
+
+Signed URLs are bearer capabilities and remain valid until their configured expiry. `PROVIDER_MEDIA_SIGNED_URL_TTL_SECONDS` is therefore bounded and should remain as short as provider ingestion reliably permits. The current worker default is 900 seconds.
+
+The worker accepts the modern `sb_secret_...` key form through `SUPABASE_SECRET_KEY`. It intentionally does not accept a browser publishable key. Production secret injection remains a deployment action and is not authorized by committing this code.
+
 ## Deployment rules
 
 ### Render
@@ -80,6 +98,7 @@ Provider-specific OAuth code must use the server-side credential store rather th
 - Public frontend build variables must be intentionally reviewed because static-site build-time values become browser-visible.
 - Credential-bearing `DATABASE_URL` and `REDIS_URL` remain server-only API/worker variables.
 - OAuth encryption keyring values must be configured only on trusted server/worker runtimes that need to decrypt provider credentials.
+- `SUPABASE_SECRET_KEY` may be configured only on the publishing worker/runtime that needs to sign provider-readable media URLs; it must not be injected into the static frontend.
 
 ### Supabase
 
@@ -88,6 +107,7 @@ Provider-specific OAuth code must use the server-side credential store rather th
 - Never expose a service-role/secret key in `NEXT_PUBLIC_*` configuration.
 - Candidate/CV access must not rely on obscurity of bucket URLs; authorization must be enforced.
 - `social_credentials` remains API-owned and must not receive browser-facing Data API grants/policies.
+- Provider-media signing must keep the bucket private; temporary signed URLs are generated server-side and are not stored as application data.
 
 ### n8n
 
@@ -133,6 +153,7 @@ Before merging a change that touches credentials or integrations:
 - [ ] least-privilege scope is used;
 - [ ] OAuth token material is encrypted before persistence;
 - [ ] encryption keys exist only in authorized runtime secret storage;
+- [ ] provider-media signing URLs and tokens are not persisted/logged;
 - [ ] logs/errors do not reveal the credential;
 - [ ] rotation/revocation procedure is understood;
 - [ ] `pnpm secrets:check` passes.

@@ -312,6 +312,9 @@ importers:
       '@recruitops/queue':
         specifier: workspace:*
         version: link:../../packages/queue
+      '@supabase/supabase-js':
+        specifier: 2.117.2
+        version: 2.117.2
     devDependencies:
       '@types/node':
         specifier: ^24.10.0
