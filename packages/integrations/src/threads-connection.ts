@@ -100,8 +100,10 @@ export class ThreadsConnectionProvider {
     const url = new URL('https://graph.threads.net/access_token');
     url.searchParams.set('grant_type', 'th_exchange_token');
     url.searchParams.set('client_secret', this.config.appSecret);
-    url.searchParams.set('access_token', shortLivedAccessToken);
-    const response = await this.fetchImpl(url, { method: 'GET' });
+    const response = await this.fetchImpl(url, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${shortLivedAccessToken}` },
+    });
     const parsed = await this.parseResponse(
       response,
       LongLivedTokenSchema,
