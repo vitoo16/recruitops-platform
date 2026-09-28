@@ -81,6 +81,11 @@ describe('ThreadsConnectionProvider', () => {
       name: 'RecruitOps',
     });
 
+    const exchangeUrl = new URL(String(fetchImpl.mock.calls[0]?.[0]));
+    expect(exchangeUrl.searchParams.has('access_token')).toBe(false);
+    const exchangeInit = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect(exchangeInit.headers).toEqual({ Authorization: 'Bearer short-token' });
+
     const profileInit = fetchImpl.mock.calls[1]?.[1] as RequestInit;
     expect(profileInit.headers).toEqual({ Authorization: 'Bearer long-token' });
   });
