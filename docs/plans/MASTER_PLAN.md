@@ -94,7 +94,7 @@
 - [x] Implement BullMQ scheduling primitive (delayed enqueue, duplicate-safe job identity, bounded retry/backoff; provider execution remains separately gated).
 - [x] Implement idempotency keys.
 - [x] Implement retry/backoff/terminal-failure behavior.
-- [x] Implement rate-limit-aware worker boundary (validated queue payloads, configurable concurrency and BullMQ limiter; provider handlers remain separately gated).
+- [x] Implement rate-limit-aware worker boundary (validated queue payloads, configurable concurrency/BullMQ limiter, compare-and-set publication execution state orchestration and normalized retry classification implemented; Prisma credential/media/runtime provider wiring remains separately gated).
 - [x] Implement Facebook Page adapter for currently supported official capabilities (verified text/link Page feed publishing slice; private-media publishing remains a later capability).
 - [x] Implement Instagram adapter for currently supported official capabilities (single-image and Reel container/publish flow with bounded Reel readiness polling and private-media resolver boundary).
 - [ ] Implement Threads adapter for currently supported official capabilities (official create-container → publish-container single-post adapter for text/image/video plus regression coverage implemented; carousel, polls, GIF/quote/repost and other advanced currently-supported features remain intentionally unclaimed).
