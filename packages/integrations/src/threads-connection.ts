@@ -68,7 +68,6 @@ interface ThreadsApiErrorPayload {
     code?: number;
     type?: string;
   };
-  error_type?: string;
 }
 
 async function requestJson<T>(
@@ -149,9 +148,7 @@ function parseProfile(input: unknown): ThreadsProfile {
   return {
     id: data.id,
     username: data.username.trim(),
-    ...(typeof data.name === 'string' && data.name.trim()
-      ? { name: data.name.trim() }
-      : {}),
+    ...(typeof data.name === 'string' && data.name.trim() ? { name: data.name.trim() } : {}),
   };
 }
 
@@ -202,11 +199,19 @@ export class ThreadsConnectionProvider {
   }
 
   async exchangeLongLivedToken(shortLivedAccessToken: string): Promise<ThreadsAccessToken> {
+    const token = requireNonEmpty('ACCESS_TOKEN', shortLivedAccessToken);
     const url = new URL('https://graph.threads.net/access_token');
     url.searchParams.set('grant_type', 'th_exchange_token');
     url.searchParams.set('client_secret', this.config.appSecret);
-    url.searchParams.set('access_token', requireNonEmpty('ACCESS_TOKEN', shortLivedAccessToken));
-    const payload = await requestJson<unknown>(this.fetchFn, url, { method: 'GET' }, 'LONG_LIVED_TOKEN_EXCHANGE');
+    const payload = await requestJson<unknown>(
+      this.fetchFn,
+      url,
+      {
+        method: 'GET',
+        headers: { authorization: `Bearer ${token}` },
+      },
+      'LONG_LIVED_TOKEN_EXCHANGE',
+    );
     return parseAccessToken(payload, 'LONG_LIVED_TOKEN_EXCHANGE');
   }
 
