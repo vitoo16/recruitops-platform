@@ -22,7 +22,7 @@ import type {
   PublicationPublisherFactory,
 } from './publication-executor.js';
 
-const RUNNABLE_STATES = ['PENDING', 'SCHEDULED', 'RETRY_WAITING'] as const;
+const CLAIMABLE_STATES = ['PENDING', 'SCHEDULED', 'RETRY_WAITING', 'PUBLISHING'] as const;
 const SAFE_FAILURE_MESSAGE = 'Publication provider execution failed';
 
 function executionError(code: string): Error & { code: string } {
@@ -61,15 +61,19 @@ function toCredential(
 export class PrismaPublicationExecutionRepository implements PublicationExecutionRepository {
   constructor(private readonly database: PrismaClient) {}
 
-  async claim(publicationId: string): Promise<PublicationExecutionContext | null> {
+  async claim(
+    publicationId: string,
+    attemptNumber: number,
+  ): Promise<PublicationExecutionContext | null> {
     const claimed = await this.database.publication.updateMany({
       where: {
         id: publicationId,
-        state: { in: [...RUNNABLE_STATES] },
+        state: { in: [...CLAIMABLE_STATES] },
+        retryCount: { lt: attemptNumber },
       },
       data: {
         state: 'PUBLISHING',
-        retryCount: { increment: 1 },
+        retryCount: attemptNumber,
         nextRetryAt: null,
         lastErrorCode: null,
         lastErrorMessage: null,
@@ -107,7 +111,7 @@ export class PrismaPublicationExecutionRepository implements PublicationExecutio
 
     return {
       publicationId: publication.id,
-      attemptNumber: publication.retryCount,
+      attemptNumber,
       platform: publication.postVariant.platform,
       destinationPlatform: publication.destination.platform,
       destinationId: publication.destination.id,
