@@ -19,28 +19,30 @@ export function ThreadsConnectionPanel() {
   }
 
   if (!workspace.signedIn) {
-    return <p className="text-sm text-neutral-500">{t('signInRequired')}</p>;
+    return <p className="text-sm text-[var(--content-secondary)]">{t('signInRequired')}</p>;
   }
 
   if (!workspace.canManage) {
-    return <p className="text-sm text-neutral-500">{t('ownerAdminRequired')}</p>;
+    return <p className="text-sm text-[var(--content-secondary)]">{t('ownerAdminRequired')}</p>;
   }
 
   return (
     <section
-      className="space-y-6 rounded-2xl border bg-white p-6"
+      className="space-y-6 rounded-[var(--radius-panel)] border bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-panel)]"
       aria-labelledby="threads-connection-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
+          <p className="text-sm font-medium text-[var(--content-secondary)]">{t('eyebrow')}</p>
           <h2
             id="threads-connection-title"
             className="mt-1 text-2xl font-semibold tracking-tight text-balance"
           >
             {t('title')}
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">{t('description')}</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--content-secondary)]">
+            {t('description')}
+          </p>
         </div>
         <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
       </div>
@@ -112,11 +114,11 @@ export function ThreadsConnectionPanel() {
 
       <div aria-live="polite">
         {workspace.loading && workspace.accounts.length === 0 ? (
-          <p className="text-sm text-neutral-500">{t('loading')}</p>
+          <p className="text-sm text-[var(--content-secondary)]">{t('loading')}</p>
         ) : null}
 
         {!workspace.loading && workspace.accounts.length === 0 && !workspace.loadError ? (
-          <p className="rounded-xl border border-dashed px-4 py-6 text-sm text-neutral-500">
+          <p className="rounded-xl border border-dashed px-4 py-6 text-sm text-[var(--content-secondary)]">
             {t('noAccounts')}
           </p>
         ) : null}
@@ -124,25 +126,28 @@ export function ThreadsConnectionPanel() {
         {workspace.accounts.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2">
             {workspace.accounts.map((account) => (
-              <article key={account.id} className="min-w-0 rounded-xl border bg-neutral-50 p-4">
+              <article
+                key={account.id}
+                className="min-w-0 rounded-xl border bg-[var(--surface-subtle)] p-4"
+              >
                 <div className="flex items-start gap-3">
                   <AtSign className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold">{account.displayName}</h3>
-                    <p className="mt-2 break-all text-xs text-neutral-500">
+                    <p className="mt-2 break-all text-xs text-[var(--content-secondary)]">
                       {t('accountId', { id: account.externalAccountId })}
                     </p>
-                    <p className="mt-2 text-sm text-neutral-700">
+                    <p className="mt-2 text-sm text-[var(--content-primary)]">
                       {t('status', { value: t(`statusValues.${account.status}`) })}
                     </p>
                     {account.expiresAt ? (
-                      <p className="mt-2 text-sm text-neutral-600">
+                      <p className="mt-2 text-sm text-[var(--content-secondary)]">
                         {t('expires', {
                           value: dateFormatter.format(new Date(account.expiresAt)),
                         })}
                       </p>
                     ) : null}
-                    <p className="mt-2 break-words text-sm text-neutral-600">
+                    <p className="mt-2 break-words text-sm text-[var(--content-secondary)]">
                       {t('scopes', { value: account.scopes.join(', ') })}
                     </p>
                   </div>
