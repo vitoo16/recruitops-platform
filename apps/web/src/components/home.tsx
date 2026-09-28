@@ -10,6 +10,8 @@ import { ContentMediaWorkspace } from '@/components/content/content-media-worksp
 import { JobHub } from '@/components/jobs/job-hub';
 import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
 import { Button } from '@/components/ui/button';
+import contentStudioEn from '@/messages/content-studio.en.json';
+import contentStudioVi from '@/messages/content-studio.vi.json';
 import en from '@/messages/en.json';
 import metaEn from '@/messages/meta-connections.en.json';
 import metaVi from '@/messages/meta-connections.vi.json';
@@ -33,7 +35,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <div>
           <p className="mb-4 text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
-          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
+          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
             {t('title')}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
@@ -79,6 +81,7 @@ export function Home() {
   const messages = {
     ...baseMessages,
     metaConnections: locale === 'vi' ? metaVi : metaEn,
+    contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
   };
 
   return (
