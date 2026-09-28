@@ -39,7 +39,11 @@ function createRepository(record: PublicationExecutionRecord = baseRecord) {
     loadForExecution: vi.fn().mockImplementation(async () => structuredClone(current)),
     compareAndSet: vi.fn().mockImplementation(async (_id, expectedStates, patch) => {
       if (!expectedStates.includes(current.state)) return false;
-      current = { ...current, state: patch.state, retryCount: patch.retryCount ?? current.retryCount };
+      current = {
+        ...current,
+        state: patch.state,
+        retryCount: patch.retryCount ?? current.retryCount,
+      };
       patches.push(patch);
       return true;
     }),
@@ -143,9 +147,9 @@ describe('executePublication', () => {
     const publisher = createPublisher({ publish: vi.fn().mockRejectedValue(providerError) });
     const now = new Date('2026-09-28T12:00:00.000Z');
 
-    await expect(executePublication(job, repository, registry(publisher), now)).rejects.toBeInstanceOf(
-      PublicationRetryableError,
-    );
+    await expect(
+      executePublication(job, repository, registry(publisher), now),
+    ).rejects.toBeInstanceOf(PublicationRetryableError);
     expect(patches.at(-1)).toMatchObject({
       state: 'RETRY_WAITING',
       retryCount: 1,
@@ -174,7 +178,11 @@ describe('executePublication', () => {
   });
 
   it('stops retrying once the configured attempt budget is exhausted', async () => {
-    const { repository, patches } = createRepository({ ...baseRecord, state: 'RETRY_WAITING', retryCount: 4 });
+    const { repository, patches } = createRepository({
+      ...baseRecord,
+      state: 'RETRY_WAITING',
+      retryCount: 4,
+    });
     const providerError = Object.assign(new Error('still unavailable'), {
       code: 'META_PROVIDER_TEMPORARY',
       status: 503,
