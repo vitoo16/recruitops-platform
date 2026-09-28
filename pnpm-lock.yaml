@@ -300,9 +300,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@recruitops/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@recruitops/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@recruitops/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@recruitops/queue':
         specifier: workspace:*
         version: link:../../packages/queue
@@ -377,6 +383,9 @@ importers:
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
+      '@types/node':
+        specifier: ^24.10.0
+        version: 24.13.6
       typescript:
         specifier: ^6.0.0
         version: 6.0.3
