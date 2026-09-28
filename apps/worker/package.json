@@ -11,7 +11,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@recruitops/contracts": "workspace:*",
     "@recruitops/database": "workspace:*",
+    "@recruitops/integrations": "workspace:*",
     "@recruitops/queue": "workspace:*"
   },
   "devDependencies": {
