@@ -227,9 +227,7 @@ export function createSupabaseProviderMediaResolver(input: {
       supabaseUrl: input.supabaseUrl,
       supabaseSecretKey: input.supabaseSecretKey,
       ...(input.bucket ? { bucket: input.bucket } : {}),
-      ...(input.expiresInSeconds !== undefined
-        ? { expiresInSeconds: input.expiresInSeconds }
-        : {}),
+      ...(input.expiresInSeconds !== undefined ? { expiresInSeconds: input.expiresInSeconds } : {}),
     }),
   );
 }

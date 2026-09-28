@@ -32,7 +32,9 @@ describe('PrismaProviderMediaResolver', () => {
     ]);
     const sign = vi
       .fn()
-      .mockImplementation(async (storageKey: string) => `https://project.supabase.co/${storageKey}`);
+      .mockImplementation(
+        async (storageKey: string) => `https://project.supabase.co/${storageKey}`,
+      );
     const resolver = new PrismaProviderMediaResolver(database, { sign });
 
     await expect(
@@ -62,9 +64,9 @@ describe('PrismaProviderMediaResolver', () => {
     const sign = vi.fn();
     const resolver = new PrismaProviderMediaResolver(database, { sign });
 
-    await expect(
-      resolver.resolve(['11111111-1111-4111-8111-111111111111']),
-    ).rejects.toMatchObject({ code: 'WORKER_PROVIDER_MEDIA_NOT_FOUND' });
+    await expect(resolver.resolve(['11111111-1111-4111-8111-111111111111'])).rejects.toMatchObject({
+      code: 'WORKER_PROVIDER_MEDIA_NOT_FOUND',
+    });
     expect(sign).not.toHaveBeenCalled();
   });
 
@@ -80,9 +82,9 @@ describe('PrismaProviderMediaResolver', () => {
     const sign = vi.fn();
     const resolver = new PrismaProviderMediaResolver(database, { sign });
 
-    await expect(
-      resolver.resolve(['11111111-1111-4111-8111-111111111111']),
-    ).rejects.toMatchObject({ code: 'WORKER_PROVIDER_MEDIA_KIND_UNSUPPORTED' });
+    await expect(resolver.resolve(['11111111-1111-4111-8111-111111111111'])).rejects.toMatchObject({
+      code: 'WORKER_PROVIDER_MEDIA_KIND_UNSUPPORTED',
+    });
     expect(sign).not.toHaveBeenCalled();
   });
 
@@ -101,10 +103,7 @@ describe('PrismaProviderMediaResolver', () => {
 });
 
 describe('SupabaseProviderMediaUrlSigner', () => {
-  function createStorageClient(result: {
-    data: { signedUrl: string } | null;
-    error: unknown;
-  }) {
+  function createStorageClient(result: { data: { signedUrl: string } | null; error: unknown }) {
     const createSignedUrl = vi.fn().mockResolvedValue(result);
     const from = vi.fn().mockReturnValue({ createSignedUrl });
     const client = { storage: { from } } as ProviderMediaStorageClient;
