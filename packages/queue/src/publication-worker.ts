@@ -148,7 +148,7 @@ export async function createPublicationWorkerRuntime(input: {
   const worker = createPublicationWorker({
     connection,
     handler: input.handler,
-    limits: input.limits,
+    ...(input.limits === undefined ? {} : { limits: input.limits }),
   });
 
   return {
