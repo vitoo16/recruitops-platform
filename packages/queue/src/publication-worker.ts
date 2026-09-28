@@ -29,6 +29,16 @@ export interface PublicationJobHandler {
   (job: PublicationQueueJob): Promise<void>;
 }
 
+function safeRuntimeErrorCode(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const code = (error as { code?: unknown }).code;
+    if (typeof code === 'string' && /^[A-Z0-9_:-]{1,160}$/i.test(code)) return code;
+    const name = (error as { name?: unknown }).name;
+    if (typeof name === 'string' && /^[A-Z0-9_:-]{1,160}$/i.test(name)) return name;
+  }
+  return 'RUNTIME_ERROR';
+}
+
 export function validatePublicationQueueJob(input: unknown): PublicationQueueJob {
   if (!input || typeof input !== 'object') {
     throw new TypeError('publication queue job must be an object');
@@ -116,7 +126,7 @@ export function createPublicationWorker(input: {
         level: 'error',
         service: 'recruitops-worker',
         event: 'publication_worker_error',
-        message: error.message,
+        code: safeRuntimeErrorCode(error),
       }),
     );
   });
@@ -138,7 +148,7 @@ export async function createPublicationWorkerRuntime(input: {
         level: 'error',
         service: 'recruitops-worker',
         event: 'redis_error',
-        message: error instanceof Error ? error.message : 'unknown redis error',
+        code: safeRuntimeErrorCode(error),
       }),
     );
   });
