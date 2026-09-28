@@ -40,7 +40,7 @@ State claims and result writes use a single Prisma `updateMany` predicate over P
 
 ### Media selection boundary
 
-Private MediaAssets remain owned by the canonical Post. Publishing media is now explicit: `PostVariantMediaAsset` stores the ordered set selected for one platform variant.
+Private MediaAssets remain owned by the canonical Post. Publishing media is explicit: `PostVariantMediaAsset` stores the ordered set selected for one platform variant.
 
 The Content API validates replacement selections before writing them:
 
@@ -52,7 +52,17 @@ The Content API validates replacement selections before writing them:
 
 The worker reads only `mediaAssetId` from that relation, ordered by `position`, and maps those IDs to `PublishCommand.payload.mediaIds`. It never falls back to all Post media. An empty selection therefore stays empty.
 
-Provider-readable URL resolution is still a separate runtime responsibility. Private storage keys do not enter the generic executor payload.
+Private storage keys do not enter the generic executor payload.
+
+### Provider-readable media URL boundary
+
+`PrismaProviderMediaResolver` is the worker-only bridge from explicit `payload.mediaIds` to provider-readable media sources. It performs a narrow Prisma lookup after publication selection, preserves the incoming media order, rejects duplicate/excessive IDs, fails closed when an asset is missing, and refuses `DOCUMENT` assets.
+
+`SupabaseProviderMediaUrlSigner` then creates a short-lived signed URL from the private `recruitops-private` bucket using the server-only modern Supabase secret-key form. The signer accepts only HTTPS Supabase URLs, validates the returned signed URL remains on the configured Supabase origin, and bounds the signed URL lifetime to 60–3600 seconds (900 seconds by default).
+
+The signed URL is an in-memory bearer capability used only for the immediate provider request. RecruitOps does not persist/log the URL, query token, private storage key, or Supabase secret key. Browser contracts continue to exchange opaque MediaAsset UUIDs only.
+
+The resolver implements both the Instagram and Threads media-resolver interfaces, but production registry activation remains separate. This keeps the private-media capability independently testable without silently enabling a provider before its OAuth/runtime prerequisites are complete.
 
 ## Queue handler composition
 
@@ -62,7 +72,7 @@ Provider-readable URL resolution is still a separate runtime responsibility. Pri
 
 OAuth credential crypto is shared between API writes and worker reads through the same AES-256-GCM implementation and payload contract. A provider-specific resolver loads the exact `Destination -> SocialAccount -> SocialCredential` relation only after the executor has selected a publisher, verifies account/platform ownership again, and decrypts in memory at the execution point.
 
-The production runtime registry currently enables only Facebook Page text/link publishing. Instagram and Threads remain absent until approved provider-readable private-media resolution and the remaining connection/runtime verification are complete. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
+The production runtime registry currently enables only Facebook Page text/link publishing. Instagram and Threads remain absent until their connection/runtime verification is complete and the provider-media resolver is deliberately wired into those registry entries. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
 
 ## Retry behavior
 
@@ -88,7 +98,7 @@ The repository boundary exposes compare-and-set state updates. Only the worker t
 
 ## Worker lifecycle
 
-`apps/worker/src/main.ts` validates server-only database, Redis, Meta Graph version and OAuth keyring configuration before consuming the queue. Startup logs contain only normalized configuration metadata, never connection strings, provider tokens or encryption keys.
+`apps/worker/src/main.ts` validates server-only database, Redis, Meta Graph version and OAuth keyring configuration before consuming the queue. Provider-media signing configuration remains dormant until an Instagram/Threads publisher is explicitly registered. Startup logs contain only normalized configuration metadata, never connection strings, provider tokens, encryption keys, signed URLs or Supabase secret keys.
 
 BullMQ closes before Prisma disconnects during graceful shutdown so no new job can continue after the persistence layer is torn down.
 
@@ -101,6 +111,7 @@ sequenceDiagram
     participant DB as Prisma repository
     participant Registry as Publisher registry
     participant Resolver as Credential/media resolver
+    participant Storage as Private Supabase Storage
     participant Provider as SocialPublisher
 
     Queue->>Executor: execute(publicationId, idempotencyKey)
@@ -118,6 +129,8 @@ sequenceDiagram
         opt provider needs server-side context
             Provider->>Resolver: resolve credential/media context
             Resolver->>DB: load exact approved records
+            Resolver->>Storage: create short-lived signed URL
+            Storage-->>Resolver: HTTPS signed URL
             Resolver-->>Provider: decrypted token / temporary provider-readable media
         end
         Provider-->>Executor: normalized result
@@ -127,8 +140,8 @@ sequenceDiagram
 
 ## Remaining runtime work
 
-- implement approved short-lived private-media URL resolution for provider ingestion;
-- register Instagram / Threads only after their connection/runtime prerequisites are verified;
+- wire the verified provider-media resolver into Instagram / Threads only after their connection/runtime prerequisites are verified;
+- inject `SUPABASE_SECRET_KEY` only into the trusted worker deployment that needs provider-media signing;
 - provision a deployed always-on worker when the infrastructure tier supports it;
 - verify queue/database/provider behavior with integration/E2E coverage;
 - add recovery/reconciliation handling for ambiguous external outcomes and provider-processing states.
