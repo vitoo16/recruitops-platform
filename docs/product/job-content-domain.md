@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document defines the first persistent domain slice for RecruitOps. It intentionally stops before API persistence is enabled because the hosted database credential has not yet been wired to the Render API.
+This document defines the persistent Job/Content slice used by RecruitOps APIs, UI and publication execution.
 
 ## Job
 
@@ -27,8 +27,6 @@ Core fields:
 DRAFT → ACTIVE ↔ PAUSED → CLOSED
 ```
 
-The initial contract exposes statuses but does not yet encode the transition policy in the API. Transition authorization belongs to the Job application service when the Job API is implemented.
-
 ## Post
 
 A Post is canonical recruitment copy linked to one Job. It contains the shared title/base content and language before platform-specific adaptation.
@@ -44,7 +42,7 @@ A Post may move between Draft and Ready. Archived posts cannot silently return t
 
 A PostVariant is the platform-specific rendering of one canonical Post.
 
-Current supported platform identifiers:
+Current platform identifiers:
 - Facebook
 - Instagram
 - Threads
@@ -52,20 +50,29 @@ Current supported platform identifiers:
 - TikTok
 - Zalo
 
-One Post may have at most one variant per platform. Platform-specific publishing constraints remain the responsibility of the future provider adapter validation layer.
+One Post may have at most one variant per platform. Variant text, hashtags, optional link and platform metadata are persisted behind authenticated NestJS APIs.
+
+### Explicit media selection
+
+A Post owns the private media library. A PostVariant does not automatically inherit all Post media.
+
+`PostVariantMediaAsset` is an explicit ordered selection joining one PostVariant to approved MediaAssets. The API replaces a variant's selection transactionally and verifies that every selected asset belongs to the same canonical Post. Duplicate asset IDs are rejected at the contract boundary; database primary/unique constraints enforce asset uniqueness and one stable position per variant.
+
+An empty selection is valid at the generic content layer. Provider adapters remain responsible for capability rules such as requiring exactly one Instagram image or Reel input.
+
+This prevents a persistence convenience from becoming an accidental cross-platform publishing rule.
 
 ## Platform preview model
 
-The preview surface should be driven by the same `PostVariant` contract persisted by the backend. The frontend must not maintain a second incompatible representation.
+The preview surface should be driven by the same PostVariant contract persisted by the backend. The frontend must not maintain a second incompatible representation.
 
 A preview receives:
 - platform;
 - text;
 - hashtags;
 - optional link;
-- platform metadata.
-
-This creates a stable boundary for later platform adapters without coupling the content domain to provider SDKs.
+- platform metadata;
+- explicit ordered media IDs where applicable.
 
 ## Validation boundary
 
