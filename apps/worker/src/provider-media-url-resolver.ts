@@ -1,10 +1,10 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { PrismaClient } from '@recruitops/database';
 import type {
   MetaPublishingMediaResolver,
   MetaPublishingMediaSource,
   ThreadsPublishingMediaResolver,
 } from '@recruitops/integrations';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const DEFAULT_PRIVATE_STORAGE_BUCKET = 'recruitops-private';
 const DEFAULT_SIGNED_URL_TTL_SECONDS = 900;
@@ -79,6 +79,11 @@ function requireSignedUrlTtl(value: number | undefined): number {
   return ttl;
 }
 
+function parseSignedUrlTtl(value: string | undefined): number | undefined {
+  if (value === undefined || value.trim() === '') return undefined;
+  return requireSignedUrlTtl(Number(value));
+}
+
 function requireStorageKey(value: string): string {
   const normalized = value.trim();
   if (!normalized || normalized.startsWith('/') || normalized.includes('\0')) {
@@ -104,6 +109,24 @@ function requireSignedUrl(value: string, supabaseOrigin: string): string {
     throw new WorkerProviderMediaResolutionError('WORKER_PROVIDER_MEDIA_SIGNED_URL_INVALID');
   }
   return parsed.toString();
+}
+
+export function readSupabaseProviderMediaSignerConfig(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): SupabaseProviderMediaSignerConfig {
+  const supabaseUrl = requireHttpsSupabaseUrl(env.SUPABASE_URL ?? '').toString();
+  const supabaseSecretKey = requireSecretKey(env.SUPABASE_SECRET_KEY ?? '');
+  const bucket = requireBucket(env.STORAGE_BUCKET);
+  const expiresInSeconds = requireSignedUrlTtl(
+    parseSignedUrlTtl(env.PROVIDER_MEDIA_SIGNED_URL_TTL_SECONDS),
+  );
+
+  return {
+    supabaseUrl,
+    supabaseSecretKey,
+    bucket,
+    expiresInSeconds,
+  };
 }
 
 export class SupabaseProviderMediaUrlSigner implements ProviderMediaUrlSigner {
