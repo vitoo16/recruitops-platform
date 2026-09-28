@@ -141,12 +141,12 @@ export async function executePublication(
   const record = await repository.loadForExecution(job.publicationId);
   if (!record) return { status: 'FAILED', code: 'PUBLICATION_NOT_FOUND' };
 
-  if (record.idempotencyKey !== job.idempotencyKey) {
-    return markFailed(repository, record, 'PUBLICATION_IDEMPOTENCY_KEY_MISMATCH');
-  }
-
   if (record.state === 'PUBLISHED' || record.state === 'CANCELLED' || record.state === 'PROCESSING') {
     return { status: 'NOOP', reason: `PUBLICATION_ALREADY_${record.state}` };
+  }
+
+  if (record.idempotencyKey !== job.idempotencyKey) {
+    return markFailed(repository, record, 'PUBLICATION_IDEMPOTENCY_KEY_MISMATCH');
   }
 
   if (record.state === 'PUBLISHING') {
@@ -164,16 +164,12 @@ export async function executePublication(
   const publisher = publishers.get(record.platform);
   if (!publisher) return markFailed(repository, record, 'PUBLICATION_PUBLISHER_UNAVAILABLE');
 
-  const claimed = await repository.compareAndSet(
-    record.id,
-    [record.state],
-    {
-      state: 'PUBLISHING',
-      nextRetryAt: null,
-      lastErrorCode: null,
-      lastErrorMessage: null,
-    },
-  );
+  const claimed = await repository.compareAndSet(record.id, [record.state], {
+    state: 'PUBLISHING',
+    nextRetryAt: null,
+    lastErrorCode: null,
+    lastErrorMessage: null,
+  });
   if (!claimed) return { status: 'NOOP', reason: 'PUBLICATION_ALREADY_CLAIMED' };
 
   const command: PublishCommand = {
