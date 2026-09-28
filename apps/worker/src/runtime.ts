@@ -16,8 +16,7 @@ import { PrismaPublicationExecutionRepository } from './publication-execution.re
 import { createPublicationJobHandler } from './publication-handler.js';
 
 export type InstagramPublishingRuntimeConfig =
-  | { enabled: false }
-  | { enabled: true; mediaSigner: SupabaseProviderMediaSignerConfig };
+  { enabled: false } | { enabled: true; mediaSigner: SupabaseProviderMediaSignerConfig };
 
 export interface WorkerRuntimeConfig {
   databaseUrl: string;

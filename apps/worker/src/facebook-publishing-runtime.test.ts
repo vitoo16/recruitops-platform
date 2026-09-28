@@ -1,6 +1,9 @@
 import type { PublishCommand } from '@recruitops/contracts';
 import type { PrismaClient } from '@recruitops/database';
-import { OAuthCredentialCipherCore, type MetaPublishingMediaResolver } from '@recruitops/integrations';
+import {
+  OAuthCredentialCipherCore,
+  type MetaPublishingMediaResolver,
+} from '@recruitops/integrations';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createProductionPublisherRegistry,
