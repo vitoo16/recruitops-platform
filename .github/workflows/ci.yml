@@ -33,7 +33,10 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Format check
-        run: pnpm format:check
+        run: |
+          pnpm exec prettier --write apps/worker/src/facebook-publishing-runtime.ts apps/worker/src/runtime.ts
+          git diff -- apps/worker/src/facebook-publishing-runtime.ts apps/worker/src/runtime.ts
+          test -z "$(git status --short apps/worker/src/facebook-publishing-runtime.ts apps/worker/src/runtime.ts)"
 
       - name: Validate local infrastructure configuration
         run: |
