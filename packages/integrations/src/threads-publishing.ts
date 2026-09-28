@@ -7,10 +7,6 @@ import type {
   ValidationResult,
 } from '@recruitops/contracts';
 
-export interface ThreadsPublishingConfig {
-  apiVersion: string;
-}
-
 export interface ThreadsPublishingContext {
   platform: 'THREADS';
   accessToken: string;
@@ -53,13 +49,7 @@ interface ThreadsApiErrorPayload {
   };
 }
 
-function normalizeApiVersion(value: string): string {
-  const normalized = value.trim();
-  if (!/^v\d+\.\d+$/.test(normalized)) {
-    throw new ThreadsPublishingError('THREADS_API_VERSION_INVALID');
-  }
-  return normalized;
-}
+const THREADS_API_HOST = 'https://graph.threads.net';
 
 function requireAccessToken(value: string): string {
   const normalized = value.trim();
@@ -152,16 +142,12 @@ function ensureValid(result: ValidationResult): void {
 
 export class ThreadsPublisher implements SocialPublisher {
   readonly platform = 'THREADS' as const;
-  private readonly apiVersion: string;
 
   constructor(
-    config: ThreadsPublishingConfig,
     private readonly contexts: ThreadsPublishingContextResolver,
     private readonly media: ThreadsPublishingMediaResolver,
     private readonly fetchFn: typeof fetch = fetch,
-  ) {
-    this.apiVersion = normalizeApiVersion(config.apiVersion);
-  }
+  ) {}
 
   async validate(command: PublishCommand): Promise<ValidationResult> {
     const issues: ValidationIssue[] = [];
@@ -207,7 +193,7 @@ export class ThreadsPublisher implements SocialPublisher {
       throw new ThreadsPublishingError('THREADS_PUBLISH_MEDIA_RESOLUTION_INCOMPLETE');
     }
 
-    const createUrl = new URL(`https://graph.threads.net/${this.apiVersion}/me/threads`);
+    const createUrl = new URL(`${THREADS_API_HOST}/me/threads`);
     const createBody = new URLSearchParams();
     const copy = composeCopy(command);
     if (copy) createBody.set('text', copy);
@@ -239,7 +225,7 @@ export class ThreadsPublisher implements SocialPublisher {
     );
     const creationId = parseIdResponse(createPayload, 'CREATE_CONTAINER');
 
-    const publishUrl = new URL(`https://graph.threads.net/${this.apiVersion}/me/threads_publish`);
+    const publishUrl = new URL(`${THREADS_API_HOST}/me/threads_publish`);
     const publishBody = new URLSearchParams({ creation_id: creationId });
     const publishPayload = await requestJson<unknown>(
       this.fetchFn,
