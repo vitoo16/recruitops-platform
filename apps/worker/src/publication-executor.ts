@@ -2,7 +2,6 @@ import {
   buildPublicationIdempotencyKey,
   calculateRetryDelayMs,
   defaultPublicationRetryPolicy,
-  type PublicationStatus,
   type PublishCommand,
   type PublishResult,
   type SocialPlatform,
@@ -38,7 +37,7 @@ export interface PublicationExecutionContext {
 }
 
 export interface PublicationExecutionRepository {
-  claim(publicationId: string): Promise<PublicationExecutionContext | null>;
+  claim(publicationId: string, attemptNumber: number): Promise<PublicationExecutionContext | null>;
   markPublished(publicationId: string, result: PublishResult): Promise<void>;
   markProcessing(publicationId: string, result: PublishResult): Promise<void>;
   markRetryWaiting(
@@ -135,8 +134,12 @@ export class PublicationExecutor {
     private readonly publishers: PublicationPublisherFactory,
   ) {}
 
-  async execute(publicationId: string): Promise<PublicationExecutionOutcome> {
-    const context = await this.repository.claim(publicationId);
+  async execute(publicationId: string, attemptNumber: number): Promise<PublicationExecutionOutcome> {
+    if (!Number.isInteger(attemptNumber) || attemptNumber < 1) {
+      throw new RangeError('attemptNumber must be a positive integer');
+    }
+
+    const context = await this.repository.claim(publicationId, attemptNumber);
     if (!context) return { status: 'SKIPPED' };
 
     try {
@@ -165,8 +168,4 @@ export class PublicationExecutor {
       return { status: 'FAILED', failure };
     }
   }
-}
-
-export function isTerminalPublicationStatus(status: PublicationStatus['status']): boolean {
-  return status === 'PUBLISHED' || status === 'FAILED';
 }
