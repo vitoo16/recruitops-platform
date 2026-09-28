@@ -32,8 +32,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Preview publication worker formatting
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Validate local infrastructure configuration
         run: |
-          pnpm exec prettier --write apps/worker/src/publication-executor.test.ts apps/worker/src/publication-executor.ts apps/worker/src/publication-runtime.ts
-          git diff -- apps/worker/src/publication-executor.test.ts apps/worker/src/publication-executor.ts apps/worker/src/publication-runtime.ts
-          test -z "$(git status --short apps/worker/src/publication-executor.test.ts apps/worker/src/publication-executor.ts apps/worker/src/publication-runtime.ts)"
+          node tooling/scripts/init-local-infra.mjs --infra-only
+          docker compose --env-file infra/docker/.env.local -f infra/docker/docker-compose.yml config --quiet
+
+      - name: Typecheck
+        run: pnpm typecheck
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
+
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
