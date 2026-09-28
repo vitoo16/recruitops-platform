@@ -29,7 +29,9 @@ function createHarness() {
     }),
   };
   const provider = {
-    buildAuthorizationUrl: vi.fn().mockReturnValue('https://threads.net/oauth/authorize?state=test'),
+    buildAuthorizationUrl: vi
+      .fn()
+      .mockReturnValue('https://threads.net/oauth/authorize?state=test'),
     exchangeAuthorizationCode: vi.fn().mockResolvedValue({
       accessToken: 'short-token',
       userId: '12345',
@@ -112,7 +114,9 @@ describe('ThreadsConnectionsService', () => {
   it('normalizes provider denial without making token calls', async () => {
     const { service, provider } = createHarness();
 
-    await expect(service.callback({ state: validState, error: 'access_denied' })).rejects.toMatchObject({
+    await expect(
+      service.callback({ state: validState, error: 'access_denied' }),
+    ).rejects.toMatchObject({
       response: expect.objectContaining({ code: 'THREADS_OAUTH_DENIED' }),
     });
     expect(provider.exchangeAuthorizationCode).not.toHaveBeenCalled();

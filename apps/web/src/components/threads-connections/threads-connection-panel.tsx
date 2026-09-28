@@ -40,9 +40,7 @@ export function ThreadsConnectionPanel() {
           >
             {t('title')}
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
-            {t('description')}
-          </p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">{t('description')}</p>
         </div>
         <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
       </div>
@@ -52,9 +50,7 @@ export function ThreadsConnectionPanel() {
           className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
           role="status"
         >
-          <span>
-            {workspace.notice === 'connected' ? t('connectedNotice') : t('deniedNotice')}
-          </span>
+          <span>{workspace.notice === 'connected' ? t('connectedNotice') : t('deniedNotice')}</span>
           <Button
             type="button"
             variant="outline"

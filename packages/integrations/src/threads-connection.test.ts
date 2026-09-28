@@ -20,10 +20,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 describe('ThreadsConnectionProvider', () => {
   it('uses the least-privilege publishing scopes', () => {
-    expect(threadsPublishingConnectionScopes).toEqual([
-      'threads_basic',
-      'threads_content_publish',
-    ]);
+    expect(threadsPublishingConnectionScopes).toEqual(['threads_basic', 'threads_content_publish']);
   });
 
   it('builds the official authorization URL with strong caller state and no app secret', () => {
@@ -43,9 +40,9 @@ describe('ThreadsConnectionProvider', () => {
   });
 
   it('exchanges an authorization code using a form body', async () => {
-    const fetchFn = vi.fn().mockResolvedValue(
-      jsonResponse({ access_token: 'short-token', user_id: '12345' }),
-    );
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ access_token: 'short-token', user_id: '12345' }));
     const provider = new ThreadsConnectionProvider(config, fetchFn as unknown as typeof fetch);
 
     await expect(provider.exchangeAuthorizationCode('authorization-code')).resolves.toEqual({
@@ -86,9 +83,9 @@ describe('ThreadsConnectionProvider', () => {
   });
 
   it('retrieves the app-scoped Threads profile with bearer auth', async () => {
-    const fetchFn = vi.fn().mockResolvedValue(
-      jsonResponse({ id: '12345', username: 'recruitops', name: 'RecruitOps' }),
-    );
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ id: '12345', username: 'recruitops', name: 'RecruitOps' }));
     const provider = new ThreadsConnectionProvider(config, fetchFn as unknown as typeof fetch);
 
     await expect(provider.getProfile('long-token')).resolves.toEqual({
@@ -106,9 +103,11 @@ describe('ThreadsConnectionProvider', () => {
   });
 
   it('normalizes provider failures without leaking the provider response body', async () => {
-    const fetchFn = vi.fn().mockResolvedValue(
-      jsonResponse({ error: { code: 190, message: 'provider-secret-detail' } }, 401),
-    );
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ error: { code: 190, message: 'provider-secret-detail' } }, 401),
+      );
     const provider = new ThreadsConnectionProvider(config, fetchFn as unknown as typeof fetch);
 
     await expect(provider.getProfile('bad-token')).rejects.toMatchObject({
