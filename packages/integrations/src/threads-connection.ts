@@ -88,7 +88,11 @@ export class ThreadsConnectionProvider {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
     });
-    const parsed = await this.parseResponse(response, ShortLivedTokenSchema, 'THREADS_OAUTH_CODE_EXCHANGE_FAILED');
+    const parsed = await this.parseResponse(
+      response,
+      ShortLivedTokenSchema,
+      'THREADS_OAUTH_CODE_EXCHANGE_FAILED',
+    );
     return { accessToken: parsed.access_token, userId: String(parsed.user_id) };
   }
 
@@ -105,8 +109,8 @@ export class ThreadsConnectionProvider {
     );
     return {
       accessToken: parsed.access_token,
-      tokenType: parsed.token_type,
       expiresInSeconds: parsed.expires_in,
+      ...(parsed.token_type ? { tokenType: parsed.token_type } : {}),
     };
   }
 
@@ -120,8 +124,10 @@ export class ThreadsConnectionProvider {
     return {
       id: parsed.id,
       username: parsed.username,
-      name: parsed.name,
-      profilePictureUrl: parsed.threads_profile_picture_url,
+      ...(parsed.name ? { name: parsed.name } : {}),
+      ...(parsed.threads_profile_picture_url
+        ? { profilePictureUrl: parsed.threads_profile_picture_url }
+        : {}),
     };
   }
 
