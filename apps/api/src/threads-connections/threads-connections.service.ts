@@ -43,7 +43,14 @@ export class ThreadsConnectionsService {
   }
 
   async callback(rawQuery: Record<string, unknown>) {
-    const query = CallbackQuerySchema.parse(rawQuery);
+    const parsedQuery = CallbackQuerySchema.safeParse(rawQuery);
+    if (!parsedQuery.success) {
+      throw new BadRequestException({
+        code: 'THREADS_OAUTH_CALLBACK_INVALID',
+        message: 'Threads OAuth callback is invalid',
+      });
+    }
+    const query = parsedQuery.data;
     if (query.error) {
       throw new BadRequestException({
         code: 'THREADS_OAUTH_DENIED',
@@ -80,9 +87,9 @@ export class ThreadsConnectionsService {
       const expiresAt = new Date(Date.now() + longLived.expiresInSeconds * 1_000).toISOString();
       const credential = this.cipher.encrypt('THREADS', {
         accessToken: longLived.accessToken,
-        tokenType: longLived.tokenType,
         scopes: [...THREADS_CONNECTION_SCOPES],
         expiresAt,
+        ...(longLived.tokenType ? { tokenType: longLived.tokenType } : {}),
       });
       const displayName = profile.name?.trim() || `@${profile.username}`;
       const promoted = await this.repository.promote({
