@@ -122,7 +122,11 @@ export class ThreadsConnectionProvider {
     const response = await this.fetchImpl(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const parsed = await this.parseResponse(response, ThreadsProfileSchema, 'THREADS_PROFILE_FETCH_FAILED');
+    const parsed = await this.parseResponse(
+      response,
+      ThreadsProfileSchema,
+      'THREADS_PROFILE_FETCH_FAILED',
+    );
     return {
       id: parsed.id,
       username: parsed.username,
