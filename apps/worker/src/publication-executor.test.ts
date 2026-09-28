@@ -65,11 +65,12 @@ describe('PublicationExecutor', () => {
       create: vi.fn().mockReturnValue(socialPublisher),
     });
 
-    await expect(executor.execute(publicationId)).resolves.toEqual({
+    await expect(executor.execute(publicationId, 1)).resolves.toEqual({
       status: 'PUBLISHED',
       result: { status: 'PUBLISHED', externalPostId: 'provider-post-1' },
     });
 
+    expect(repo.claim).toHaveBeenCalledWith(publicationId, 1);
     expect(received).toEqual({
       platform: 'FACEBOOK',
       socialAccountId: '11111111-1111-4111-8111-111111111111',
@@ -102,7 +103,9 @@ describe('PublicationExecutor', () => {
       ),
     });
 
-    await expect(executor.execute(publicationId)).resolves.toMatchObject({ status: 'PROCESSING' });
+    await expect(executor.execute(publicationId, 1)).resolves.toMatchObject({
+      status: 'PROCESSING',
+    });
     expect(repo.markProcessing).toHaveBeenCalledOnce();
     expect(repo.markPublished).not.toHaveBeenCalled();
   });
@@ -120,7 +123,7 @@ describe('PublicationExecutor', () => {
       ),
     });
 
-    await expect(executor.execute(publicationId)).rejects.toBeInstanceOf(
+    await expect(executor.execute(publicationId, 2)).rejects.toBeInstanceOf(
       RetryablePublicationExecutionError,
     );
     expect(repo.markRetryWaiting).toHaveBeenCalledOnce();
@@ -146,7 +149,7 @@ describe('PublicationExecutor', () => {
       ),
     });
 
-    await expect(executor.execute(publicationId)).resolves.toEqual({
+    await expect(executor.execute(publicationId, 1)).resolves.toEqual({
       status: 'FAILED',
       failure: {
         code: 'META_FACEBOOK_PAGE_PUBLISH_FAILED_PROVIDER_100',
@@ -158,12 +161,21 @@ describe('PublicationExecutor', () => {
     expect(repo.markRetryWaiting).not.toHaveBeenCalled();
   });
 
-  it('skips duplicate or no-longer-runnable jobs when claim returns null', async () => {
+  it('skips duplicate delivery of the same queue attempt when claim returns null', async () => {
     const repo = repository(null);
     const create = vi.fn();
     const executor = new PublicationExecutor(repo, { create });
 
-    await expect(executor.execute(publicationId)).resolves.toEqual({ status: 'SKIPPED' });
+    await expect(executor.execute(publicationId, 1)).resolves.toEqual({ status: 'SKIPPED' });
+    expect(repo.claim).toHaveBeenCalledWith(publicationId, 1);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid BullMQ attempt numbers before touching persistence', async () => {
+    const repo = repository(context());
+    const executor = new PublicationExecutor(repo, { create: vi.fn() });
+
+    await expect(executor.execute(publicationId, 0)).rejects.toThrow(RangeError);
+    expect(repo.claim).not.toHaveBeenCalled();
   });
 });
