@@ -1,4 +1,8 @@
-import { BadGatewayException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import type { OAuthCredentialCipher } from '../social-credentials/oauth-credential-cipher.js';
 import type { ThreadsConnectionClientFactory } from './threads-connection-client.factory.js';
@@ -95,9 +99,9 @@ describe('ThreadsConnectionsService', () => {
     const { service, sessions, provider } = createHarness();
     sessions.consumePending.mockResolvedValueOnce(null);
 
-    await expect(service.callback({ code: 'oauth-code', state: 'expired' })).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      service.callback({ code: 'oauth-code', state: 'expired' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(provider.exchangeCode).not.toHaveBeenCalled();
   });
 
@@ -105,9 +109,9 @@ describe('ThreadsConnectionsService', () => {
     const { service, provider, repository } = createHarness();
     provider.getProfile.mockResolvedValueOnce({ id: '999', username: 'other' });
 
-    await expect(service.callback({ code: 'oauth-code', state: 'oauth-state' })).rejects.toBeInstanceOf(
-      BadGatewayException,
-    );
+    await expect(
+      service.callback({ code: 'oauth-code', state: 'oauth-state' }),
+    ).rejects.toBeInstanceOf(BadGatewayException);
     expect(repository.promote).not.toHaveBeenCalled();
   });
 
