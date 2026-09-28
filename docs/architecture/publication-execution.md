@@ -49,6 +49,12 @@ Media IDs must be supplied only after the product model exposes an explicit, val
 
 The handler is intentionally composition-only. It does not construct provider adapters or decrypt credentials.
 
+## Credential and publisher runtime
+
+OAuth credential crypto is shared between API writes and worker reads through the same AES-256-GCM implementation and payload contract. The worker never selects encrypted credential columns in the generic publication projection. A provider-specific resolver loads the exact `Destination -> SocialAccount -> SocialCredential` relation only after the executor has selected a publisher, verifies account/platform ownership again, and decrypts in memory at the execution point.
+
+The first production runtime registry intentionally enables only the Facebook Page text/link publisher. Facebook is safe to activate before media selection exists because the implemented adapter rejects `mediaIds` and does not infer Post media. Instagram and Threads remain absent from the production registry until explicit per-variant/per-publication media selection and approved provider-readable media URL resolution exist. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
+
 ## Retry behavior
 
 The existing publication retry policy remains authoritative:
@@ -73,6 +79,12 @@ This is intentionally safer than assuming exactly-once external side effects.
 
 The repository boundary exposes compare-and-set state updates. Only the worker that successfully transitions the current Publication state to `PUBLISHING` owns that execution attempt. Concurrent or stale workers receive a no-op outcome rather than invoking the provider.
 
+## Worker lifecycle
+
+`apps/worker/src/main.ts` validates server-only database, Redis, Meta Graph version and OAuth keyring configuration before consuming the queue. Startup logs contain only normalized configuration metadata, never connection strings, provider tokens or encryption keys.
+
+The runtime maps `redis://` / `rediss://` configuration into BullMQ connection options, starts the publication worker with configured concurrency/rate limits, and handles `SIGTERM` / `SIGINT` with idempotent graceful shutdown. BullMQ closes before Prisma disconnects so no new job can continue after the persistence layer is torn down.
+
 ## Sequence
 
 ```mermaid
@@ -82,6 +94,7 @@ sequenceDiagram
     participant Executor as Publication executor
     participant DB as Prisma repository
     participant Registry as Publisher registry
+    participant Resolver as Credential resolver
     participant Provider as SocialPublisher
 
     Queue->>Handler: validated PublicationQueueJob
@@ -90,7 +103,7 @@ sequenceDiagram
     DB-->>Executor: Publication + destination/account/payload
     Executor->>Executor: validate state/destination/account/platform
     Executor->>Registry: get(platform)
-    Registry-->>Executor: SocialPublisher
+    Registry-->>Executor: SocialPublisher or undefined
     Executor->>DB: CAS executable state -> PUBLISHING
     alt claim lost
         DB-->>Executor: false
@@ -99,6 +112,12 @@ sequenceDiagram
         DB-->>Executor: true
         Executor->>Provider: validate(PublishCommand)
         Executor->>Provider: publish(PublishCommand)
+        opt provider needs credential context
+            Provider->>Resolver: resolve(command)
+            Resolver->>DB: load exact destination/account/credential
+            Resolver->>Resolver: verify ownership + authenticated decrypt
+            Resolver-->>Provider: server-side access token context
+        end
         alt published
             Provider-->>Executor: PUBLISHED
             Executor->>DB: PUBLISHING -> PUBLISHED
@@ -119,14 +138,12 @@ sequenceDiagram
     end
 ```
 
-## Runtime wiring still required
+## Remaining runtime work
 
-Execution semantics, Prisma persistence and queue-handler composition are implemented and unit-tested. Production worker activation remains intentionally gated until all remaining runtime boundaries are available:
+The queue processor can now be composed safely for the registered Facebook non-media capability. Remaining publication runtime work is intentionally scoped rather than inferred:
 
-- credential resolvers that decrypt `SocialCredential` only at the execution point;
-- publisher registry wiring for production-enabled providers;
-- explicit media-selection semantics plus approved private-media URL resolution for media providers;
-- worker startup/shutdown wiring and graceful Redis/Prisma cleanup;
-- integration/E2E verification against the real queue/database/provider boundary.
-
-Until those dependencies are present, `apps/worker/src/main.ts` must not start the publication processor. This avoids consuming real jobs into an intentionally incomplete runtime.
+- define explicit media-selection semantics in the persistent product model;
+- add approved private-media URL resolution and then register Instagram / Threads media publishers;
+- provision a deployed worker service with the same server-only database, Redis, Graph-version and OAuth-keyring configuration;
+- verify queue/database/Facebook behavior with integration/E2E coverage before calling production publishing complete;
+- add recovery/reconciliation handling for ambiguous external outcomes and provider-processing states.
