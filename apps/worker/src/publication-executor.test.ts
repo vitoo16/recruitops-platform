@@ -9,7 +9,9 @@ import {
 
 const publicationId = '33333333-3333-4333-8333-333333333333';
 
-function context(overrides: Partial<PublicationExecutionContext> = {}): PublicationExecutionContext {
+function context(
+  overrides: Partial<PublicationExecutionContext> = {},
+): PublicationExecutionContext {
   return {
     publicationId,
     attemptNumber: 1,
