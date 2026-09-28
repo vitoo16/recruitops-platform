@@ -136,17 +136,18 @@ model Post {
 }
 
 model PostVariant {
-  id           String        @id @default(uuid()) @db.Uuid
-  postId       String        @db.Uuid
-  platform     SocialPlatform
-  text         String
-  hashtags     String[]      @default([])
-  link         String?
-  metadata     Json          @default("{}")
-  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  publications Publication[]
+  id              String                  @id @default(uuid()) @db.Uuid
+  postId          String                  @db.Uuid
+  platform        SocialPlatform
+  text            String
+  hashtags        String[]                @default([])
+  link            String?
+  metadata        Json                    @default("{}")
+  createdAt       DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @db.Timestamptz(6)
+  post            Post                    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  publications    Publication[]
+  mediaSelections PostVariantMediaAsset[]
 
   @@unique([postId, platform])
   @@index([postId])
@@ -155,25 +156,39 @@ model PostVariant {
 }
 
 model MediaAsset {
-  id               String         @id @default(uuid()) @db.Uuid
-  postId           String         @db.Uuid
-  kind             MediaAssetKind
-  storageKey       String         @unique
-  originalFileName String
-  mimeType         String
-  sizeBytes        BigInt
-  checksumSha256   String?
-  width            Int?
-  height           Int?
-  durationMs       Int?
-  altText          String?
-  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime       @updatedAt @db.Timestamptz(6)
-  post             Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id                String                  @id @default(uuid()) @db.Uuid
+  postId            String                  @db.Uuid
+  kind              MediaAssetKind
+  storageKey        String                  @unique
+  originalFileName  String
+  mimeType          String
+  sizeBytes         BigInt
+  checksumSha256    String?
+  width             Int?
+  height            Int?
+  durationMs        Int?
+  altText           String?
+  createdAt         DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime                @updatedAt @db.Timestamptz(6)
+  post              Post                    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  variantSelections PostVariantMediaAsset[]
 
   @@index([postId, createdAt])
   @@index([kind])
   @@map("media_assets")
+}
+
+model PostVariantMediaAsset {
+  postVariantId String      @db.Uuid
+  mediaAssetId  String      @db.Uuid
+  position      Int
+  postVariant   PostVariant @relation(fields: [postVariantId], references: [id], onDelete: Cascade)
+  mediaAsset    MediaAsset  @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@id([postVariantId, mediaAssetId])
+  @@unique([postVariantId, position])
+  @@index([mediaAssetId])
+  @@map("post_variant_media_assets")
 }
 
 model SocialAccount {

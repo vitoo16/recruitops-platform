@@ -14,6 +14,9 @@
 - [ ] migration impact reviewed
 - [ ] security impact reviewed
 - [ ] accessibility reviewed for UI changes
+- [ ] changed UI files reviewed against current Vercel Web Interface Guidelines
+- [ ] component boundaries reviewed; no avoidable feature monolith introduced
+- [ ] design-system token/override impact reviewed for UI changes
 - [ ] no secrets
 - [ ] no unintended changes
 
@@ -24,6 +27,7 @@
 - create/edit job
 - create/save draft
 - platform variants
+- explicit ordered platform media selection
 - destination selection
 - schedule/publish
 - failure/retry

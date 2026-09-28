@@ -99,6 +99,22 @@ Required locales: `vi`, `en`.
 Accessibility must include semantic HTML, keyboard access, focus visibility, labels,
 accessible dialogs, screen-reader support, and reduced-motion respect.
 
+### UI architecture and design quality gate
+
+Before every non-trivial UI task, load and apply all three UI review/design skills from `.agents/SKILL_REGISTRY.md`:
+
+- `ui-ux-pro-max`
+- `gpt-taste`
+- `web-design-guidelines`
+
+Rules:
+- Review component boundaries before adding new UI behavior. Do not grow feature monoliths when state, orchestration, and presentation can be separated cleanly.
+- Use the RecruitOps design system in `design-system/recruitops/MASTER.md` as the visual source of truth and use page overrides only when documented.
+- Prefer primitive → semantic → component token layering. Do not introduce arbitrary raw colors/spacing when an existing semantic token fits.
+- Apply GPT Taste as a visual-quality and composition lens, not as permission to force marketing-page patterns, excessive motion, or decorative UI into operational workflows.
+- Accessibility, task efficiency, repository product requirements, and the current Vercel Web Interface Guidelines override purely decorative choices.
+- Final UI review must include the latest `web-design-guidelines` audit over every changed UI file.
+
 ## 8. Backend boundaries
 
 Every external input must be validated, including:

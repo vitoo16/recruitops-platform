@@ -30,30 +30,39 @@ Its read projection intentionally contains only execution-safe business data:
 
 - Publication identity, state, retry count and idempotency key;
 - PostVariant platform, text, hashtags, link and object-shaped metadata;
+- ordered PostVariant media-selection IDs;
 - Destination identity, platform, posting mode, enabled state and social-account reference;
 - Publication SocialAccount identity, platform and connection status.
 
-It does **not** select OAuth credentials, encrypted credential envelopes, private storage keys, or provider tokens. Credential decryption stays behind the provider context resolver at the execution point.
+It does **not** select OAuth credentials, encrypted credential envelopes, private storage keys, signed media URLs, or provider tokens. Credential decryption stays behind the provider context resolver at the execution point.
 
-State claims and result writes use a single Prisma `updateMany` predicate over Publication ID plus expected state. A worker only owns an attempt when exactly one row matches. This provides the compare-and-set behavior required by the executor without relying on process-local locking.
+State claims and result writes use a single Prisma `updateMany` predicate over Publication ID plus expected state. A worker only owns an attempt when exactly one row matches.
 
 ### Media selection boundary
 
-The current persistent model stores `MediaAsset` at the Post level. It does not yet express which assets are selected for a specific `PostVariant` / destination publication. The execution repository therefore does not infer `payload.mediaIds` by attaching every Post asset to every platform variant.
+Private MediaAssets remain owned by the canonical Post. Publishing media is now explicit: `PostVariantMediaAsset` stores the ordered set selected for one platform variant.
 
-Media IDs must be supplied only after the product model exposes an explicit, validated media-selection rule. This prevents a persistence convenience from silently becoming a cross-platform publishing business rule.
+The Content API validates replacement selections before writing them:
+
+- duplicate media IDs are rejected by the shared Zod contract;
+- the PostVariant must exist;
+- every selected MediaAsset must belong to the same Post as the variant;
+- replacement runs transactionally;
+- database keys preserve asset uniqueness and ordering positions.
+
+The worker reads only `mediaAssetId` from that relation, ordered by `position`, and maps those IDs to `PublishCommand.payload.mediaIds`. It never falls back to all Post media. An empty selection therefore stays empty.
+
+Provider-readable URL resolution is still a separate runtime responsibility. Private storage keys do not enter the generic executor payload.
 
 ## Queue handler composition
 
 `createPublicationJobHandler` adapts the validated BullMQ `PublicationQueueJob` into the executor identity contract. Queue scheduling metadata is not treated as provider input; the durable Publication row remains the source of truth for execution state.
 
-The handler is intentionally composition-only. It does not construct provider adapters or decrypt credentials.
-
 ## Credential and publisher runtime
 
-OAuth credential crypto is shared between API writes and worker reads through the same AES-256-GCM implementation and payload contract. The worker never selects encrypted credential columns in the generic publication projection. A provider-specific resolver loads the exact `Destination -> SocialAccount -> SocialCredential` relation only after the executor has selected a publisher, verifies account/platform ownership again, and decrypts in memory at the execution point.
+OAuth credential crypto is shared between API writes and worker reads through the same AES-256-GCM implementation and payload contract. A provider-specific resolver loads the exact `Destination -> SocialAccount -> SocialCredential` relation only after the executor has selected a publisher, verifies account/platform ownership again, and decrypts in memory at the execution point.
 
-The first production runtime registry intentionally enables only the Facebook Page text/link publisher. Facebook is safe to activate before media selection exists because the implemented adapter rejects `mediaIds` and does not infer Post media. Instagram and Threads remain absent from the production registry until explicit per-variant/per-publication media selection and approved provider-readable media URL resolution exist. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
+The production runtime registry currently enables only Facebook Page text/link publishing. Instagram and Threads remain absent until approved provider-readable private-media resolution and the remaining connection/runtime verification are complete. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
 
 ## Retry behavior
 
@@ -71,9 +80,7 @@ The executor stores normalized error codes/messages only. Raw provider response 
 
 A process can crash after a provider accepted a publish request but before RecruitOps persisted the provider result. Re-running that request blindly can create duplicate social posts because not every provider operation offers a RecruitOps-controlled idempotency primitive.
 
-Therefore, redelivery of a Publication that is already persisted as `PUBLISHING` fails closed with `PUBLICATION_AMBIGUOUS_OUTCOME`. It is not automatically published again. A later recovery/reconciliation workflow may inspect provider state or require human review before retrying.
-
-This is intentionally safer than assuming exactly-once external side effects.
+Therefore, redelivery of a Publication that is already persisted as `PUBLISHING` fails closed with `PUBLICATION_AMBIGUOUS_OUTCOME`. It is not automatically published again.
 
 ## Concurrency
 
@@ -83,23 +90,21 @@ The repository boundary exposes compare-and-set state updates. Only the worker t
 
 `apps/worker/src/main.ts` validates server-only database, Redis, Meta Graph version and OAuth keyring configuration before consuming the queue. Startup logs contain only normalized configuration metadata, never connection strings, provider tokens or encryption keys.
 
-The runtime maps `redis://` / `rediss://` configuration into BullMQ connection options, starts the publication worker with configured concurrency/rate limits, and handles `SIGTERM` / `SIGINT` with idempotent graceful shutdown. BullMQ closes before Prisma disconnects so no new job can continue after the persistence layer is torn down.
+BullMQ closes before Prisma disconnects during graceful shutdown so no new job can continue after the persistence layer is torn down.
 
 ## Sequence
 
 ```mermaid
 sequenceDiagram
     participant Queue as BullMQ worker
-    participant Handler as Worker handler
     participant Executor as Publication executor
     participant DB as Prisma repository
     participant Registry as Publisher registry
-    participant Resolver as Credential resolver
+    participant Resolver as Credential/media resolver
     participant Provider as SocialPublisher
 
-    Queue->>Handler: validated PublicationQueueJob
-    Handler->>Executor: execute(publicationId, idempotencyKey)
-    Executor->>DB: load execution projection
+    Queue->>Executor: execute(publicationId, idempotencyKey)
+    Executor->>DB: load execution projection + ordered media IDs
     DB-->>Executor: Publication + destination/account/payload
     Executor->>Executor: validate state/destination/account/platform
     Executor->>Registry: get(platform)
@@ -109,41 +114,21 @@ sequenceDiagram
         DB-->>Executor: false
         Executor-->>Queue: NOOP
     else claim acquired
-        DB-->>Executor: true
         Executor->>Provider: validate(PublishCommand)
-        Executor->>Provider: publish(PublishCommand)
-        opt provider needs credential context
-            Provider->>Resolver: resolve(command)
-            Resolver->>DB: load exact destination/account/credential
-            Resolver->>Resolver: verify ownership + authenticated decrypt
-            Resolver-->>Provider: server-side access token context
+        opt provider needs server-side context
+            Provider->>Resolver: resolve credential/media context
+            Resolver->>DB: load exact approved records
+            Resolver-->>Provider: decrypted token / temporary provider-readable media
         end
-        alt published
-            Provider-->>Executor: PUBLISHED
-            Executor->>DB: PUBLISHING -> PUBLISHED
-            Executor-->>Queue: success
-        else provider processing
-            Provider-->>Executor: PROCESSING
-            Executor->>DB: PUBLISHING -> PROCESSING
-            Executor-->>Queue: processing
-        else retryable failure
-            Provider--xExecutor: 429 / 5xx normalized error
-            Executor->>DB: PUBLISHING -> RETRY_WAITING
-            Executor--xQueue: PublicationRetryableError
-        else terminal failure
-            Provider--xExecutor: terminal normalized error
-            Executor->>DB: PUBLISHING -> FAILED
-            Executor-->>Queue: failed terminal outcome
-        end
+        Provider-->>Executor: normalized result
+        Executor->>DB: persist terminal/processing/retry state
     end
 ```
 
 ## Remaining runtime work
 
-The queue processor can now be composed safely for the registered Facebook non-media capability. Remaining publication runtime work is intentionally scoped rather than inferred:
-
-- define explicit media-selection semantics in the persistent product model;
-- add approved private-media URL resolution and then register Instagram / Threads media publishers;
-- provision a deployed worker service with the same server-only database, Redis, Graph-version and OAuth-keyring configuration;
-- verify queue/database/Facebook behavior with integration/E2E coverage before calling production publishing complete;
+- implement approved short-lived private-media URL resolution for provider ingestion;
+- register Instagram / Threads only after their connection/runtime prerequisites are verified;
+- provision a deployed always-on worker when the infrastructure tier supports it;
+- verify queue/database/provider behavior with integration/E2E coverage;
 - add recovery/reconciliation handling for ambiguous external outcomes and provider-processing states.

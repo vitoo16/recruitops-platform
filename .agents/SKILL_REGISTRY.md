@@ -27,6 +27,14 @@ Before any non-trivial task, map the task to all applicable skills below.
 
 ## Frontend
 
+Mandatory RecruitOps UI trio for every non-trivial frontend task:
+
+- **ui-ux-pro-max**: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+- **gpt-taste**: https://github.com/Leonxlnx/taste-skill/tree/main/skills/gpt-tasteskill
+- **web-design-guidelines**: https://www.skills.sh/vercel-labs/agent-skills/web-design-guidelines
+
+Stack and implementation skills:
+
 - **typescript-advanced-types**: https://www.skills.sh/wshobson/agents/typescript-advanced-types
 - **vercel-react-best-practices**: https://www.skills.sh/vercel-labs/agent-skills/react-best-practices
 - **composition-patterns**: https://www.skills.sh/vercel-labs/agent-skills/composition-patterns
@@ -39,7 +47,6 @@ Before any non-trivial task, map the task to all applicable skills below.
 - **shadcn**: https://www.skills.sh/shadcn/ui/shadcn
 - **frontend-design**: https://www.skills.sh/anthropics/skills/frontend-design
 - **frontend-design-nexu**: https://www.skills.sh/nexu-io/open-design/frontend-design
-- **web-design-guidelines**: https://www.skills.sh/vercel-labs/agent-skills/web-design-guidelines
 - **frontend-accessibility-best-practices**: https://www.skills.sh/sergiodxa/agent-skills/frontend-accessibility-best-practices
 - **accessibility**: https://www.skills.sh/addyosmani/web-quality-skills/accessibility
 - **seo**: https://www.skills.sh/addyosmani/web-quality-skills/seo

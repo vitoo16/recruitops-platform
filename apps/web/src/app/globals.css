@@ -2,11 +2,33 @@
 
 :root {
   color-scheme: light;
-  --background: #fafafa;
-  --foreground: #171717;
-  --muted: #737373;
-  --border: #e5e5e5;
-  --card: #ffffff;
+
+  /* Primitive tokens */
+  --neutral-0: #ffffff;
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-500: #737373;
+  --neutral-950: #171717;
+  --red-50: #fef2f2;
+  --red-200: #fecaca;
+  --red-800: #991b1b;
+
+  /* Semantic tokens */
+  --background: var(--neutral-50);
+  --foreground: var(--neutral-950);
+  --muted: var(--neutral-500);
+  --border: var(--neutral-200);
+  --card: var(--neutral-0);
+  --surface-panel: var(--neutral-0);
+  --surface-subtle: var(--neutral-50);
+  --content-primary: var(--neutral-950);
+  --content-secondary: var(--neutral-500);
+  --focus-ring: var(--neutral-950);
+
+  /* Component tokens */
+  --radius-panel: 1rem;
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.04);
 }
 
 * {
@@ -27,11 +49,31 @@ body {
 }
 
 button,
-a {
+a,
+label,
+input,
+select,
+textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+button,
+a {
+  touch-action: manipulation;
+}
+
 :focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -10,6 +10,8 @@ import { ContentMediaWorkspace } from '@/components/content/content-media-worksp
 import { JobHub } from '@/components/jobs/job-hub';
 import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
 import { Button } from '@/components/ui/button';
+import contentStudioEn from '@/messages/content-studio.en.json';
+import contentStudioVi from '@/messages/content-studio.vi.json';
 import en from '@/messages/en.json';
 import metaEn from '@/messages/meta-connections.en.json';
 import metaVi from '@/messages/meta-connections.vi.json';
@@ -19,57 +21,69 @@ type Locale = 'vi' | 'en';
 
 function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: () => void }) {
   const t = useTranslations('home');
+  const studioT = useTranslations('contentStudio');
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16">
-      <div className="flex items-center justify-between gap-4">
-        <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
-        <Button variant="outline" onClick={onLocaleChange} aria-label={t('switchLanguage')}>
-          <Languages className="mr-2 size-4" aria-hidden="true" />
-          {locale === 'vi' ? 'EN' : 'VI'}
-        </Button>
-      </div>
-
-      <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
-        <div>
-          <p className="mb-4 text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
-          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
-            {t('title')}
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
+    <>
+      <a
+        href="#main-content"
+        className="sr-only fixed left-4 top-4 z-50 rounded-md bg-neutral-950 px-4 py-3 text-sm font-medium text-white focus:not-sr-only"
+      >
+        {studioT('skipToContent')}
+      </a>
+      <main
+        id="main-content"
+        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
+          <Button variant="outline" onClick={onLocaleChange} aria-label={t('switchLanguage')}>
+            <Languages className="mr-2 size-4" aria-hidden="true" />
+            {locale === 'vi' ? 'EN' : 'VI'}
+          </Button>
         </div>
-        <div className="space-y-4">
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-neutral-500">{t('foundationLabel')}</p>
-            <p className="mt-2 text-2xl font-semibold">{t('foundationStatus')}</p>
-            <p className="mt-3 text-sm leading-6 text-neutral-600">{t('foundationHint')}</p>
-          </div>
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="mb-4 text-sm font-medium text-neutral-500">{t('accessLabel')}</p>
-            <AuthPanel />
-          </div>
-        </div>
-      </section>
 
-      <section className="grid gap-4 md:grid-cols-2" aria-label={t('capabilities')}>
-        <article className="rounded-2xl border bg-white p-6">
-          <Send className="size-5" aria-hidden="true" />
-          <h2 className="mt-6 font-semibold">{t('publishingTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('publishingDescription')}</p>
-        </article>
-        <article className="rounded-2xl border bg-white p-6">
-          <UsersRound className="size-5" aria-hidden="true" />
-          <h2 className="mt-6 font-semibold">{t('candidateTitle')}</h2>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">{t('candidateDescription')}</p>
-        </article>
-      </section>
+        <section className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+          <div>
+            <p className="mb-4 text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
+            <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+              {t('title')}
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">{t('description')}</p>
+          </div>
+          <div className="space-y-4">
+            <div className="rounded-2xl border bg-white p-6 shadow-sm">
+              <p className="text-sm font-medium text-neutral-500">{t('foundationLabel')}</p>
+              <p className="mt-2 text-2xl font-semibold">{t('foundationStatus')}</p>
+              <p className="mt-3 text-sm leading-6 text-neutral-600">{t('foundationHint')}</p>
+            </div>
+            <div className="rounded-2xl border bg-white p-6 shadow-sm">
+              <p className="mb-4 text-sm font-medium text-neutral-500">{t('accessLabel')}</p>
+              <AuthPanel />
+            </div>
+          </div>
+        </section>
 
-      <MetaConnectionPanel />
-      <JobHub />
-      <ContentMediaWorkspace />
-      <CandidateCrm />
-      <CandidateCvWorkspace />
-    </main>
+        <section className="grid gap-4 md:grid-cols-2" aria-label={t('capabilities')}>
+          <article className="rounded-2xl border bg-white p-6">
+            <Send className="size-5" aria-hidden="true" />
+            <h2 className="mt-6 font-semibold">{t('publishingTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-600">{t('publishingDescription')}</p>
+          </article>
+          <article className="rounded-2xl border bg-white p-6">
+            <UsersRound className="size-5" aria-hidden="true" />
+            <h2 className="mt-6 font-semibold">{t('candidateTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-600">{t('candidateDescription')}</p>
+          </article>
+        </section>
+
+        <MetaConnectionPanel />
+        <JobHub />
+        <ContentMediaWorkspace />
+        <CandidateCrm />
+        <CandidateCvWorkspace />
+      </main>
+    </>
   );
 }
 
@@ -79,6 +93,7 @@ export function Home() {
   const messages = {
     ...baseMessages,
     metaConnections: locale === 'vi' ? metaVi : metaEn,
+    contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
   };
 
   return (

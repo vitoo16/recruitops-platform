@@ -1,9 +1,17 @@
 import {
   PostListResponseSchema,
   PostSchema,
+  PostVariantListSchema,
+  PostVariantMediaSelectionSchema,
+  PostVariantRecordSchema,
   type CreatePostInput,
   type Post,
   type PostListResponse,
+  type PostVariantMediaSelection,
+  type PostVariantRecord,
+  type ReplacePostVariantMediaSelectionInput,
+  type SocialPlatform,
+  type UpsertPostVariantInput,
 } from '@recruitops/contracts';
 
 export class ContentApiError extends Error {
@@ -69,6 +77,53 @@ export async function createPost(
   return PostSchema.parse(
     await requestJson(apiUrl, token, '/posts', {
       method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function listPostVariants(
+  apiUrl: string,
+  token: string,
+  postId: string,
+): Promise<PostVariantRecord[]> {
+  return PostVariantListSchema.parse(await requestJson(apiUrl, token, `/posts/${postId}/variants`));
+}
+
+export async function upsertPostVariant(
+  apiUrl: string,
+  token: string,
+  postId: string,
+  platform: SocialPlatform,
+  input: UpsertPostVariantInput,
+): Promise<PostVariantRecord> {
+  return PostVariantRecordSchema.parse(
+    await requestJson(apiUrl, token, `/posts/${postId}/variants/${platform}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function getPostVariantMediaSelection(
+  apiUrl: string,
+  token: string,
+  variantId: string,
+): Promise<PostVariantMediaSelection> {
+  return PostVariantMediaSelectionSchema.parse(
+    await requestJson(apiUrl, token, `/posts/variants/${variantId}/media-selection`),
+  );
+}
+
+export async function replacePostVariantMediaSelection(
+  apiUrl: string,
+  token: string,
+  variantId: string,
+  input: ReplacePostVariantMediaSelectionInput,
+): Promise<PostVariantMediaSelection> {
+  return PostVariantMediaSelectionSchema.parse(
+    await requestJson(apiUrl, token, `/posts/variants/${variantId}/media-selection`, {
+      method: 'PUT',
       body: JSON.stringify(input),
     }),
   );

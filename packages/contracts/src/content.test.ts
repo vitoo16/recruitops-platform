@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { canTransitionPostStatus, CreatePostSchema, PostVariantSchema } from './content.js';
+import {
+  canTransitionPostStatus,
+  CreatePostSchema,
+  PostVariantSchema,
+  ReplacePostVariantMediaSelectionSchema,
+} from './content.js';
 
 describe('content contracts', () => {
   it('accepts a valid draft post', () => {
@@ -23,6 +28,14 @@ describe('content contracts', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('rejects duplicate media selections before persistence', () => {
+    const mediaId = '0f07a2ec-3d1e-4aaa-949c-66f50b2262c4';
+    expect(
+      ReplacePostVariantMediaSelectionSchema.safeParse({ mediaAssetIds: [mediaId, mediaId] })
+        .success,
+    ).toBe(false);
   });
 
   it('prevents restoring an archived post through a silent state transition', () => {
