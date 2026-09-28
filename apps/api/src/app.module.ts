@@ -10,6 +10,7 @@ import { IntegrationHealthModule } from './integration-health/integration-health
 import { JobsModule } from './jobs/jobs.module.js';
 import { MetaConnectionsModule } from './meta-connections/meta-connections.module.js';
 import { SocialCredentialsModule } from './social-credentials/social-credentials.module.js';
+import { ThreadsConnectionsModule } from './threads-connections/threads-connections.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SocialCredentialsModule } from './social-credentials/social-credentials
     JobsModule,
     MetaConnectionsModule,
     SocialCredentialsModule,
+    ThreadsConnectionsModule,
   ],
   controllers: [HealthController],
 })
