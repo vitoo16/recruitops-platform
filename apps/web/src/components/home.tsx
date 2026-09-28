@@ -31,7 +31,10 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       >
         {studioT('skipToContent')}
       </a>
-      <main id="main-content" className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16">
+      <main
+        id="main-content"
+        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16"
+      >
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
           <Button variant="outline" onClick={onLocaleChange} aria-label={t('switchLanguage')}>
