@@ -22,6 +22,33 @@ For one durable Publication job, the executor:
 
 Only HTTP 429 and provider/server errors with status >= 500 are treated as retryable by the generic executor. Provider-specific adapters remain responsible for translating provider responses into normalized safe errors.
 
+## Prisma execution projection
+
+`PrismaPublicationExecutionRepository` is the concrete persistence adapter used by the worker composition boundary.
+
+Its read projection intentionally contains only execution-safe business data:
+
+- Publication identity, state, retry count and idempotency key;
+- PostVariant platform, text, hashtags, link and object-shaped metadata;
+- Destination identity, platform, posting mode, enabled state and social-account reference;
+- Publication SocialAccount identity, platform and connection status.
+
+It does **not** select OAuth credentials, encrypted credential envelopes, private storage keys, or provider tokens. Credential decryption stays behind the provider context resolver at the execution point.
+
+State claims and result writes use a single Prisma `updateMany` predicate over Publication ID plus expected state. A worker only owns an attempt when exactly one row matches. This provides the compare-and-set behavior required by the executor without relying on process-local locking.
+
+### Media selection boundary
+
+The current persistent model stores `MediaAsset` at the Post level. It does not yet express which assets are selected for a specific `PostVariant` / destination publication. The execution repository therefore does not infer `payload.mediaIds` by attaching every Post asset to every platform variant.
+
+Media IDs must be supplied only after the product model exposes an explicit, validated media-selection rule. This prevents a persistence convenience from silently becoming a cross-platform publishing business rule.
+
+## Queue handler composition
+
+`createPublicationJobHandler` adapts the validated BullMQ `PublicationQueueJob` into the executor identity contract. Queue scheduling metadata is not treated as provider input; the durable Publication row remains the source of truth for execution state.
+
+The handler is intentionally composition-only. It does not construct provider adapters or decrypt credentials.
+
 ## Retry behavior
 
 The existing publication retry policy remains authoritative:
@@ -51,12 +78,14 @@ The repository boundary exposes compare-and-set state updates. Only the worker t
 ```mermaid
 sequenceDiagram
     participant Queue as BullMQ worker
+    participant Handler as Worker handler
     participant Executor as Publication executor
-    participant DB as Publication repository
+    participant DB as Prisma repository
     participant Registry as Publisher registry
     participant Provider as SocialPublisher
 
-    Queue->>Executor: execute(publicationId, idempotencyKey)
+    Queue->>Handler: validated PublicationQueueJob
+    Handler->>Executor: execute(publicationId, idempotencyKey)
     Executor->>DB: load execution projection
     DB-->>Executor: Publication + destination/account/payload
     Executor->>Executor: validate state/destination/account/platform
@@ -92,11 +121,12 @@ sequenceDiagram
 
 ## Runtime wiring still required
 
-This slice implements and tests execution semantics only. It does not yet claim production worker activation. Runtime completion still requires:
+Execution semantics, Prisma persistence and queue-handler composition are implemented and unit-tested. Production worker activation remains intentionally gated until all remaining runtime boundaries are available:
 
-- a Prisma-backed execution repository;
 - credential resolvers that decrypt `SocialCredential` only at the execution point;
 - publisher registry wiring for production-enabled providers;
-- approved private-media URL resolution for media providers;
-- worker startup/shutdown wiring;
+- explicit media-selection semantics plus approved private-media URL resolution for media providers;
+- worker startup/shutdown wiring and graceful Redis/Prisma cleanup;
 - integration/E2E verification against the real queue/database/provider boundary.
+
+Until those dependencies are present, `apps/worker/src/main.ts` must not start the publication processor. This avoids consuming real jobs into an intentionally incomplete runtime.
