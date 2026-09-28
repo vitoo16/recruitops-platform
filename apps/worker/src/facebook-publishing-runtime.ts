@@ -4,9 +4,13 @@ import {
   FacebookPagePublisher,
   InstagramProfessionalPublisher,
   OAuthCredentialCipherCore,
+  ThreadsPublisher,
   type MetaPublishingContext,
   type MetaPublishingContextResolver,
   type MetaPublishingMediaResolver,
+  type ThreadsPublishingContext,
+  type ThreadsPublishingContextResolver,
+  type ThreadsPublishingMediaResolver,
 } from '@recruitops/integrations';
 import type { SocialPublisherRegistry } from '@recruitops/queue';
 
@@ -146,6 +150,100 @@ export class PrismaInstagramPublishingContextResolver extends PrismaMetaPublishi
   }
 }
 
+const THREADS_REQUIRED_SCOPES = ['threads_basic', 'threads_content_publish'] as const;
+
+export class PrismaThreadsPublishingContextResolver implements ThreadsPublishingContextResolver {
+  constructor(
+    private readonly database: PrismaClient,
+    private readonly cipher: OAuthCredentialCipherCore = new OAuthCredentialCipherCore(),
+    private readonly env: NodeJS.ProcessEnv = process.env,
+  ) {}
+
+  async resolve(command: PublishCommand): Promise<ThreadsPublishingContext> {
+    if (command.platform !== 'THREADS') {
+      throw new WorkerPublishingContextError('WORKER_THREADS_PLATFORM_MISMATCH');
+    }
+
+    const destination = await this.database.destination.findUnique({
+      where: { id: command.destinationId },
+      select: {
+        id: true,
+        platform: true,
+        socialAccountId: true,
+        socialAccount: {
+          select: {
+            id: true,
+            platform: true,
+            status: true,
+            scopes: true,
+            credential: {
+              select: {
+                platform: true,
+                keyId: true,
+                algorithm: true,
+                iv: true,
+                authTag: true,
+                ciphertext: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!destination) {
+      throw new WorkerPublishingContextError('WORKER_DESTINATION_NOT_FOUND');
+    }
+    if (
+      destination.platform !== 'THREADS' ||
+      destination.socialAccountId !== command.socialAccountId ||
+      !destination.socialAccount ||
+      destination.socialAccount.id !== command.socialAccountId ||
+      destination.socialAccount.platform !== 'THREADS' ||
+      destination.socialAccount.status !== 'CONNECTED'
+    ) {
+      throw new WorkerPublishingContextError('WORKER_THREADS_CONTEXT_MISMATCH');
+    }
+
+    for (const scope of THREADS_REQUIRED_SCOPES) {
+      if (!destination.socialAccount.scopes.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_THREADS_SCOPE_REQUIRED');
+      }
+    }
+
+    const credential = destination.socialAccount.credential;
+    if (!credential || credential.platform !== 'THREADS') {
+      throw new WorkerPublishingContextError('WORKER_THREADS_CREDENTIAL_REQUIRED');
+    }
+    if (credential.algorithm !== 'aes-256-gcm') {
+      throw new WorkerPublishingContextError('WORKER_CREDENTIAL_ALGORITHM_UNSUPPORTED');
+    }
+
+    const payload = this.cipher.decrypt(
+      {
+        platform: 'THREADS',
+        keyId: credential.keyId,
+        algorithm: 'aes-256-gcm',
+        iv: credential.iv,
+        authTag: credential.authTag,
+        ciphertext: credential.ciphertext,
+      },
+      this.env,
+    );
+
+    for (const scope of THREADS_REQUIRED_SCOPES) {
+      if (!payload.scopes?.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_THREADS_CREDENTIAL_SCOPE_REQUIRED');
+      }
+    }
+
+    return {
+      platform: 'THREADS',
+      accessToken: payload.accessToken,
+    };
+  }
+}
+
 class MapPublisherRegistry implements SocialPublisherRegistry {
   constructor(private readonly publishers: ReadonlyMap<SocialPlatform, SocialPublisher>) {}
 
@@ -159,6 +257,7 @@ export function createProductionPublisherRegistry(input: {
   graphApiVersion: string;
   env?: NodeJS.ProcessEnv;
   instagramMediaResolver?: MetaPublishingMediaResolver;
+  threadsMediaResolver?: ThreadsPublishingMediaResolver;
 }): SocialPublisherRegistry {
   const facebookContextResolver = new PrismaFacebookPublishingContextResolver(
     input.database,
@@ -183,6 +282,16 @@ export function createProductionPublisherRegistry(input: {
       input.instagramMediaResolver,
     );
     publishers.set('INSTAGRAM', instagram);
+  }
+
+  if (input.threadsMediaResolver) {
+    const threadsContextResolver = new PrismaThreadsPublishingContextResolver(
+      input.database,
+      new OAuthCredentialCipherCore(),
+      input.env,
+    );
+    const threads = new ThreadsPublisher(threadsContextResolver, input.threadsMediaResolver);
+    publishers.set('THREADS', threads);
   }
 
   return new MapPublisherRegistry(publishers);
