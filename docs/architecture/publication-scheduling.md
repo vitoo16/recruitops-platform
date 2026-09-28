@@ -4,7 +4,7 @@ RecruitOps uses BullMQ for durable delayed dispatch backed by Redis.
 
 ## Boundary
 
-The scheduler is responsible only for queue timing and duplicate-safe enqueue. It does not claim that a social post has been published.
+The scheduler is responsible for queue timing and duplicate-safe enqueue. Provider success is established only after the publishing worker executes the stored Publication and persists the resulting state.
 
 ```mermaid
 sequenceDiagram
@@ -12,38 +12,70 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant Queue as BullMQ / Redis
     participant Worker as Publishing worker
-    participant Adapter as Provider adapter
+    participant Storage as Supabase private storage
+    participant Adapter as SocialPublisher adapter
+    participant Provider as Social provider
 
     API->>DB: Persist Publication + scheduledAt + idempotencyKey
     API->>Queue: enqueue publicationId with delay
     Note over Queue: BullMQ jobId = Publication UUID
     Queue-->>Worker: release when delay expires
-    Worker->>Worker: validate payload + apply concurrency/rate limits
-    Worker->>DB: claim/check current Publication state
-    Worker->>Adapter: execute only after provider adapter is available
+    Worker->>Worker: validate queue payload + limits
+    Worker->>DB: atomic claim runnable Publication -> PUBLISHING
+    DB-->>Worker: variant + destination + account + encrypted credential + media
+    Worker->>Worker: validate boundaries + decrypt credential
+    opt media required
+        Worker->>Storage: create short-lived signed URL
+        Storage-->>Worker: signed HTTPS URL
+    end
+    Worker->>Adapter: publish(PublishCommand)
+    Adapter->>Provider: official provider API request
+    Provider-->>Adapter: result / normalized failure
+    Adapter-->>Worker: PUBLISHED / PROCESSING / failure
+    Worker->>DB: persist durable outcome
 ```
 
 ## Reliability
 
-BullMQ delayed jobs are used rather than process-local timers. The queue job ID is the Publication UUID, so duplicate enqueue attempts target the same durable job identity. Retry settings use five total attempts with exponential backoff starting at one second; business retry/terminal state still remains in the Publication model.
+BullMQ delayed jobs are used rather than process-local timers. The queue job ID is the Publication UUID, so duplicate enqueue attempts target the same durable job identity. Retry settings use five total attempts with exponential backoff starting at one second; business retry/terminal state also remains persisted in the Publication model.
 
 Delayed jobs are not guaranteed to execute at the exact millisecond when a worker is busy, so product UI should treat `scheduledAt` as the requested dispatch time rather than a hard real-time guarantee.
 
-## Worker boundary
+The worker claims only `PENDING`, `SCHEDULED`, or `RETRY_WAITING` records. The claim is an atomic conditional state update to `PUBLISHING`; a duplicate queue delivery that can no longer claim the Publication becomes a no-op before any provider call.
 
-`@recruitops/queue` now exposes a publishing-worker boundary that requires an explicit provider handler. Queue payloads are validated before the handler is called, including Publication UUID, idempotency-key consistency and a parseable scheduled timestamp.
+## Failure and retry semantics
 
-Default worker limits are intentionally conservative:
+Retryable network, timeout, rate-limit, HTTP 408/425/429, and provider 5xx failures are persisted as `RETRY_WAITING` with a calculated `nextRetryAt`, then rethrown so BullMQ applies its bounded exponential retry policy. Terminal validation and provider 4xx failures are persisted as `FAILED` and acknowledged.
+
+Only normalized failure codes are persisted. Provider response bodies and raw provider messages are not copied into `Publication.lastErrorMessage`; this prevents accidental token/PII/provider-payload persistence.
+
+External publishing remains at-least-once in the cases where a provider does not expose a usable idempotency mechanism. An ambiguous network failure after a provider accepted a request can require operator reconciliation. RecruitOps must not claim universal exactly-once provider delivery.
+
+## Credential boundary
+
+OAuth credentials remain encrypted in `social_credentials`. The worker uses the same AES-256-GCM keyring implementation as the API, but decryption happens only inside the execution path after the Publication, Destination, SocialAccount, status, platform, and credential relationships are validated.
+
+The access token is handed directly to the selected adapter in memory. It is never written to the Publication record, queue payload, browser contract, URL, or structured worker log.
+
+## Private media boundary
+
+Supabase Storage remains private. For Instagram and Threads media operations, the worker uses a server-only Supabase secret to create a short-lived signed HTTPS URL at execution time. The signed URL is passed to the adapter but not persisted.
+
+Current model limitation: `PostVariant` does not store an explicit per-variant media selection. The executor therefore supplies the parent Post's ordered media set and lets each adapter enforce its supported count/type rules. A future variant-media mapping should replace this without inventing selection behavior in the worker.
+
+## Worker limits
+
+`@recruitops/queue` validates Publication UUID, idempotency-key consistency and scheduled timestamp before invoking the application handler.
+
+Default limits remain intentionally conservative:
 
 - concurrency: 4 jobs;
 - rate limit: 10 jobs per 1,000 ms window.
 
-Both values are configurable with positive-integer validation. Platform adapters may later use stricter limits when provider-specific quotas are verified from current official documentation.
+Platform adapters may use stricter limits when provider-specific quotas are verified from current official documentation.
 
-The generic worker boundary does not contain a fallback provider implementation. This prevents a queue job from being consumed and marked successful when no social-platform adapter exists.
+## Runtime activation boundary
 
-## Current completion boundary
+The worker runtime is now implemented in code for the currently wired Facebook, Instagram, and Threads publisher adapters. This does **not** mean production publishing is active: a hosted worker process, production database/Redis access, server-only Supabase signing secret, OAuth encryption keyring, real provider credentials/app permissions, and real-provider integration/E2E verification are still required.
 
-The BullMQ scheduling and generic rate-limit-aware worker primitives are complete: delayed enqueue, duplicate-safe job IDs, retry/backoff configuration, validated worker payloads, concurrency/limiter options and tests are defined in `@recruitops/queue`.
-
-Provider execution and provider-specific adapters remain separate unchecked Master Plan items. A scheduled or dequeued job must never be interpreted as provider success.
+Publish Now UI remains intentionally blocked until this execution path is verified; dequeuing alone must never be presented as provider success.
