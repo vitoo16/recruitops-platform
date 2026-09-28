@@ -41,9 +41,7 @@ export class WorkerRuntimeConfigurationError extends Error {
 
 const defaultLogger: WorkerRuntimeLogger = {
   info(event, details = {}) {
-    console.log(
-      JSON.stringify({ level: 'info', service: 'recruitops-worker', event, ...details }),
-    );
+    console.log(JSON.stringify({ level: 'info', service: 'recruitops-worker', event, ...details }));
   },
   error(event, details = {}) {
     console.error(
@@ -52,11 +50,7 @@ const defaultLogger: WorkerRuntimeLogger = {
   },
 };
 
-function requireUrl(
-  value: string | undefined,
-  code: string,
-  protocols: readonly string[],
-): string {
+function requireUrl(value: string | undefined, code: string, protocols: readonly string[]): string {
   const normalized = value?.trim();
   if (!normalized) throw new WorkerRuntimeConfigurationError(code);
 
@@ -73,11 +67,7 @@ function requireUrl(
   return normalized;
 }
 
-function positiveInteger(
-  value: string | undefined,
-  fallback: number,
-  code: string,
-): number {
+function positiveInteger(value: string | undefined, fallback: number, code: string): number {
   if (value === undefined || value.trim() === '') return fallback;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 1) {
