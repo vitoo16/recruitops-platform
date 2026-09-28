@@ -1,5 +1,12 @@
 import { PublicationIdentitySchema, buildPublicationIdempotencyKey } from '@recruitops/contracts';
-import { Worker, type ConnectionOptions, type Job, type WorkerOptions } from 'bullmq';
+import {
+  Worker,
+  createNodeRedisClient,
+  type ConnectionOptions,
+  type Job,
+  type WorkerOptions,
+} from 'bullmq';
+import { createClient } from 'redis';
 import {
   PUBLICATION_JOB_NAME,
   PUBLICATION_QUEUE_NAME,
@@ -115,4 +122,40 @@ export function createPublicationWorker(input: {
   });
 
   return worker;
+}
+
+export async function createPublicationWorkerRuntime(input: {
+  redisUrl: string;
+  handler: PublicationJobHandler;
+  limits?: Partial<PublicationWorkerLimits>;
+}) {
+  if (!input.redisUrl.trim()) throw new Error('REDIS_URL_REQUIRED');
+
+  const rawClient = createClient({ url: input.redisUrl });
+  rawClient.on('error', (error) => {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        service: 'recruitops-worker',
+        event: 'redis_error',
+        message: error instanceof Error ? error.message : 'unknown redis error',
+      }),
+    );
+  });
+  await rawClient.connect();
+
+  const connection = createNodeRedisClient(rawClient);
+  const worker = createPublicationWorker({
+    connection,
+    handler: input.handler,
+    limits: input.limits,
+  });
+
+  return {
+    worker,
+    async close() {
+      await worker.close();
+      if (rawClient.isOpen) await rawClient.quit();
+    },
+  };
 }
