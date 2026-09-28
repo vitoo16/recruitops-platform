@@ -2,16 +2,36 @@
 
 ## Verified official basis
 
-This slice follows the current Meta Threads API single-post flow on `https://graph.threads.net`:
+RecruitOps follows Meta's current Threads-specific OAuth and publishing contracts on `https://threads.net` and `https://graph.threads.net`:
 
-1. authorize a Threads user with the Threads OAuth flow;
-2. require `threads_basic` and `threads_content_publish` for this publishing capability;
-3. create a media container with `POST /{threads-user-id}/threads` (RecruitOps uses `/me/threads`);
-4. publish the returned container with `POST /{threads-user-id}/threads_publish` (RecruitOps uses `/me/threads_publish`).
+1. redirect an authenticated RecruitOps OWNER/ADMIN to `https://threads.net/oauth/authorize`;
+2. request only `threads_basic` and `threads_content_publish` for the current publishing slice;
+3. exchange the callback authorization code at `POST https://graph.threads.net/oauth/access_token`;
+4. exchange the short-lived user token for a long-lived token through `GET /access_token` with `grant_type=th_exchange_token`;
+5. resolve the app-scoped Threads profile from `GET /me` and verify it matches the user ID returned by the code exchange;
+6. create a media container with `POST /me/threads`;
+7. publish the returned container with `POST /me/threads_publish`.
 
-Meta's official Threads Postman workspace was rechecked before this runtime wiring. The adapter intentionally does not use the Facebook Graph host or prepend the Meta Facebook Graph API version because the current Threads API host is `https://graph.threads.net`.
+The Threads OAuth path is intentionally independent of the Facebook/Instagram Meta connection flow. RecruitOps does not reuse a Facebook Page token for Threads.
 
-## Supported in this slice
+## Connection and credential boundary
+
+`POST /api/integrations/threads/oauth/start` is restricted to OWNER/ADMIN users. The API generates 32 bytes of cryptographically random state and stores only `SHA-256(state)` in Redis for ten minutes. State is consumed atomically with `GETDEL`, so expired or replayed callbacks fail before any provider token exchange.
+
+The public callback never receives or returns a RecruitOps bearer token. After state consumption it:
+
+1. exchanges the one-time provider code server-side;
+2. obtains a long-lived Threads token;
+3. loads the app-scoped Threads profile with the long-lived token;
+4. requires the profile ID to equal the user ID returned by the code exchange;
+5. encrypts the long-lived credential with the shared AES-256-GCM OAuth keyring;
+6. transactionally creates or reconnects the `THREADS` `SocialAccount`, encrypted `SocialCredential`, and API `PROFILE` Destination.
+
+The durable SocialAccount stores only non-secret account metadata, scopes, status, and token expiry. Provider token material never enters browser URLs, queue payloads, application logs, or Publication persistence.
+
+`THREADS_APP_ID`, `THREADS_APP_SECRET`, `THREADS_REDIRECT_URI`, and `THREADS_FRONTEND_REDIRECT_URI` are server-side runtime configuration. Production HTTPS is required for the frontend return URL; plain HTTP is allowed only for localhost development.
+
+## Supported publishing slice
 
 - text-only Threads posts;
 - one image post using a provider-readable HTTPS `image_url`;
@@ -22,9 +42,9 @@ Meta's official Threads Postman workspace was rechecked before this runtime wiri
 - worker credential resolution from the exact durable Threads destination/account/credential relation;
 - opt-in worker registry wiring behind `PUBLISHING_THREADS_ENABLED`.
 
-This slice does **not** claim support for carousel posts, polls, GIF attachments, quote/repost operations, topic/location tagging, ghost posts, reply approval controls, or other advanced Threads features. The Master Plan item remains incomplete until the intended currently-supported capability set and the dedicated connection flow are verified end to end.
+This slice does **not** claim support for carousel posts, polls, GIF attachments, quote/repost operations, topic/location tagging, ghost posts, reply approval controls, or other advanced Threads features. The Master Plan item remains incomplete until the intended currently-supported capability set and real-provider verification are completed.
 
-## Credential boundary
+## Worker credential boundary
 
 `PrismaThreadsPublishingContextResolver` loads the exact `Destination -> SocialAccount -> SocialCredential` relation at execution time. Before decrypting anything it verifies:
 
@@ -35,8 +55,6 @@ This slice does **not** claim support for carousel posts, polls, GIF attachments
 - persisted account scopes include `threads_basic` and `threads_content_publish`.
 
 The encrypted credential is then decrypted in memory through the shared AES-256-GCM OAuth keyring. The decrypted payload must still declare both required scopes. Only the access token is returned to `ThreadsPublisher`.
-
-The token is sent only in the HTTP `Authorization: Bearer ...` header and is never placed in queue payloads, browser-facing contracts, URLs, application logs, or Publication persistence.
 
 ## Media boundary
 
@@ -64,7 +82,37 @@ When the flag is enabled:
 
 The same provider-media resolver can serve Instagram and Threads when both are enabled. Private storage keys and signed URL bearer tokens remain outside generic publication persistence.
 
-## Flow
+## Connection flow
+
+```mermaid
+sequenceDiagram
+    actor User as RecruitOps OWNER/ADMIN
+    participant API as RecruitOps API
+    participant Redis as Redis
+    participant Threads as Threads OAuth/API
+    participant Cipher as OAuth cipher
+    participant DB as PostgreSQL
+    participant Web as RecruitOps frontend
+
+    User->>API: POST /integrations/threads/oauth/start
+    API->>Redis: SET SHA-256(state), userId, TTL, NX
+    API-->>User: authorizationUrl
+    User->>Threads: authorize threads_basic + threads_content_publish
+    Threads->>API: GET callback?code&state
+    API->>Redis: GETDEL SHA-256(state)
+    API->>Threads: POST /oauth/access_token
+    Threads-->>API: short-lived token + user_id
+    API->>Threads: GET /access_token (long-lived exchange)
+    Threads-->>API: long-lived token + expiry
+    API->>Threads: GET /me
+    Threads-->>API: app-scoped profile
+    API->>API: require profile.id == exchanged user_id
+    API->>Cipher: encrypt long-lived token
+    API->>DB: upsert SocialAccount + SocialCredential + PROFILE Destination
+    API-->>Web: 303 fixed frontend return, status only
+```
+
+## Publishing flow
 
 ```mermaid
 sequenceDiagram
@@ -82,7 +130,6 @@ sequenceDiagram
     Executor->>Registry: get(THREADS)
     Registry-->>Executor: ThreadsPublisher only if explicitly enabled
     Executor->>Adapter: publish(PublishCommand)
-    Adapter->>Adapter: validate platform/payload/media count
     Adapter->>Context: resolve(command)
     Context->>DB: load exact destination/account/credential
     Context-->>Adapter: decrypted server-side Threads token
@@ -100,14 +147,14 @@ sequenceDiagram
     Adapter-->>Executor: PUBLISHED + externalPostId
 ```
 
-## Remaining activation work
+## Remaining production work
 
-The worker runtime alone does not make Threads production-ready. Remaining gates are:
+The code-side connection and worker runtime do not make Threads production-ready. Remaining gates are:
 
-- implement the dedicated Threads OAuth connection flow and durable account promotion;
-- configure a real Meta app with the Threads use case, redirect URI and required reviewed access;
-- verify token exchange/refresh and account identity against a real Threads account;
-- inject hosted worker secrets/flags only through the approved production secret-management process;
+- configure a real Meta app with the Threads use case, exact redirect URI and required reviewed access;
+- configure the server-only Threads app credentials and fixed frontend return URL in the hosted API;
+- verify authorization, long-lived token exchange/refresh, reconnect behavior and account identity against a real Threads account;
+- enable hosted worker secrets/flags only through the approved production secret-management process;
 - deploy an always-on worker when infrastructure supports it;
 - run real-provider integration/E2E verification before claiming production readiness;
 - explicitly decide which advanced Threads capabilities belong in the product scope before completing the Master Plan adapter item.
