@@ -10,6 +10,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@recruitops/config": "workspace:*",
+    "@recruitops/contracts": "workspace:*",
+    "@recruitops/database": "workspace:*",
+    "@recruitops/integrations": "workspace:*",
+    "@recruitops/queue": "workspace:*",
+    "@supabase/supabase-js": "^2.105.0"
+  },
   "devDependencies": {
     "@types/node": "^24.10.0",
     "tsx": "^4.20.5",
