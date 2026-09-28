@@ -1,4 +1,5 @@
 {
+  "skipToContent": "Chuyển đến nội dung chính",
   "eyebrow": "Biến thể theo nền tảng",
   "title": "Tinh chỉnh nội dung và chọn media cho từng nền tảng",
   "description": "Giữ bài nháp gốc tách biệt với nội dung riêng cho từng nền tảng. Media được chọn rõ ràng theo từng biến thể để hệ thống không tự suy đoán asset nào cần xuất bản.",
@@ -6,9 +7,9 @@
   "choosePost": "Chọn một bài nháp trước khi chỉnh sửa biến thể theo nền tảng.",
   "variantText": "Nội dung theo nền tảng",
   "hashtags": "Hashtag",
-  "hashtagsPlaceholder": "tuyendung, engineering",
+  "hashtagsPlaceholder": "tuyendung, engineering…",
   "link": "Liên kết tùy chọn",
-  "linkPlaceholder": "https://example.com/job",
+  "linkPlaceholder": "https://example.com/job…",
   "saveVariant": "Lưu biến thể nền tảng",
   "savingVariant": "Đang lưu biến thể…",
   "mediaSelection": "Media đã chọn",

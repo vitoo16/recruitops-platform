@@ -18,13 +18,16 @@ The UI must make that dependency visible. A platform media selection cannot exis
 
 ## Composition
 
-- `ContentMediaWorkspace`: orchestration only.
+- `ContentMediaWorkspace`: orchestration and feature composition only.
 - `PostDraftPanel`: job/post context and canonical draft creation.
 - `MediaWorkspacePanel`: private upload plus post-owned media inventory.
 - `PostVariantMediaPanel`: platform-specific copy and explicit media ordering.
-- `useContentStudio`: feature state/API orchestration. Provider SDK behavior does not belong here.
+- `useContentStudioSession`: authentication, role and job context.
+- `usePostMediaWorkspace`: canonical Post and private media behavior.
+- `usePostVariantWorkspace`: platform variant and ordered media-selection behavior.
+- `useContentStudio`: composes the three bounded hooks and shared error surface.
 
-Future growth should split the feature hook by bounded concern before it becomes a second monolith.
+Provider SDK behavior does not belong in these UI hooks. If any bounded hook begins mixing another domain responsibility, split it before extending the feature.
 
 ## Media-selection UX
 

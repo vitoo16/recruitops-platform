@@ -1,4 +1,5 @@
 {
+  "skipToContent": "Skip to main content",
   "eyebrow": "Platform variants",
   "title": "Shape each platform variant and choose its media",
   "description": "Keep the canonical draft separate from platform-specific copy. Media is selected explicitly per variant so publishing never guesses which private asset to send.",
@@ -6,9 +7,9 @@
   "choosePost": "Choose a draft post before editing platform variants.",
   "variantText": "Platform copy",
   "hashtags": "Hashtags",
-  "hashtagsPlaceholder": "hiring, engineering",
+  "hashtagsPlaceholder": "hiring, engineering…",
   "link": "Optional link",
-  "linkPlaceholder": "https://example.com/job",
+  "linkPlaceholder": "https://example.com/job…",
   "saveVariant": "Save platform variant",
   "savingVariant": "Saving variant…",
   "mediaSelection": "Selected media",
