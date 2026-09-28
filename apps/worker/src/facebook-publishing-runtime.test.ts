@@ -3,12 +3,14 @@ import type { PrismaClient } from '@recruitops/database';
 import {
   OAuthCredentialCipherCore,
   type MetaPublishingMediaResolver,
+  type ThreadsPublishingMediaResolver,
 } from '@recruitops/integrations';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createProductionPublisherRegistry,
   PrismaFacebookPublishingContextResolver,
   PrismaInstagramPublishingContextResolver,
+  PrismaThreadsPublishingContextResolver,
   WorkerPublishingContextError,
 } from './facebook-publishing-runtime.js';
 
@@ -34,6 +36,16 @@ const instagramCommand: PublishCommand = {
   platform: 'INSTAGRAM',
   payload: {
     text: 'We are hiring',
+    hashtags: ['jobs'],
+    mediaIds: ['44444444-4444-4444-8444-444444444444'],
+  },
+};
+
+const threadsCommand: PublishCommand = {
+  ...facebookCommand,
+  platform: 'THREADS',
+  payload: {
+    text: 'We are hiring on Threads',
     hashtags: ['jobs'],
     mediaIds: ['44444444-4444-4444-8444-444444444444'],
   },
@@ -189,8 +201,73 @@ describe('PrismaInstagramPublishingContextResolver', () => {
   });
 });
 
+describe('PrismaThreadsPublishingContextResolver', () => {
+  it('decrypts the selected connected Threads credential only at execution time', async () => {
+    const cipher = new OAuthCredentialCipherCore();
+    const scopes = ['threads_basic', 'threads_content_publish'];
+    const encrypted = cipher.encrypt(
+      'THREADS',
+      {
+        accessToken: 'threads-user-access-token',
+        scopes,
+      },
+      env,
+    );
+    const database = createDatabase({
+      id: threadsCommand.destinationId,
+      platform: 'THREADS',
+      socialAccountId: threadsCommand.socialAccountId,
+      socialAccount: {
+        id: threadsCommand.socialAccountId,
+        platform: 'THREADS',
+        status: 'CONNECTED',
+        scopes,
+        credential: {
+          platform: 'THREADS',
+          keyId: encrypted.keyId,
+          algorithm: encrypted.algorithm,
+          iv: encrypted.iv,
+          authTag: encrypted.authTag,
+          ciphertext: encrypted.ciphertext,
+        },
+      },
+    });
+
+    const resolver = new PrismaThreadsPublishingContextResolver(database, cipher, env);
+
+    await expect(resolver.resolve(threadsCommand)).resolves.toEqual({
+      platform: 'THREADS',
+      accessToken: 'threads-user-access-token',
+    });
+  });
+
+  it('fails before decryption when the persisted account lacks Threads publishing scope', async () => {
+    const database = createDatabase({
+      id: threadsCommand.destinationId,
+      platform: 'THREADS',
+      socialAccountId: threadsCommand.socialAccountId,
+      socialAccount: {
+        id: threadsCommand.socialAccountId,
+        platform: 'THREADS',
+        status: 'CONNECTED',
+        scopes: ['threads_basic'],
+        credential: null,
+      },
+    });
+    const resolver = new PrismaThreadsPublishingContextResolver(
+      database,
+      new OAuthCredentialCipherCore(),
+      env,
+    );
+
+    await expect(resolver.resolve(threadsCommand)).rejects.toMatchObject({
+      code: 'WORKER_THREADS_SCOPE_REQUIRED',
+    });
+  });
+});
+
 describe('createProductionPublisherRegistry', () => {
-  it('keeps Instagram disabled unless a trusted media resolver is explicitly supplied', () => {
+  it('keeps media providers disabled unless trusted media resolvers are explicitly supplied', () => {
     const database = createDatabase(null);
     const registry = createProductionPublisherRegistry({
       database,
@@ -218,5 +295,22 @@ describe('createProductionPublisherRegistry', () => {
     expect(registry.get('FACEBOOK')?.platform).toBe('FACEBOOK');
     expect(registry.get('INSTAGRAM')?.platform).toBe('INSTAGRAM');
     expect(registry.get('THREADS')).toBeUndefined();
+  });
+
+  it('registers Threads only when the worker composition supplies its media resolver', () => {
+    const database = createDatabase(null);
+    const mediaResolver: ThreadsPublishingMediaResolver = {
+      resolve: vi.fn().mockResolvedValue([]),
+    };
+    const registry = createProductionPublisherRegistry({
+      database,
+      graphApiVersion: 'v26.0',
+      env,
+      threadsMediaResolver: mediaResolver,
+    });
+
+    expect(registry.get('FACEBOOK')?.platform).toBe('FACEBOOK');
+    expect(registry.get('INSTAGRAM')).toBeUndefined();
+    expect(registry.get('THREADS')?.platform).toBe('THREADS');
   });
 });

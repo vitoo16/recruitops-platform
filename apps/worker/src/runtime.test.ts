@@ -14,6 +14,7 @@ const config = {
   redisUrl: 'rediss://worker:secret@redis.example.com:6380/2',
   metaGraphApiVersion: 'v26.0',
   instagramPublishing: { enabled: false as const },
+  threadsPublishing: { enabled: false as const },
   limits: {
     concurrency: 3,
     maxPerDuration: 7,
@@ -26,8 +27,15 @@ const credentialEnv = {
   OAUTH_CREDENTIAL_ENCRYPTION_KEYS: JSON.stringify({ primary: encryptionKey }),
 };
 
+const mediaSigningEnv = {
+  SUPABASE_URL: 'https://project.supabase.co',
+  SUPABASE_SECRET_KEY: `sb_secret_${'x'.repeat(32)}`,
+  STORAGE_BUCKET: 'recruitops-private',
+  PROVIDER_MEDIA_SIGNED_URL_TTL_SECONDS: '600',
+};
+
 describe('publication worker runtime', () => {
-  it('reads validated runtime configuration and keeps Instagram disabled by default', () => {
+  it('reads validated runtime configuration and keeps media providers disabled by default', () => {
     expect(
       readWorkerRuntimeConfig({
         DATABASE_URL: config.databaseUrl,
@@ -61,10 +69,7 @@ describe('publication worker runtime', () => {
       REDIS_URL: config.redisUrl,
       META_GRAPH_API_VERSION: config.metaGraphApiVersion,
       PUBLISHING_INSTAGRAM_ENABLED: 'true',
-      SUPABASE_URL: 'https://project.supabase.co',
-      SUPABASE_SECRET_KEY: `sb_secret_${'x'.repeat(32)}`,
-      STORAGE_BUCKET: 'recruitops-private',
-      PROVIDER_MEDIA_SIGNED_URL_TTL_SECONDS: '600',
+      ...mediaSigningEnv,
       ...credentialEnv,
     });
 
@@ -77,9 +82,46 @@ describe('publication worker runtime', () => {
         expiresInSeconds: 600,
       },
     });
+    expect(enabled.threadsPublishing).toEqual({ enabled: false });
   });
 
-  it('rejects ambiguous Instagram activation flags', () => {
+  it('requires privileged private-media signing configuration before Threads can be enabled', () => {
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+        PUBLISHING_THREADS_ENABLED: 'true',
+        ...credentialEnv,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_THREADS_MEDIA_SIGNING_CONFIG_INVALID',
+      }),
+    );
+
+    const enabled = readWorkerRuntimeConfig({
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+      PUBLISHING_THREADS_ENABLED: 'true',
+      ...mediaSigningEnv,
+      ...credentialEnv,
+    });
+
+    expect(enabled.threadsPublishing).toEqual({
+      enabled: true,
+      mediaSigner: {
+        supabaseUrl: 'https://project.supabase.co/',
+        supabaseSecretKey: `sb_secret_${'x'.repeat(32)}`,
+        bucket: 'recruitops-private',
+        expiresInSeconds: 600,
+      },
+    });
+    expect(enabled.instagramPublishing).toEqual({ enabled: false });
+  });
+
+  it('rejects ambiguous media-provider activation flags', () => {
     expect(() =>
       readWorkerRuntimeConfig({
         DATABASE_URL: config.databaseUrl,
@@ -91,6 +133,20 @@ describe('publication worker runtime', () => {
     ).toThrowError(
       expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
         code: 'WORKER_INSTAGRAM_PUBLISHING_FLAG_INVALID',
+      }),
+    );
+
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+        PUBLISHING_THREADS_ENABLED: 'sometimes',
+        ...credentialEnv,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_THREADS_PUBLISHING_FLAG_INVALID',
       }),
     );
   });
