@@ -17,7 +17,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@recruitops/contracts": "workspace:*"
+    "@recruitops/contracts": "workspace:*",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
