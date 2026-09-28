@@ -57,15 +57,7 @@ function createHarness() {
     cipher as unknown as OAuthCredentialCipher,
   );
 
-  return {
-    service,
-    provider,
-    clients,
-    sessions,
-    cipher,
-    repository,
-    encryptedCredential,
-  };
+  return { service, provider, clients, sessions, cipher, repository, encryptedCredential };
 }
 
 describe('ThreadsConnectionsService', () => {
@@ -112,9 +104,9 @@ describe('ThreadsConnectionsService', () => {
     const { service, sessions, provider } = createHarness();
     sessions.consumePending.mockResolvedValueOnce(null);
 
-    await expect(
-      service.callback({ code: 'oauth-code', state: 'expired' }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.callback({ code: 'oauth-code', state: 'expired' })).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
     expect(provider.exchangeCode).not.toHaveBeenCalled();
   });
 
