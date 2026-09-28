@@ -141,10 +141,16 @@ export class ContentRepository {
       throw new NotFoundException({ code: 'POST_NOT_FOUND', message: 'Post was not found' });
     }
 
+    const data = {
+      text: input.text,
+      hashtags: input.hashtags,
+      link: input.link ?? null,
+      metadata: input.metadata,
+    };
     const variant = await this.database.client.postVariant.upsert({
       where: { postId_platform: { postId, platform } },
-      create: { postId, platform, ...input },
-      update: input,
+      create: { postId, platform, ...data },
+      update: data,
     });
     return mapPostVariant(variant);
   }
