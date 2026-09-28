@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '@recruitops/database';
 import type { SocialPublisherRegistry } from '@recruitops/queue';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildRedisConnectionOptions,
   readWorkerRuntimeConfig,
@@ -13,6 +13,7 @@ const config = {
   databaseUrl: 'postgresql://user:password@db.example.com:5432/recruitops',
   redisUrl: 'rediss://worker:secret@redis.example.com:6380/2',
   metaGraphApiVersion: 'v26.0',
+  instagramPublishing: { enabled: false as const },
   limits: {
     concurrency: 3,
     maxPerDuration: 7,
@@ -26,7 +27,7 @@ const credentialEnv = {
 };
 
 describe('publication worker runtime', () => {
-  it('reads validated runtime configuration and bounded positive worker limits', () => {
+  it('reads validated runtime configuration and keeps Instagram disabled by default', () => {
     expect(
       readWorkerRuntimeConfig({
         DATABASE_URL: config.databaseUrl,
@@ -38,6 +39,60 @@ describe('publication worker runtime', () => {
         ...credentialEnv,
       }),
     ).toEqual(config);
+  });
+
+  it('requires privileged private-media signing configuration before Instagram can be enabled', () => {
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+        PUBLISHING_INSTAGRAM_ENABLED: 'true',
+        ...credentialEnv,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_INSTAGRAM_MEDIA_SIGNING_CONFIG_INVALID',
+      }),
+    );
+
+    const enabled = readWorkerRuntimeConfig({
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+      PUBLISHING_INSTAGRAM_ENABLED: 'true',
+      SUPABASE_URL: 'https://project.supabase.co',
+      SUPABASE_SECRET_KEY: `sb_secret_${'x'.repeat(32)}`,
+      STORAGE_BUCKET: 'recruitops-private',
+      PROVIDER_MEDIA_SIGNED_URL_TTL_SECONDS: '600',
+      ...credentialEnv,
+    });
+
+    expect(enabled.instagramPublishing).toEqual({
+      enabled: true,
+      mediaSigner: {
+        supabaseUrl: 'https://project.supabase.co/',
+        supabaseSecretKey: `sb_secret_${'x'.repeat(32)}`,
+        bucket: 'recruitops-private',
+        expiresInSeconds: 600,
+      },
+    });
+  });
+
+  it('rejects ambiguous Instagram activation flags', () => {
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: config.metaGraphApiVersion,
+        PUBLISHING_INSTAGRAM_ENABLED: 'sometimes',
+        ...credentialEnv,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_INSTAGRAM_PUBLISHING_FLAG_INVALID',
+      }),
+    );
   });
 
   it('fails closed on missing or invalid server connection settings', () => {

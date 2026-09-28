@@ -6,13 +6,23 @@ import {
   type SocialPublisherRegistry,
 } from '@recruitops/queue';
 import { createProductionPublisherRegistry } from './facebook-publishing-runtime.js';
+import {
+  createSupabaseProviderMediaResolver,
+  readSupabaseProviderMediaSignerConfig,
+  WorkerProviderMediaResolutionError,
+  type SupabaseProviderMediaSignerConfig,
+} from './provider-media-url-resolver.js';
 import { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 import { createPublicationJobHandler } from './publication-handler.js';
+
+export type InstagramPublishingRuntimeConfig =
+  { enabled: false } | { enabled: true; mediaSigner: SupabaseProviderMediaSignerConfig };
 
 export interface WorkerRuntimeConfig {
   databaseUrl: string;
   redisUrl: string;
   metaGraphApiVersion: string;
+  instagramPublishing: InstagramPublishingRuntimeConfig;
   limits: PublicationWorkerLimits;
 }
 
@@ -84,6 +94,35 @@ function requireGraphApiVersion(value: string | undefined): string {
   return normalized;
 }
 
+function booleanFlag(value: string | undefined, code: string): boolean {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized || normalized === 'false' || normalized === '0') return false;
+  if (normalized === 'true' || normalized === '1') return true;
+  throw new WorkerRuntimeConfigurationError(code);
+}
+
+function readInstagramPublishingConfig(
+  env: Readonly<Record<string, string | undefined>>,
+): InstagramPublishingRuntimeConfig {
+  const enabled = booleanFlag(
+    env.PUBLISHING_INSTAGRAM_ENABLED,
+    'WORKER_INSTAGRAM_PUBLISHING_FLAG_INVALID',
+  );
+  if (!enabled) return { enabled: false };
+
+  try {
+    return {
+      enabled: true,
+      mediaSigner: readSupabaseProviderMediaSignerConfig(env),
+    };
+  } catch (error) {
+    if (error instanceof WorkerProviderMediaResolutionError) {
+      throw new WorkerRuntimeConfigurationError('WORKER_INSTAGRAM_MEDIA_SIGNING_CONFIG_INVALID');
+    }
+    throw error;
+  }
+}
+
 export function readWorkerRuntimeConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): WorkerRuntimeConfig {
@@ -100,6 +139,7 @@ export function readWorkerRuntimeConfig(
     ]),
     redisUrl: requireUrl(env.REDIS_URL, 'WORKER_REDIS_URL_INVALID', ['redis:', 'rediss:']),
     metaGraphApiVersion: requireGraphApiVersion(env.META_GRAPH_API_VERSION),
+    instagramPublishing: readInstagramPublishingConfig(env),
     limits: {
       concurrency: positiveInteger(
         env.PUBLICATION_WORKER_CONCURRENCY,
@@ -158,11 +198,19 @@ export function startPublicationWorkerRuntime(
   const logger = dependencies.logger ?? defaultLogger;
   const database = (dependencies.createDatabase ?? createPrismaClient)(config.databaseUrl);
   const repository = new PrismaPublicationExecutionRepository(database);
+  const instagramMediaResolver = config.instagramPublishing.enabled
+    ? createSupabaseProviderMediaResolver({
+        database,
+        ...config.instagramPublishing.mediaSigner,
+      })
+    : undefined;
   const publishers =
     dependencies.publishers ??
     createProductionPublisherRegistry({
       database,
       graphApiVersion: config.metaGraphApiVersion,
+      env: process.env,
+      ...(instagramMediaResolver ? { instagramMediaResolver } : {}),
     });
   const handler = createPublicationJobHandler(repository, publishers);
   const worker = (dependencies.createWorker ?? createPublicationWorker)({
@@ -175,7 +223,9 @@ export function startPublicationWorkerRuntime(
     concurrency: config.limits.concurrency,
     rateLimitMax: config.limits.maxPerDuration,
     rateLimitDurationMs: config.limits.durationMs,
-    enabledPublishers: ['FACEBOOK'],
+    enabledPublishers: config.instagramPublishing.enabled
+      ? ['FACEBOOK', 'INSTAGRAM']
+      : ['FACEBOOK'],
   });
 
   let closing: Promise<void> | undefined;
