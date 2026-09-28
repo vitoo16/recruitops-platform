@@ -1,15 +1,18 @@
 import { createPrismaClient, type PrismaClient } from '@recruitops/database';
+import { parseOAuthCredentialKeyring } from '@recruitops/integrations';
 import {
   createPublicationWorker,
   type PublicationWorkerLimits,
   type SocialPublisherRegistry,
 } from '@recruitops/queue';
+import { createProductionPublisherRegistry } from './facebook-publishing-runtime.js';
 import { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 import { createPublicationJobHandler } from './publication-handler.js';
 
 export interface WorkerRuntimeConfig {
   databaseUrl: string;
   redisUrl: string;
+  metaGraphApiVersion: string;
   limits: PublicationWorkerLimits;
 }
 
@@ -49,12 +52,6 @@ const defaultLogger: WorkerRuntimeLogger = {
   },
 };
 
-const failClosedPublishers: SocialPublisherRegistry = {
-  get() {
-    return undefined;
-  },
-};
-
 function requireUrl(
   value: string | undefined,
   code: string,
@@ -89,15 +86,30 @@ function positiveInteger(
   return parsed;
 }
 
+function requireGraphApiVersion(value: string | undefined): string {
+  const normalized = value?.trim();
+  if (!normalized || !/^v\d+\.\d+$/.test(normalized)) {
+    throw new WorkerRuntimeConfigurationError('WORKER_META_GRAPH_API_VERSION_INVALID');
+  }
+  return normalized;
+}
+
 export function readWorkerRuntimeConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): WorkerRuntimeConfig {
+  try {
+    parseOAuthCredentialKeyring(env as NodeJS.ProcessEnv);
+  } catch {
+    throw new WorkerRuntimeConfigurationError('WORKER_OAUTH_CREDENTIAL_KEYRING_INVALID');
+  }
+
   return {
     databaseUrl: requireUrl(env.DATABASE_URL, 'WORKER_DATABASE_URL_INVALID', [
       'postgresql:',
       'postgres:',
     ]),
     redisUrl: requireUrl(env.REDIS_URL, 'WORKER_REDIS_URL_INVALID', ['redis:', 'rediss:']),
+    metaGraphApiVersion: requireGraphApiVersion(env.META_GRAPH_API_VERSION),
     limits: {
       concurrency: positiveInteger(
         env.PUBLICATION_WORKER_CONCURRENCY,
@@ -156,7 +168,12 @@ export function startPublicationWorkerRuntime(
   const logger = dependencies.logger ?? defaultLogger;
   const database = (dependencies.createDatabase ?? createPrismaClient)(config.databaseUrl);
   const repository = new PrismaPublicationExecutionRepository(database);
-  const publishers = dependencies.publishers ?? failClosedPublishers;
+  const publishers =
+    dependencies.publishers ??
+    createProductionPublisherRegistry({
+      database,
+      graphApiVersion: config.metaGraphApiVersion,
+    });
   const handler = createPublicationJobHandler(repository, publishers);
   const worker = (dependencies.createWorker ?? createPublicationWorker)({
     connection: buildRedisConnectionOptions(config.redisUrl),
@@ -168,6 +185,7 @@ export function startPublicationWorkerRuntime(
     concurrency: config.limits.concurrency,
     rateLimitMax: config.limits.maxPerDuration,
     rateLimitDurationMs: config.limits.durationMs,
+    enabledPublishers: ['FACEBOOK'],
   });
 
   let closing: Promise<void> | undefined;
