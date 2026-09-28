@@ -1,8 +1,4 @@
-import {
-  BadGatewayException,
-  BadRequestException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadGatewayException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import type { OAuthCredentialCipher } from '../social-credentials/oauth-credential-cipher.js';
 import type { ThreadsConnectionClientFactory } from './threads-connection-client.factory.js';
