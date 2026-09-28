@@ -8,14 +8,21 @@ import {
   WorkerRuntimeConfigurationError,
 } from './runtime.js';
 
+const encryptionKey = Buffer.alloc(32, 7).toString('base64');
 const config = {
   databaseUrl: 'postgresql://user:password@db.example.com:5432/recruitops',
   redisUrl: 'rediss://worker:secret@redis.example.com:6380/2',
+  metaGraphApiVersion: 'v26.0',
   limits: {
     concurrency: 3,
     maxPerDuration: 7,
     durationMs: 2_000,
   },
+};
+
+const credentialEnv = {
+  OAUTH_CREDENTIAL_ACTIVE_KEY_ID: 'primary',
+  OAUTH_CREDENTIAL_ENCRYPTION_KEYS: JSON.stringify({ primary: encryptionKey }),
 };
 
 describe('publication worker runtime', () => {
@@ -24,9 +31,11 @@ describe('publication worker runtime', () => {
       readWorkerRuntimeConfig({
         DATABASE_URL: config.databaseUrl,
         REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: config.metaGraphApiVersion,
         PUBLICATION_WORKER_CONCURRENCY: '3',
         PUBLICATION_WORKER_RATE_LIMIT_MAX: '7',
         PUBLICATION_WORKER_RATE_LIMIT_DURATION_MS: '2000',
+        ...credentialEnv,
       }),
     ).toEqual(config);
   });
@@ -36,6 +45,8 @@ describe('publication worker runtime', () => {
       readWorkerRuntimeConfig({
         DATABASE_URL: 'https://not-postgres.example.com',
         REDIS_URL: 'redis://localhost:6379',
+        META_GRAPH_API_VERSION: 'v26.0',
+        ...credentialEnv,
       }),
     ).toThrowError(
       expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
@@ -47,10 +58,39 @@ describe('publication worker runtime', () => {
       readWorkerRuntimeConfig({
         DATABASE_URL: 'postgresql://localhost/recruitops',
         REDIS_URL: 'https://not-redis.example.com',
+        META_GRAPH_API_VERSION: 'v26.0',
+        ...credentialEnv,
       }),
     ).toThrowError(
       expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
         code: 'WORKER_REDIS_URL_INVALID',
+      }),
+    );
+  });
+
+  it('requires the credential keyring and an explicit Meta Graph API version', () => {
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: 'v26.0',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_OAUTH_CREDENTIAL_KEYRING_INVALID',
+      }),
+    );
+
+    expect(() =>
+      readWorkerRuntimeConfig({
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        META_GRAPH_API_VERSION: 'latest',
+        ...credentialEnv,
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WorkerRuntimeConfigurationError>>({
+        code: 'WORKER_META_GRAPH_API_VERSION_INVALID',
       }),
     );
   });
@@ -103,6 +143,7 @@ describe('publication worker runtime', () => {
       concurrency: 3,
       rateLimitMax: 7,
       rateLimitDurationMs: 2_000,
+      enabledPublishers: ['FACEBOOK'],
     });
 
     await Promise.all([runtime.close(), runtime.close()]);
