@@ -14,7 +14,8 @@
     "@recruitops/contracts": "workspace:*",
     "@recruitops/database": "workspace:*",
     "@recruitops/integrations": "workspace:*",
-    "@recruitops/queue": "workspace:*"
+    "@recruitops/queue": "workspace:*",
+    "@supabase/supabase-js": "2.117.2"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
