@@ -97,7 +97,7 @@
 - [x] Implement rate-limit-aware worker boundary (validated queue payloads, configurable concurrency and BullMQ limiter; provider handlers remain separately gated).
 - [x] Implement Facebook Page adapter for currently supported official capabilities (verified text/link Page feed publishing slice; private-media publishing remains a later capability).
 - [x] Implement Instagram adapter for currently supported official capabilities (single-image and Reel container/publish flow with bounded Reel readiness polling and private-media resolver boundary).
-- [ ] Implement Threads adapter for currently supported official capabilities.
+- [ ] Implement Threads adapter for currently supported official capabilities (official create-container → publish-container single-post adapter for text/image/video plus regression coverage implemented; carousel, polls, GIF/quote/repost and other advanced currently-supported features remain intentionally unclaimed).
 - [ ] Implement LinkedIn adapter for currently supported official capabilities.
 - [ ] Implement TikTok adapter for currently supported official capabilities.
 - [ ] Implement Zalo adapter for currently supported official capabilities.
