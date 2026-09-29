@@ -50,17 +50,30 @@ describe('publication worker boundary', () => {
     ).toThrow('PUBLICATION_IDEMPOTENCY_KEY_MISMATCH');
   });
 
+  it('rejects malformed correlation metadata before the handler runs', () => {
+    expect(() =>
+      validatePublicationQueueJob({
+        publicationId,
+        idempotencyKey: `publication:${publicationId}`,
+        scheduledAt: '2026-09-27T16:00:00.000Z',
+        correlationId: ' '.repeat(3),
+      }),
+    ).toThrow('PUBLICATION_CORRELATION_ID_INVALID');
+  });
+
   it('accepts and normalizes a valid publication queue payload', () => {
     expect(
       validatePublicationQueueJob({
         publicationId,
         idempotencyKey: `publication:${publicationId}`,
         scheduledAt: '2026-09-27T16:00:00+00:00',
+        correlationId: ' request-123 ',
       }),
     ).toEqual({
       publicationId,
       idempotencyKey: `publication:${publicationId}`,
       scheduledAt: '2026-09-27T16:00:00.000Z',
+      correlationId: 'request-123',
     });
   });
 });
