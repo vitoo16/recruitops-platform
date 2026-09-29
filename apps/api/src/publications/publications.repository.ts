@@ -8,20 +8,6 @@ import { DatabaseService } from '../database/database.service.js';
 
 export const PUBLICATION_QUEUE_ENQUEUE_FAILED = 'PUBLICATION_QUEUE_ENQUEUE_FAILED';
 
-export interface PublishReadinessContext {
-  postVariantId: string;
-  postId: string;
-  platform: PublishNowCommandContext['platform'];
-  postStatus: PublishNowCommandContext['postStatus'];
-  destinations: readonly {
-    id: string;
-    platform: PublishNowCommandContext['platform'];
-    type: 'PAGE' | 'PROFILE' | 'GROUP' | 'ORGANIZATION' | 'OA' | 'OTHER';
-    name: string;
-    socialAccountId: string;
-  }[];
-}
-
 export interface PublishNowCommandContext {
   postVariantId: string;
   postId: string;
@@ -40,6 +26,20 @@ export interface PublishNowCommandContext {
       expiresAt: Date | null;
     } | null;
   } | null;
+}
+
+export interface PublishReadinessContext {
+  postVariantId: string;
+  postId: string;
+  platform: PublishNowCommandContext['platform'];
+  postStatus: PublishNowCommandContext['postStatus'];
+  destinations: readonly {
+    id: string;
+    platform: PublishNowCommandContext['platform'];
+    type: 'PAGE' | 'PROFILE' | 'GROUP' | 'ORGANIZATION' | 'OA' | 'OTHER';
+    name: string;
+    socialAccountId: string;
+  }[];
 }
 
 export interface PersistedPublication {
@@ -204,30 +204,27 @@ export class PublicationsRepository {
     return publication;
   }
 
-  async reopenQueueFailure(publicationId: string, scheduledAt: Date): Promise<boolean> {
-    const result = await this.database.client.publication.updateMany({
-      where: {
-        id: publicationId,
-        state: 'FAILED',
-        lastErrorCode: PUBLICATION_QUEUE_ENQUEUE_FAILED,
-      },
-      data: {
-        state: 'PENDING',
-        scheduledAt,
-        lastErrorCode: null,
-        lastErrorMessage: null,
-      },
-    });
-    return result.count === 1;
-  }
-
-  async markQueueFailure(publicationId: string): Promise<void> {
+  async recordQueueEnqueueFailure(publicationId: string): Promise<void> {
     await this.database.client.publication.updateMany({
       where: { id: publicationId, state: 'PENDING' },
       data: {
-        state: 'FAILED',
         lastErrorCode: PUBLICATION_QUEUE_ENQUEUE_FAILED,
-        lastErrorMessage: 'Publication could not be accepted by the dispatch queue',
+        lastErrorMessage:
+          'Queue acceptance was not confirmed; retry the same publication ID to reconcile safely',
+      },
+    });
+  }
+
+  async clearQueueEnqueueFailure(publicationId: string): Promise<void> {
+    await this.database.client.publication.updateMany({
+      where: {
+        id: publicationId,
+        state: 'PENDING',
+        lastErrorCode: PUBLICATION_QUEUE_ENQUEUE_FAILED,
+      },
+      data: {
+        lastErrorCode: null,
+        lastErrorMessage: null,
       },
     });
   }
