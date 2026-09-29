@@ -23,13 +23,12 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm build && pnpm start',
+    command: 'pnpm exec next dev --hostname 127.0.0.1 --port 3100',
     url: 'http://127.0.0.1:3100',
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
     env: {
       ...inheritedEnv,
-      PORT: '3100',
       NEXT_PUBLIC_API_URL: 'http://127.0.0.1:8787',
       NEXT_PUBLIC_SUPABASE_URL: 'https://e2e-recruitops.supabase.co',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_recruitops_public_key',
