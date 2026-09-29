@@ -9,9 +9,14 @@ const postId = '33333333-3333-4333-8333-333333333333';
 const destinationId = '44444444-4444-4444-8444-444444444444';
 const socialAccountId = '55555555-5555-4555-8555-555555555555';
 const now = new Date('2026-09-29T03:00:00.000Z');
+const scheduledAt = new Date('2026-09-29T04:00:00.000Z');
 
 function command() {
   return { publicationId, postVariantId, destinationId };
+}
+
+function scheduleCommand() {
+  return { ...command(), scheduledAt: scheduledAt.toISOString() };
 }
 
 function context() {
@@ -36,7 +41,10 @@ function context() {
   };
 }
 
-function persisted(state: 'PENDING' | 'PUBLISHED' | 'FAILED' = 'PENDING') {
+function persisted(
+  state: 'PENDING' | 'SCHEDULED' | 'PUBLISHED' | 'FAILED' = 'PENDING',
+  dispatchAt = now,
+) {
   return {
     id: publicationId,
     postVariantId,
@@ -44,13 +52,14 @@ function persisted(state: 'PENDING' | 'PUBLISHED' | 'FAILED' = 'PENDING') {
     socialAccountId,
     state,
     idempotencyKey: `publication:${publicationId}`,
-    scheduledAt: now,
+    scheduledAt: dispatchAt,
     lastErrorCode: null,
   };
 }
 
 function statusRow(
-  state: 'PENDING' | 'PUBLISHING' | 'PUBLISHED' | 'RETRY_WAITING' | 'FAILED' = 'FAILED',
+  state: 'PENDING' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'RETRY_WAITING' | 'FAILED' =
+    'FAILED',
   lastErrorCode: string | null = 'PROVIDER_TEMPORARY_ERROR',
 ) {
   return {
@@ -58,7 +67,7 @@ function statusRow(
     postVariantId,
     socialAccountId,
     state,
-    scheduledAt: now,
+    scheduledAt: state === 'SCHEDULED' ? scheduledAt : now,
     publishedAt: state === 'PUBLISHED' ? now : null,
     nextRetryAt: state === 'RETRY_WAITING' ? new Date('2026-09-29T03:01:00.000Z') : null,
     retryCount: state === 'FAILED' ? 5 : 0,
@@ -93,6 +102,7 @@ function harness() {
     }),
     findPublishContext: vi.fn().mockResolvedValue(context()),
     upsertPublication: vi.fn().mockResolvedValue(persisted()),
+    upsertScheduledPublication: vi.fn().mockResolvedValue(persisted('SCHEDULED', scheduledAt)),
     listStatusByVariant: vi.fn().mockResolvedValue({ items: [statusRow()], truncated: false }),
     findStatusById: vi.fn().mockResolvedValue(statusRow()),
     prepareManualRetry: vi.fn().mockResolvedValue(true),
@@ -166,7 +176,7 @@ describe('PublicationsService', () => {
 
     expect(repository.upsertPublication).toHaveBeenCalledWith(command(), socialAccountId, now);
     expect(queue.enqueue).toHaveBeenCalledWith(publicationId, now);
-    expect(repository.clearQueueEnqueueFailure).toHaveBeenCalledWith(publicationId);
+    expect(repository.clearQueueEnqueueFailure).toHaveBeenCalledWith(publicationId, 'PENDING');
   });
 
   it('returns an existing accepted publication without enqueuing a provider retry', async () => {
@@ -187,7 +197,56 @@ describe('PublicationsService', () => {
     await expect(service.publishNow(command(), now)).rejects.toMatchObject({
       response: expect.objectContaining({ code: 'PUBLICATION_QUEUE_ENQUEUE_UNCONFIRMED' }),
     });
-    expect(repository.recordQueueEnqueueFailure).toHaveBeenCalledWith(publicationId);
+    expect(repository.recordQueueEnqueueFailure).toHaveBeenCalledWith(publicationId, 'PENDING');
+  });
+
+  it('schedules a READY publication as a delayed queue job', async () => {
+    const { service, repository, queue } = harness();
+
+    await expect(service.schedulePublication(scheduleCommand(), now)).resolves.toEqual({
+      acceptance: 'SCHEDULED',
+      publication: {
+        id: publicationId,
+        postVariantId,
+        destinationId,
+        socialAccountId,
+        state: 'SCHEDULED',
+        scheduledAt: scheduledAt.toISOString(),
+      },
+    });
+
+    expect(repository.upsertScheduledPublication).toHaveBeenCalledWith(
+      scheduleCommand(),
+      socialAccountId,
+      scheduledAt,
+    );
+    expect(queue.enqueue).toHaveBeenCalledWith(publicationId, scheduledAt);
+    expect(repository.clearQueueEnqueueFailure).toHaveBeenCalledWith(publicationId, 'SCHEDULED');
+  });
+
+  it('rejects a scheduled publication time that is not in the future', async () => {
+    const { service, repository, queue } = harness();
+
+    await expect(
+      service.schedulePublication({ ...command(), scheduledAt: now.toISOString() }, now),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'PUBLICATION_SCHEDULE_NOT_FUTURE' }),
+    });
+
+    expect(repository.findPublishContext).not.toHaveBeenCalled();
+    expect(repository.upsertScheduledPublication).not.toHaveBeenCalled();
+    expect(queue.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('records an uncertain delayed enqueue without changing the scheduled identity', async () => {
+    const { service, repository, queue } = harness();
+    queue.enqueue.mockRejectedValueOnce(new Error('redis unavailable'));
+
+    await expect(service.schedulePublication(scheduleCommand(), now)).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'PUBLICATION_SCHEDULE_QUEUE_UNCONFIRMED' }),
+    });
+
+    expect(repository.recordQueueEnqueueFailure).toHaveBeenCalledWith(publicationId, 'SCHEDULED');
   });
 
   it('rejects an expired social account before persisting or enqueuing', async () => {
@@ -210,7 +269,7 @@ describe('PublicationsService', () => {
     expect(queue.enqueue).not.toHaveBeenCalled();
   });
 
-  it('rejects manual destinations from the API Publish Now command', async () => {
+  it('rejects manual destinations from API publication commands', async () => {
     const { service, repository, queue } = harness();
     repository.findPublishContext.mockResolvedValueOnce({
       ...context(),

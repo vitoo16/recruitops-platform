@@ -52,6 +52,15 @@ export const PublishNowCommandSchema = z
   })
   .strict();
 
+export const SchedulePublicationCommandSchema = z
+  .object({
+    publicationId: z.uuid(),
+    postVariantId: z.uuid(),
+    destinationId: z.uuid(),
+    scheduledAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
 export const PublishNowBlockingReasonSchema = z.enum([
   'POST_NOT_READY',
   'NO_ELIGIBLE_API_DESTINATION',
@@ -80,6 +89,7 @@ export const PublishNowReadinessSchema = z
   .strict();
 
 export const PublishNowAcceptanceSchema = z.enum(['QUEUED', 'ALREADY_ACCEPTED']);
+export const SchedulePublicationAcceptanceSchema = z.enum(['SCHEDULED', 'ALREADY_ACCEPTED']);
 
 export const PublishNowPublicationSchema = z
   .object({
@@ -95,6 +105,13 @@ export const PublishNowPublicationSchema = z
 export const PublishNowResponseSchema = z
   .object({
     acceptance: PublishNowAcceptanceSchema,
+    publication: PublishNowPublicationSchema,
+  })
+  .strict();
+
+export const SchedulePublicationResponseSchema = z
+  .object({
+    acceptance: SchedulePublicationAcceptanceSchema,
     publication: PublishNowPublicationSchema,
   })
   .strict();
@@ -150,11 +167,14 @@ export const PublicationManualRetryResponseSchema = z
   .strict();
 
 export type PublishNowCommand = z.infer<typeof PublishNowCommandSchema>;
+export type SchedulePublicationCommand = z.infer<typeof SchedulePublicationCommandSchema>;
 export type PublishNowBlockingReason = z.infer<typeof PublishNowBlockingReasonSchema>;
 export type PublishNowDestination = z.infer<typeof PublishNowDestinationSchema>;
 export type PublishNowReadiness = z.infer<typeof PublishNowReadinessSchema>;
 export type PublishNowAcceptance = z.infer<typeof PublishNowAcceptanceSchema>;
+export type SchedulePublicationAcceptance = z.infer<typeof SchedulePublicationAcceptanceSchema>;
 export type PublishNowResponse = z.infer<typeof PublishNowResponseSchema>;
+export type SchedulePublicationResponse = z.infer<typeof SchedulePublicationResponseSchema>;
 export type PublicationRetryBlockReason = z.infer<typeof PublicationRetryBlockReasonSchema>;
 export type PublicationStatusRecord = z.infer<typeof PublicationStatusRecordSchema>;
 export type PublicationStatusList = z.infer<typeof PublicationStatusListSchema>;
