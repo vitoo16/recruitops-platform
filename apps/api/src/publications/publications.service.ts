@@ -13,10 +13,7 @@ import {
 } from '@recruitops/contracts';
 import { parseRequest } from '../common/zod-request.js';
 import { PublicationQueueGateway } from './publication-queue.gateway.js';
-import {
-  PublicationsRepository,
-  type PersistedPublication,
-} from './publications.repository.js';
+import { PublicationsRepository, type PersistedPublication } from './publications.repository.js';
 
 @Injectable()
 export class PublicationsService {
@@ -121,11 +118,7 @@ export class PublicationsService {
       });
     }
 
-    const publication = await this.repository.upsertPublication(
-      command,
-      socialAccount.id,
-      now,
-    );
+    const publication = await this.repository.upsertPublication(command, socialAccount.id, now);
 
     if (publication.state === 'CANCELLED') {
       throw new ConflictException({

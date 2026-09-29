@@ -45,7 +45,10 @@ export function PublishNowPanel({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-medium text-[var(--content-secondary)]">{t('eyebrow')}</p>
-          <h3 id="publish-now-title" className="mt-1 text-xl font-semibold tracking-tight text-balance">
+          <h3
+            id="publish-now-title"
+            className="mt-1 text-xl font-semibold tracking-tight text-balance"
+          >
             {t('title')}
           </h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--content-secondary)]">
@@ -85,7 +88,10 @@ export function PublishNowPanel({
           </div>
 
           {readiness.blockingReasons.length > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            <div
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              role="status"
+            >
               <p className="font-medium">{t('blockedTitle')}</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 {readiness.blockingReasons.map((reason) => (
@@ -125,12 +131,7 @@ export function PublishNowPanel({
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              className="min-h-11"
-              disabled={!canQueue}
-              onClick={onPublishNow}
-            >
+            <Button type="button" className="min-h-11" disabled={!canQueue} onClick={onPublishNow}>
               <Send className="mr-2 size-4" aria-hidden="true" />
               {publishing ? t('queueing') : t('queueAction')}
             </Button>
@@ -150,13 +151,18 @@ export function PublishNowPanel({
             </Button>
           </div>
 
-          <p className="text-xs leading-5 text-[var(--content-secondary)]">{t('queueDisclaimer')}</p>
+          <p className="text-xs leading-5 text-[var(--content-secondary)]">
+            {t('queueDisclaimer')}
+          </p>
         </div>
       ) : null}
 
       <div aria-live="polite">
         {result ? (
-          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+          <p
+            className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+            role="status"
+          >
             {result.acceptance === 'QUEUED'
               ? t('queuedSuccess', { state: result.publication.state })
               : t('alreadyAccepted', { state: result.publication.state })}
@@ -164,7 +170,10 @@ export function PublishNowPanel({
         ) : null}
 
         {publishErrorStatus !== null ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+          <p
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            role="alert"
+          >
             {publishErrorStatus === 503 ? t('queueUnconfirmed') : t('publishFailed')}
           </p>
         ) : null}

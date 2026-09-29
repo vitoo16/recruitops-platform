@@ -57,10 +57,7 @@ export interface PersistedPublication {
 export class PublicationsRepository {
   constructor(private readonly database: DatabaseService) {}
 
-  async findReadiness(
-    postVariantId: string,
-    now: Date,
-  ): Promise<PublishReadinessContext | null> {
+  async findReadiness(postVariantId: string, now: Date): Promise<PublishReadinessContext | null> {
     const variant = await this.database.client.postVariant.findUnique({
       where: { id: postVariantId },
       select: {

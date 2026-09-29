@@ -202,6 +202,9 @@ importers:
       '@recruitops/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
+      '@recruitops/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       dotenv:
         specifier: ^17.2.2
         version: 17.4.2

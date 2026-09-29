@@ -27,11 +27,7 @@ async function requestJson<TSchema extends z.ZodType>(
   return schema.parse(await response.json());
 }
 
-export function getPublishNowReadiness(
-  apiUrl: string,
-  accessToken: string,
-  postVariantId: string,
-) {
+export function getPublishNowReadiness(apiUrl: string, accessToken: string, postVariantId: string) {
   return requestJson(
     PublishNowReadinessSchema,
     `${apiUrl}/publications/publish-now/readiness/${encodeURIComponent(postVariantId)}`,
@@ -39,11 +35,7 @@ export function getPublishNowReadiness(
   );
 }
 
-export function queuePublishNow(
-  apiUrl: string,
-  accessToken: string,
-  command: PublishNowCommand,
-) {
+export function queuePublishNow(apiUrl: string, accessToken: string, command: PublishNowCommand) {
   return requestJson(PublishNowResponseSchema, `${apiUrl}/publications/publish-now`, accessToken, {
     method: 'POST',
     body: JSON.stringify(command),

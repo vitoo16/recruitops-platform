@@ -115,10 +115,7 @@ describe('PublicationsService', () => {
     const result = await service.getPublishNowReadiness(postVariantId, now);
 
     expect(result.canPublish).toBe(false);
-    expect(result.blockingReasons).toEqual([
-      'POST_NOT_READY',
-      'NO_ELIGIBLE_API_DESTINATION',
-    ]);
+    expect(result.blockingReasons).toEqual(['POST_NOT_READY', 'NO_ELIGIBLE_API_DESTINATION']);
   });
 
   it('persists and enqueues a publish-now command with the same publication UUID', async () => {
