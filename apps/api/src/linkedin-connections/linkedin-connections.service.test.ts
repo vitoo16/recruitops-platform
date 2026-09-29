@@ -25,17 +25,23 @@ function encryptedCredential() {
 
 function setup(options?: { scope?: string }) {
   const provider = {
-    buildAuthorizationUrl: vi.fn().mockReturnValue('https://www.linkedin.com/oauth/v2/authorization'),
+    buildAuthorizationUrl: vi
+      .fn()
+      .mockReturnValue('https://www.linkedin.com/oauth/v2/authorization'),
     exchangeAuthorizationCode: vi.fn().mockResolvedValue({
       accessToken: 'member-token',
       expiresInSeconds: 3_600,
       ...(options?.scope === undefined ? {} : { scope: options.scope }),
     }),
-    getProfile: vi.fn().mockResolvedValue({ subject: 'member-subject', name: 'Recruiter Name' }),
+    getProfile: vi
+      .fn()
+      .mockResolvedValue({ subject: 'member-subject', name: 'Recruiter Name' }),
   } as unknown as LinkedInConnectionProvider;
   const states = {
     create: vi.fn().mockResolvedValue({ expiresAt: '2026-09-30T04:00:00.000Z' }),
-    consume: vi.fn().mockResolvedValue({ userId, createdAt: '2026-09-30T03:50:00.000Z' }),
+    consume: vi
+      .fn()
+      .mockResolvedValue({ userId, createdAt: '2026-09-30T03:50:00.000Z' }),
   } as unknown as LinkedInOAuthStateStore;
   const cipher = {
     encrypt: vi.fn().mockReturnValue(encryptedCredential()),
@@ -122,7 +128,9 @@ describe('LinkedInConnectionsService', () => {
   it('fails closed if LinkedIn reports a granted scope set without publishing permission', async () => {
     const { service, repository } = setup({ scope: 'openid profile' });
 
-    await expect(service.callback({ state, code: 'authorization-code' })).rejects.toMatchObject({
+    await expect(
+      service.callback({ state, code: 'authorization-code' }),
+    ).rejects.toMatchObject({
       response: expect.objectContaining({ code: 'LINKEDIN_OAUTH_REQUIRED_SCOPE_MISSING' }),
     });
     expect(repository.promote).not.toHaveBeenCalled();
@@ -131,9 +139,9 @@ describe('LinkedInConnectionsService', () => {
   it('consumes state before returning an authorization-denied error', async () => {
     const { service, states } = setup();
 
-    await expect(service.callback({ state, error: 'user_cancelled_authorize' })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.callback({ state, error: 'user_cancelled_authorize' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(states.consume).toHaveBeenCalledWith(state);
   });
 
@@ -141,7 +149,9 @@ describe('LinkedInConnectionsService', () => {
     const { service, states, provider } = setup();
     vi.mocked(states.consume).mockResolvedValueOnce(null);
 
-    await expect(service.callback({ state, code: 'authorization-code' })).rejects.toMatchObject({
+    await expect(
+      service.callback({ state, code: 'authorization-code' }),
+    ).rejects.toMatchObject({
       response: expect.objectContaining({ code: 'LINKEDIN_OAUTH_STATE_INVALID_OR_EXPIRED' }),
     });
     expect(provider.exchangeAuthorizationCode).not.toHaveBeenCalled();
