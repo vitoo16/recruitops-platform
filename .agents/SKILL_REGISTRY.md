@@ -116,4 +116,4 @@ Stack and implementation skills:
 
 ## AutoSkills verification note
 
-The repository AutoSkills dry-run (v0.3.3) currently detects TypeScript, Turborepo, Node.js, Vitest, NestJS, React, Next.js, Tailwind CSS, shadcn/ui, React Hook Form, Zod, Supabase and Prisma, and recommends 24 stack skills. `.agents/autoskills-required.json` is the machine-checkable lock for that detected set. CI must fail when AutoSkills detects a stack skill that is not represented here.
+The repository AutoSkills dry-run (v0.3.3) currently detects TypeScript, Turborepo, Node.js, Vitest, Playwright, NestJS, React, Next.js, Tailwind CSS, shadcn/ui, React Hook Form, Zod, Supabase and Prisma, and recommends 25 stack skills. `.agents/autoskills-required.json` is the machine-checkable lock for that detected set. CI must fail when AutoSkills detects a stack skill that is not represented here.

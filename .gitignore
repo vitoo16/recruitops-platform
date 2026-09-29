@@ -9,6 +9,8 @@ dist/
 build/
 coverage/
 .turbo/
+playwright-report/
+test-results/
 
 # Generated
 packages/database/src/generated/
