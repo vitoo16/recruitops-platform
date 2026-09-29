@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import {
   listThreadsAccounts,
+  refreshThreadsCredential,
   startThreadsConnection,
   type ThreadsConnectedAccount,
 } from '@/lib/threads-connections/api';
@@ -44,6 +45,11 @@ export function useThreadsConnection() {
   const [notice, setNotice] = useState<ThreadsConnectionNotice>(readReturnNotice);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [refreshingAccountId, setRefreshingAccountId] = useState<string | null>(null);
+  const [refreshedAccountId, setRefreshedAccountId] = useState<string | null>(null);
+  const [credentialRefreshErrorAccountId, setCredentialRefreshErrorAccountId] = useState<
+    string | null
+  >(null);
   const [loadError, setLoadError] = useState(false);
   const [startError, setStartError] = useState(false);
 
@@ -62,6 +68,9 @@ export function useThreadsConnection() {
       if (!nextSession) {
         setRole(null);
         setAccounts([]);
+        setRefreshingAccountId(null);
+        setRefreshedAccountId(null);
+        setCredentialRefreshErrorAccountId(null);
       }
     });
 
@@ -131,6 +140,28 @@ export function useThreadsConnection() {
     }
   }, [apiUrl, canManage, session?.access_token]);
 
+  const refreshCredential = useCallback(
+    async (accountId: string) => {
+      if (!session?.access_token || !apiUrl || !canManage || refreshingAccountId) return;
+      setRefreshingAccountId(accountId);
+      setRefreshedAccountId(null);
+      setCredentialRefreshErrorAccountId(null);
+      try {
+        const response = await refreshThreadsCredential(apiUrl, session.access_token, accountId);
+        setAccounts((current) =>
+          current.map((account) => (account.id === accountId ? response.account : account)),
+        );
+        setRefreshedAccountId(accountId);
+      } catch {
+        setCredentialRefreshErrorAccountId(accountId);
+        await refresh();
+      } finally {
+        setRefreshingAccountId(null);
+      }
+    },
+    [apiUrl, canManage, refresh, refreshingAccountId, session?.access_token],
+  );
+
   const dismissNotice = useCallback(() => {
     clearReturnNotice();
     setNotice(null);
@@ -144,10 +175,14 @@ export function useThreadsConnection() {
     notice,
     loading,
     redirecting,
+    refreshingAccountId,
+    refreshedAccountId,
+    credentialRefreshErrorAccountId,
     loadError,
     startError,
     connect,
     refresh,
+    refreshCredential,
     dismissNotice,
   };
 }
