@@ -8,7 +8,6 @@ import type {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getPublicationStatus,
-  PublicationApiError,
   retryPublication as retryPublicationRequest,
 } from '@/lib/publications/api';
 
@@ -90,11 +89,9 @@ export function usePublicationStatusWorkspace({
         const response = await retryPublicationRequest(apiUrl, session.access_token, publicationId);
         setPublicationRetryAcceptance(response.acceptance);
         await loadPublicationStatuses();
-      } catch (error) {
+      } catch {
         setPublicationRetryErrorId(publicationId);
-        if (error instanceof PublicationApiError && error.status === 409) {
-          await loadPublicationStatuses();
-        }
+        await loadPublicationStatuses();
       } finally {
         setRetryingPublicationId(null);
       }
