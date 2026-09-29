@@ -15,6 +15,10 @@ import {
 import { createProviderTelemetryRegistry } from './provider-telemetry.js';
 import { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 import { createPublicationJobHandler } from './publication-handler.js';
+import {
+  readPublicationQueueMonitorConfig,
+  startPublicationQueueMonitor,
+} from './queue-monitor.js';
 
 export type MediaPublishingRuntimeConfig =
   { enabled: false } | { enabled: true; mediaSigner: SupabaseProviderMediaSignerConfig };
@@ -37,9 +41,16 @@ interface ClosablePublicationWorker {
   close(): Promise<void>;
 }
 
+interface ClosablePublicationQueueMonitor {
+  close(): Promise<void>;
+}
+
 export interface WorkerRuntimeDependencies {
   createDatabase(connectionString: string): PrismaClient;
   createWorker(input: Parameters<typeof createPublicationWorker>[0]): ClosablePublicationWorker;
+  startQueueMonitor(
+    input: Parameters<typeof startPublicationQueueMonitor>[0],
+  ): ClosablePublicationQueueMonitor;
   publishers: SocialPublisherRegistry;
   logger: WorkerRuntimeLogger;
 }
@@ -242,6 +253,11 @@ export function startPublicationWorkerRuntime(
     handler,
     limits: config.limits,
   });
+  const queueMonitor = (dependencies.startQueueMonitor ?? startPublicationQueueMonitor)({
+    redisUrl: config.redisUrl,
+    logger,
+    config: readPublicationQueueMonitorConfig(process.env),
+  });
 
   const enabledPublishers = ['FACEBOOK'];
   if (config.instagramPublishing.enabled) enabledPublishers.push('INSTAGRAM');
@@ -259,6 +275,7 @@ export function startPublicationWorkerRuntime(
     close() {
       closing ??= (async () => {
         logger.info('publication_worker_stopping');
+        await queueMonitor.close();
         await worker.close();
         await database.$disconnect();
         logger.info('publication_worker_stopped');
