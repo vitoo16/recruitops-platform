@@ -13,6 +13,7 @@ import { MetaConnectionsModule } from './meta-connections/meta-connections.modul
 import { PublicationsModule } from './publications/publications.module.js';
 import { SocialCredentialsModule } from './social-credentials/social-credentials.module.js';
 import { ThreadsConnectionsModule } from './threads-connections/threads-connections.module.js';
+import { TikTokConnectionsModule } from './tiktok-connections/tiktok-connections.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ThreadsConnectionsModule } from './threads-connections/threads-connecti
     PublicationsModule,
     SocialCredentialsModule,
     ThreadsConnectionsModule,
+    TikTokConnectionsModule,
   ],
   controllers: [HealthController],
 })
