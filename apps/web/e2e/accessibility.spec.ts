@@ -27,12 +27,8 @@ async function installLoggedOutBoundary(page: Page): Promise<void> {
   });
 }
 
-function seriousViolations(
-  violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations'],
-) {
-  return violations.filter((violation) =>
-    ['serious', 'critical'].includes(violation.impact ?? ''),
-  );
+function seriousViolations(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations']) {
+  return violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''));
 }
 
 test('public shell has no serious or critical WCAG A/AA violations', async ({ page }) => {
