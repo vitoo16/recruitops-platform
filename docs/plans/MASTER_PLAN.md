@@ -81,7 +81,7 @@
 - [x] Implement SocialAccount domain.
 - [x] Implement secure OAuth credential storage (encrypted storage code/tests, hosted `social_credentials` migration, RLS/browser-role revocation and production encryption keyring verified).
 - [ ] Verify current Meta official APIs/scopes and implement supported connection flow (provider boundary, one-time OAuth state, encrypted discovery session, fixed frontend callback handoff, localized explicit account picker, authenticated credential promotion, reconnect UX and regression tests implemented; hosted credential migration/keyring and frontend/API deploys are verified, while production `DATABASE_URL`, real `META_CLIENT_ID`/`META_CLIENT_SECRET`, Meta app access configuration and real-provider integration/E2E verification remain pending).
-- [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow.
+- [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow (current 3-legged member OAuth code-side path implemented with `openid profile w_member_social`, one-time hashed state, encrypted member credential promotion, reconnect-safe account/destination upsert, OWNER/ADMIN connection UI and VI/EN copy; real LinkedIn app/product access, hosted credentials, live provider integration/E2E and organization capability remain pending).
 - [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.
 - [ ] Verify current Zalo official APIs/scopes and implement supported connection flow.
 - [x] Implement reconnect/expired-token UX.
