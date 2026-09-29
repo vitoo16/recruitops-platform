@@ -1,0 +1,29 @@
+{
+  "eyebrow": "Kết nối Threads",
+  "title": "Kết nối tài khoản Threads",
+  "description": "RecruitOps sử dụng luồng OAuth chính thức của Threads. Access token luôn ở phía server, được mã hóa trước khi lưu lâu dài và không bao giờ được trả về trình duyệt.",
+  "connect": "Kết nối Threads",
+  "reconnect": "Kết nối lại",
+  "redirecting": "Đang chuyển sang Threads…",
+  "refresh": "Tải lại tài khoản",
+  "loading": "Đang tải các tài khoản Threads đã kết nối…",
+  "noAccounts": "Chưa có tài khoản Threads nào được kết nối.",
+  "connectedNotice": "Đã hoàn tất cấp quyền Threads và làm mới kết nối tài khoản.",
+  "deniedNotice": "Bạn đã hủy cấp quyền Threads. Không có tài khoản nào bị thay đổi.",
+  "dismiss": "Đóng",
+  "loadFailed": "RecruitOps không thể tải tài khoản Threads. Hãy thử tải lại.",
+  "startFailed": "RecruitOps không thể bắt đầu cấp quyền Threads. Hãy kiểm tra cấu hình server rồi thử lại.",
+  "missingApiConfig": "API chưa được cấu hình cho frontend này.",
+  "signInRequired": "Đăng nhập để kết nối Threads.",
+  "ownerAdminRequired": "Chỉ tài khoản OWNER và ADMIN được quản lý kết nối Threads.",
+  "accountId": "Threads user ID: {id}",
+  "status": "Trạng thái: {value}",
+  "expires": "Credential hết hạn: {value}",
+  "scopes": "Quyền đăng bài đã cấp: {value}",
+  "statusValues": {
+    "CONNECTED": "Đã kết nối",
+    "EXPIRED": "Đã hết hạn",
+    "REVOKED": "Đã thu hồi quyền",
+    "ERROR": "Có lỗi"
+  }
+}

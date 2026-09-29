@@ -2,16 +2,70 @@
 
 ## Verified official basis
 
-This slice follows the current Meta Threads API single-post flow on `https://graph.threads.net`:
+RecruitOps follows the current Meta Threads API flow on `https://graph.threads.net`:
 
-1. authorize a Threads user with the Threads OAuth flow;
-2. require `threads_basic` and `threads_content_publish` for this publishing capability;
-3. create a media container with `POST /{threads-user-id}/threads` (RecruitOps uses `/me/threads`);
-4. publish the returned container with `POST /{threads-user-id}/threads_publish` (RecruitOps uses `/me/threads_publish`).
+1. configure a Meta app with the Threads use case;
+2. authorize the Threads user through the Authorization Code flow on `https://threads.net/oauth/authorize`;
+3. request only the publishing permissions needed by the current slice: `threads_basic` and `threads_content_publish`;
+4. exchange the authorization code at `POST https://graph.threads.net/oauth/access_token`;
+5. exchange the short-lived credential for a long-lived Threads credential at `GET https://graph.threads.net/access_token` using `grant_type=th_exchange_token`;
+6. verify the app-scoped Threads identity through `GET https://graph.threads.net/me`;
+7. create a media container with `POST /me/threads`;
+8. publish the returned container with `POST /me/threads_publish`.
 
-Meta's official Threads Postman workspace was rechecked before this runtime wiring. The adapter intentionally does not use the Facebook Graph host or prepend the Meta Facebook Graph API version because the current Threads API host is `https://graph.threads.net`.
+Meta's official Threads Postman workspace was rechecked before the connection/runtime implementation. RecruitOps intentionally does not use the Facebook Graph host or prepend a Facebook Graph API version to Threads endpoints.
 
-## Supported in this slice
+## Dedicated OAuth connection flow
+
+Threads authorization is modeled separately from the Facebook/Instagram Meta connection flow because the Threads OAuth grant resolves directly to one app-scoped Threads user. There is no second Page/account picker.
+
+The implemented flow is:
+
+```mermaid
+sequenceDiagram
+    participant User as OWNER / ADMIN
+    participant Web as RecruitOps web
+    participant API as RecruitOps API
+    participant Redis as Redis state store
+    participant Threads as Threads OAuth/API
+    participant Crypto as AES-256-GCM keyring
+    participant DB as PostgreSQL
+
+    User->>Web: Connect Threads
+    Web->>API: POST /integrations/threads/oauth/start
+    API->>API: Generate 32-byte random state
+    API->>Redis: SET SHA-256(state), userId, TTL 10m, NX
+    API-->>Web: Threads authorization URL
+    Web->>Threads: Browser authorization redirect
+    Threads->>API: GET callback?code&state
+    API->>Redis: GETDEL SHA-256(state)
+    Redis-->>API: initiating user or null
+    API->>Threads: Exchange authorization code
+    Threads-->>API: short-lived token + optional user id
+    API->>Threads: Exchange long-lived token
+    Threads-->>API: long-lived token + expiry
+    API->>Threads: GET /me (Bearer token)
+    Threads-->>API: id, username, name
+    API->>API: Verify exchanged user id matches /me when supplied
+    API->>Crypto: Encrypt long-lived token + scopes + expiry
+    API->>DB: Transactionally upsert SocialAccount, SocialCredential, Destination
+    API-->>Web: 303 frontend redirect with status only
+```
+
+Security properties:
+
+- raw OAuth state is never stored in Redis; only its SHA-256 digest is used as the key;
+- state is one-time through Redis `GETDEL` and expires after ten minutes;
+- only authenticated `OWNER`/`ADMIN` users can start authorization or list Threads connections;
+- the public callback receives the provider code/state but returns no token to the browser;
+- the short-lived access token is not placed in the long-lived-token URL;
+- profile calls use `Authorization: Bearer ...`;
+- provider response bodies are not copied into application errors;
+- the long-lived credential is encrypted before durable database persistence;
+- reconnect updates the existing `(THREADS, externalAccountId)` account and credential rather than creating duplicates;
+- `Destination` is promoted as an enabled `PROFILE` destination in `API` posting mode.
+
+## Supported publishing slice
 
 - text-only Threads posts;
 - one image post using a provider-readable HTTPS `image_url`;
@@ -22,7 +76,7 @@ Meta's official Threads Postman workspace was rechecked before this runtime wiri
 - worker credential resolution from the exact durable Threads destination/account/credential relation;
 - opt-in worker registry wiring behind `PUBLISHING_THREADS_ENABLED`.
 
-This slice does **not** claim support for carousel posts, polls, GIF attachments, quote/repost operations, topic/location tagging, ghost posts, reply approval controls, or other advanced Threads features. The Master Plan item remains incomplete until the intended currently-supported capability set and the dedicated connection flow are verified end to end.
+This slice does **not** claim support for carousel posts, polls, GIF attachments, quote/repost operations, topic/location tagging, ghost posts, reply approval controls, or other advanced Threads features. The Master Plan item remains incomplete until the intended currently-supported capability set and real-provider verification are complete.
 
 ## Credential boundary
 
@@ -36,7 +90,7 @@ This slice does **not** claim support for carousel posts, polls, GIF attachments
 
 The encrypted credential is then decrypted in memory through the shared AES-256-GCM OAuth keyring. The decrypted payload must still declare both required scopes. Only the access token is returned to `ThreadsPublisher`.
 
-The token is sent only in the HTTP `Authorization: Bearer ...` header and is never placed in queue payloads, browser-facing contracts, URLs, application logs, or Publication persistence.
+The token is sent only in the HTTP `Authorization: Bearer ...` header and is never placed in queue payloads, browser-facing contracts, application logs, or Publication persistence.
 
 ## Media boundary
 
@@ -64,7 +118,7 @@ When the flag is enabled:
 
 The same provider-media resolver can serve Instagram and Threads when both are enabled. Private storage keys and signed URL bearer tokens remain outside generic publication persistence.
 
-## Flow
+## Publishing flow
 
 ```mermaid
 sequenceDiagram
@@ -102,12 +156,11 @@ sequenceDiagram
 
 ## Remaining activation work
 
-The worker runtime alone does not make Threads production-ready. Remaining gates are:
+The code path does not make Threads production-ready. Remaining gates are:
 
-- implement the dedicated Threads OAuth connection flow and durable account promotion;
-- configure a real Meta app with the Threads use case, redirect URI and required reviewed access;
-- verify token exchange/refresh and account identity against a real Threads account;
-- inject hosted worker secrets/flags only through the approved production secret-management process;
+- configure real `THREADS_CLIENT_ID`, `THREADS_CLIENT_SECRET`, callback and frontend return URIs for an approved Threads app/use case;
+- verify code exchange, long-lived-token behavior and `/me` identity against a real Threads account;
+- enable the hosted publishing flag only through the approved production secret-management process;
 - deploy an always-on worker when infrastructure supports it;
 - run real-provider integration/E2E verification before claiming production readiness;
 - explicitly decide which advanced Threads capabilities belong in the product scope before completing the Master Plan adapter item.
