@@ -48,7 +48,12 @@ class TelemetrySocialPublisher implements SocialPublisher {
     const startedAt = this.nowMs();
     try {
       const result = await this.publisher.validate(command);
-      this.emitSuccess('validate', startedAt, command.correlationId, result.valid ? 'valid' : 'invalid');
+      this.emitSuccess(
+        'validate',
+        startedAt,
+        command.correlationId,
+        result.valid ? 'valid' : 'invalid',
+      );
       return result;
     } catch (error) {
       this.emitError('validate', startedAt, error, command.correlationId);
