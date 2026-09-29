@@ -8,6 +8,7 @@
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --exclude \"e2e/**\"",
+    "pretest:e2e": "pnpm --filter @recruitops/contracts build",
     "test:e2e": "playwright test"
   },
   "dependencies": {
