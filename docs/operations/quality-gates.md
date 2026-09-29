@@ -9,6 +9,7 @@
 - [ ] integration tests where relevant
 - [ ] E2E for critical flows
 - [ ] build
+- [ ] dependency review passes for dependency-changing PRs; newly introduced known vulnerabilities at `moderate` severity or higher are blocking
 - [ ] documentation impact reviewed
 - [ ] Mermaid impact reviewed
 - [ ] migration impact reviewed
@@ -19,6 +20,8 @@
 - [ ] design-system token/override impact reviewed for UI changes
 - [ ] no secrets
 - [ ] no unintended changes
+
+Dependabot is configured to propose weekly dependency updates for the root npm/pnpm workspace and GitHub Actions. Dependency update PRs must pass the same repository checks as human-authored changes; automation does not imply automatic merge.
 
 ## Critical E2E targets
 
@@ -52,4 +55,5 @@
 - smoke tests
 - critical E2E
 - secret storage verified
+- dependency/security scanning state reviewed
 - backup/restore state known
