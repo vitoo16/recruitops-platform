@@ -20,11 +20,7 @@ const alreadyQueuedStates = new Set([
 export class PublicationQueueGateway implements OnModuleDestroy {
   private queueHandlePromise: Promise<PublicationQueueHandle> | undefined;
 
-  async enqueue(
-    publicationId: string,
-    scheduledAt: Date,
-    correlationId?: string,
-  ): Promise<void> {
+  async enqueue(publicationId: string, scheduledAt: Date, correlationId?: string): Promise<void> {
     const handle = await this.getQueueHandle();
     await enqueuePublication(handle.queue, { publicationId, scheduledAt, correlationId });
   }
