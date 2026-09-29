@@ -36,6 +36,37 @@ interface PublicationQueueHandle {
   close(): Promise<void>;
 }
 
+function positiveInteger(value: string | undefined, fallback: number, name: string): number {
+  if (value === undefined || value.trim() === '') return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new RangeError(`${name} must be a positive integer`);
+  }
+  return parsed;
+}
+
+export function readPublicationQueueMonitorConfig(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): PublicationQueueMonitorConfig {
+  return {
+    intervalMs: positiveInteger(
+      env.PUBLICATION_QUEUE_METRICS_INTERVAL_MS,
+      defaultPublicationQueueMonitorConfig.intervalMs,
+      'PUBLICATION_QUEUE_METRICS_INTERVAL_MS',
+    ),
+    waitingAlertThreshold: positiveInteger(
+      env.PUBLICATION_QUEUE_WAITING_ALERT_THRESHOLD,
+      defaultPublicationQueueMonitorConfig.waitingAlertThreshold,
+      'PUBLICATION_QUEUE_WAITING_ALERT_THRESHOLD',
+    ),
+    failedAlertThreshold: positiveInteger(
+      env.PUBLICATION_QUEUE_FAILED_ALERT_THRESHOLD,
+      defaultPublicationQueueMonitorConfig.failedAlertThreshold,
+      'PUBLICATION_QUEUE_FAILED_ALERT_THRESHOLD',
+    ),
+  };
+}
+
 function count(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
 }
