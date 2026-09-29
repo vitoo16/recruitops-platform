@@ -16,8 +16,18 @@ export class IntegrationHealthRepository {
   constructor(private readonly database: DatabaseService) {}
 
   async listMetaAccounts(): Promise<readonly IntegrationAccountRecord[]> {
+    return this.listAccounts(['FACEBOOK', 'INSTAGRAM']);
+  }
+
+  async listThreadsAccounts(): Promise<readonly IntegrationAccountRecord[]> {
+    return this.listAccounts(['THREADS']);
+  }
+
+  private async listAccounts(
+    platforms: readonly SocialPlatform[],
+  ): Promise<readonly IntegrationAccountRecord[]> {
     const accounts = await this.database.client.socialAccount.findMany({
-      where: { platform: { in: ['FACEBOOK', 'INSTAGRAM'] } },
+      where: { platform: { in: [...platforms] } },
       orderBy: [{ platform: 'asc' }, { displayName: 'asc' }],
       select: {
         id: true,
