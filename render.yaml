@@ -83,6 +83,10 @@ services:
         sync: false
       - key: LINKEDIN_CLIENT_SECRET
         sync: false
+      - key: LINKEDIN_REDIRECT_URI
+        sync: false
+      - key: LINKEDIN_FRONTEND_REDIRECT_URI
+        sync: false
       - key: TIKTOK_CLIENT_KEY
         sync: false
       - key: TIKTOK_CLIENT_SECRET

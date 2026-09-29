@@ -38,10 +38,18 @@ const ThreadsOAuthEnvSchema = z.object({
   THREADS_FRONTEND_REDIRECT_URI: z.url(),
 });
 
+const LinkedInOAuthEnvSchema = z.object({
+  LINKEDIN_CLIENT_ID: z.string().trim().min(1),
+  LINKEDIN_CLIENT_SECRET: z.string().trim().min(1),
+  LINKEDIN_REDIRECT_URI: z.url(),
+  LINKEDIN_FRONTEND_REDIRECT_URI: z.url(),
+});
+
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
 export type SupabaseAuthEnv = z.infer<typeof SupabaseAuthEnvSchema>;
 export type MetaOAuthEnv = z.infer<typeof MetaOAuthEnvSchema>;
 export type ThreadsOAuthEnv = z.infer<typeof ThreadsOAuthEnvSchema>;
+export type LinkedInOAuthEnv = z.infer<typeof LinkedInOAuthEnvSchema>;
 
 export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
@@ -57,4 +65,8 @@ export function parseMetaOAuthEnv(input: Record<string, string | undefined>): Me
 
 export function parseThreadsOAuthEnv(input: Record<string, string | undefined>): ThreadsOAuthEnv {
   return ThreadsOAuthEnvSchema.parse(input);
+}
+
+export function parseLinkedInOAuthEnv(input: Record<string, string | undefined>): LinkedInOAuthEnv {
+  return LinkedInOAuthEnvSchema.parse(input);
 }

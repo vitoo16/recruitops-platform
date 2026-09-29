@@ -27,7 +27,7 @@ Candidate interfaces:
 - Facebook Groups: do not assume arbitrary auto-posting; use Manual Assist when unsupported.
 - Instagram: official supported professional publishing flows only.
 - Threads: official Threads API only.
-- LinkedIn: official member/organization scopes and posting API.
+- LinkedIn: current member connection uses documented 3-legged OAuth with `openid profile w_member_social`; organization posting remains separately gated by organization scopes/roles/product access, and member publishing must verify the Posts API Person author identity rather than equating OIDC `sub` with a Person ID.
 - TikTok: official Content Posting flows and current app/audit requirements.
 - Zalo: supported OA/OpenAPI capabilities only.
 
