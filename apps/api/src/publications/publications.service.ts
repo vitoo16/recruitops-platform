@@ -122,6 +122,13 @@ export class PublicationsService {
       command.destinationId,
       now,
     );
+    if (socialAccount.expiresAt && socialAccount.expiresAt.getTime() <= scheduledAt.getTime()) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_EXPIRES_BEFORE_SCHEDULE',
+        message: 'Destination social account expires before the scheduled publication time',
+      });
+    }
+
     const publication = await this.repository.upsertScheduledPublication(
       command,
       socialAccount.id,
