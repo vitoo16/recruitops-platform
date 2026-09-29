@@ -1,0 +1,30 @@
+{
+  "eyebrow": "Kết nối LinkedIn",
+  "title": "Kết nối thành viên LinkedIn",
+  "description": "RecruitOps sử dụng luồng authorization code chính thức của LinkedIn với quyền OpenID profile và Share on LinkedIn. Access token luôn ở phía server và được mã hóa trước khi lưu lâu dài.",
+  "connect": "Kết nối LinkedIn",
+  "reconnect": "Kết nối lại",
+  "redirecting": "Đang chuyển sang LinkedIn…",
+  "refresh": "Tải lại tài khoản",
+  "reconnectRequired": "Cần kết nối lại trước khi có thể tiếp tục đăng bài.",
+  "loading": "Đang tải các tài khoản LinkedIn đã kết nối…",
+  "noAccounts": "Chưa có thành viên LinkedIn nào được kết nối.",
+  "connectedNotice": "Đã hoàn tất cấp quyền LinkedIn và làm mới kết nối thành viên.",
+  "deniedNotice": "Bạn đã hủy cấp quyền LinkedIn. Không có tài khoản nào bị thay đổi.",
+  "dismiss": "Đóng",
+  "loadFailed": "RecruitOps không thể tải tài khoản LinkedIn. Hãy thử tải lại.",
+  "startFailed": "RecruitOps không thể bắt đầu cấp quyền LinkedIn. Hãy kiểm tra cấu hình server rồi thử lại.",
+  "missingApiConfig": "API chưa được cấu hình cho frontend này.",
+  "signInRequired": "Đăng nhập để kết nối LinkedIn.",
+  "ownerAdminRequired": "Chỉ tài khoản OWNER và ADMIN được quản lý kết nối LinkedIn.",
+  "accountId": "LinkedIn OIDC subject: {id}",
+  "status": "Trạng thái: {value}",
+  "expires": "Credential hết hạn: {value}",
+  "scopes": "Quyền đã cấp: {value}",
+  "statusValues": {
+    "CONNECTED": "Đã kết nối",
+    "EXPIRED": "Đã hết hạn",
+    "REVOKED": "Đã thu hồi quyền",
+    "ERROR": "Có lỗi"
+  }
+}
