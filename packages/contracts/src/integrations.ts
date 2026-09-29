@@ -37,9 +37,19 @@ export const MetaIntegrationHealthSchema = z
   })
   .strict();
 
+export const ThreadsIntegrationHealthSchema = z
+  .object({
+    provider: z.literal('THREADS'),
+    configured: z.boolean(),
+    status: IntegrationProviderStatusSchema,
+    accounts: z.array(IntegrationAccountHealthSchema),
+  })
+  .strict();
+
 export const IntegrationHealthResponseSchema = z
   .object({
     meta: MetaIntegrationHealthSchema,
+    threads: ThreadsIntegrationHealthSchema.optional(),
   })
   .strict();
 
@@ -47,4 +57,5 @@ export type IntegrationReconnectReason = z.infer<typeof IntegrationReconnectReas
 export type IntegrationProviderStatus = z.infer<typeof IntegrationProviderStatusSchema>;
 export type IntegrationAccountHealth = z.infer<typeof IntegrationAccountHealthSchema>;
 export type MetaIntegrationHealth = z.infer<typeof MetaIntegrationHealthSchema>;
+export type ThreadsIntegrationHealth = z.infer<typeof ThreadsIntegrationHealthSchema>;
 export type IntegrationHealthResponse = z.infer<typeof IntegrationHealthResponseSchema>;
