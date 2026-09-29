@@ -120,7 +120,10 @@ export class ThreadsConnectionsRepository {
     if (!account) return null;
 
     const credential = account.credential;
-    if (credential && (credential.platform !== 'THREADS' || credential.algorithm !== 'aes-256-gcm')) {
+    if (
+      credential &&
+      (credential.platform !== 'THREADS' || credential.algorithm !== 'aes-256-gcm')
+    ) {
       throw new ConflictException({
         code: 'THREADS_CREDENTIAL_ENVELOPE_INVALID',
         message: 'Stored Threads credential envelope is invalid',
@@ -206,10 +209,7 @@ export class ThreadsConnectionsRepository {
     });
   }
 
-  async markStatus(
-    accountId: string,
-    status: 'EXPIRED' | 'REVOKED' | 'ERROR',
-  ): Promise<void> {
+  async markStatus(accountId: string, status: 'EXPIRED' | 'REVOKED' | 'ERROR'): Promise<void> {
     await this.database.client.socialAccount.updateMany({
       where: { id: accountId, platform: 'THREADS' },
       data: { status },

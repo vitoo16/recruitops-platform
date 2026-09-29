@@ -165,7 +165,9 @@ export function ThreadsConnectionPanel() {
                             type="button"
                             variant="outline"
                             className="min-h-11"
-                            disabled={workspace.refreshingAccountId !== null || workspace.redirecting}
+                            disabled={
+                              workspace.refreshingAccountId !== null || workspace.redirecting
+                            }
                             onClick={() => void workspace.refreshCredential(account.id)}
                           >
                             <RefreshCw

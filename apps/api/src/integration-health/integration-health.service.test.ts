@@ -114,16 +114,19 @@ describe('IntegrationHealthService', () => {
   });
 
   it('reports expired Threads credentials as reconnect required', async () => {
-    const { service } = harness([], [
-      {
-        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-        platform: 'THREADS',
-        displayName: 'RecruitOps Threads',
-        status: 'CONNECTED',
-        expiresAt: new Date('2026-09-27T23:59:59.000Z'),
-        hasCredential: true,
-      },
-    ]);
+    const { service } = harness(
+      [],
+      [
+        {
+          id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+          platform: 'THREADS',
+          displayName: 'RecruitOps Threads',
+          status: 'CONNECTED',
+          expiresAt: new Date('2026-09-27T23:59:59.000Z'),
+          hasCredential: true,
+        },
+      ],
+    );
 
     const result = await service.getHealth(now);
 
