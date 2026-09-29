@@ -28,7 +28,9 @@ export function usePublicationStatusWorkspace({
   publishResultId,
 }: UsePublicationStatusWorkspaceInput) {
   const requestVersion = useRef(0);
-  const [publicationStatuses, setPublicationStatuses] = useState<readonly PublicationStatusRecord[]>([]);
+  const [publicationStatuses, setPublicationStatuses] = useState<
+    readonly PublicationStatusRecord[]
+  >([]);
   const [publicationStatusesTruncated, setPublicationStatusesTruncated] = useState(false);
   const [loadingPublicationStatuses, setLoadingPublicationStatuses] = useState(false);
   const [publicationStatusLoadError, setPublicationStatusLoadError] = useState(false);
@@ -97,13 +99,7 @@ export function usePublicationStatusWorkspace({
         setRetryingPublicationId(null);
       }
     },
-    [
-      apiUrl,
-      canMutate,
-      loadPublicationStatuses,
-      retryingPublicationId,
-      session?.access_token,
-    ],
+    [apiUrl, canMutate, loadPublicationStatuses, retryingPublicationId, session?.access_token],
   );
 
   return {

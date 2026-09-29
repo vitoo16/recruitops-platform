@@ -193,7 +193,8 @@ export class PublicationsService {
     if (!prepared) {
       throw new ConflictException({
         code: 'PUBLICATION_RETRY_CONFLICT',
-        message: 'Publication changed while retry was being prepared; refresh before retrying again',
+        message:
+          'Publication changed while retry was being prepared; refresh before retrying again',
       });
     }
 
