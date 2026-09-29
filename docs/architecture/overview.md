@@ -19,6 +19,7 @@ See:
 - `../diagrams/container-architecture.md`
 - `../diagrams/social-publishing-sequence.md`
 - `../diagrams/publication-state.md`
+- `publication-correlation.md`
 
 ## Module boundaries
 
