@@ -48,7 +48,7 @@ export function useContentStudio() {
     canMutate: context.canMutate,
     postVariantId: variants.selectedVariant?.id ?? null,
     publishResultId: publishing.publishNowResult?.publication.id ?? null,
-    scheduleResultId: scheduling.scheduleResult?.publication.id ?? null,
+    scheduleActivityVersion: scheduling.scheduleActivityVersion,
   });
 
   return {
