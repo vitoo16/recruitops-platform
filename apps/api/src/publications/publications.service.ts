@@ -82,12 +82,9 @@ export class PublicationsService {
       now,
     );
 
-    const publication = await this.repository.upsertPublication(
-      command,
-      socialAccount.id,
-      now,
-      correlationId,
-    );
+    const publication = correlationId
+      ? await this.repository.upsertPublication(command, socialAccount.id, now, correlationId)
+      : await this.repository.upsertPublication(command, socialAccount.id, now);
 
     if (publication.state === 'CANCELLED') {
       throw new ConflictException({
@@ -102,7 +99,11 @@ export class PublicationsService {
 
     const scheduledAt = publication.scheduledAt ?? now;
     try {
-      await this.queue.enqueue(publication.id, scheduledAt, publication.correlationId ?? undefined);
+      if (publication.correlationId) {
+        await this.queue.enqueue(publication.id, scheduledAt, publication.correlationId);
+      } else {
+        await this.queue.enqueue(publication.id, scheduledAt);
+      }
       await this.repository.clearQueueEnqueueFailure(publication.id, 'PENDING');
     } catch {
       await this.repository.recordQueueEnqueueFailure(publication.id, 'PENDING');
@@ -142,12 +143,14 @@ export class PublicationsService {
       });
     }
 
-    const publication = await this.repository.upsertScheduledPublication(
-      command,
-      socialAccount.id,
-      scheduledAt,
-      correlationId,
-    );
+    const publication = correlationId
+      ? await this.repository.upsertScheduledPublication(
+          command,
+          socialAccount.id,
+          scheduledAt,
+          correlationId,
+        )
+      : await this.repository.upsertScheduledPublication(command, socialAccount.id, scheduledAt);
 
     if (publication.state === 'CANCELLED') {
       throw new ConflictException({
@@ -161,7 +164,11 @@ export class PublicationsService {
     }
 
     try {
-      await this.queue.enqueue(publication.id, scheduledAt, publication.correlationId ?? undefined);
+      if (publication.correlationId) {
+        await this.queue.enqueue(publication.id, scheduledAt, publication.correlationId);
+      } else {
+        await this.queue.enqueue(publication.id, scheduledAt);
+      }
       await this.repository.clearQueueEnqueueFailure(publication.id, 'SCHEDULED');
     } catch {
       await this.repository.recordQueueEnqueueFailure(publication.id, 'SCHEDULED');
@@ -205,10 +212,9 @@ export class PublicationsService {
       });
     }
 
-    const acceptance = await this.queue.retryFailed(
-      publicationId,
-      publication.correlationId ?? undefined,
-    );
+    const acceptance = publication.correlationId
+      ? await this.queue.retryFailed(publicationId, publication.correlationId)
+      : await this.queue.retryFailed(publicationId);
     const refreshed = await this.repository.findStatusById(publicationId);
     if (!refreshed) {
       throw new ConflictException({
