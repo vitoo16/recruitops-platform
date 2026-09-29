@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const inheritedEnv = Object.fromEntries(
-  Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+  Object.entries(process.env).filter(
+    (entry): entry is [string, string] => typeof entry[1] === 'string',
+  ),
 );
 
 export default defineConfig({

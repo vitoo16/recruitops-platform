@@ -473,11 +473,15 @@ test('viewer can inspect publication operations but cannot publish, schedule, or
 
   const schedulePanel = page.locator('section[aria-labelledby="publication-schedule-title"]');
   await expect(
-    schedulePanel.getByText('Your role can inspect the publication calendar but cannot schedule a publication.'),
+    schedulePanel.getByText(
+      'Your role can inspect the publication calendar but cannot schedule a publication.',
+    ),
   ).toBeVisible();
   await expect(schedulePanel.getByRole('button', { name: 'Schedule publication' })).toHaveCount(0);
 
   const statusPanel = page.locator('section[aria-labelledby="publication-status-title"]');
   await expect(statusPanel.getByText('PROVIDER_TEMPORARY_ERROR')).toBeVisible();
-  await expect(statusPanel.getByRole('button', { name: 'Retry failed publication' })).toHaveCount(0);
+  await expect(statusPanel.getByRole('button', { name: 'Retry failed publication' })).toHaveCount(
+    0,
+  );
 });
