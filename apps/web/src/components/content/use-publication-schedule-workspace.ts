@@ -33,6 +33,7 @@ export function usePublicationScheduleWorkspace({
   const [scheduleValidationError, setScheduleValidationError] = useState(false);
   const [scheduleErrorStatus, setScheduleErrorStatus] = useState<number | null>(null);
   const [scheduleResult, setScheduleResult] = useState<SchedulePublicationResponse | null>(null);
+  const [scheduleActivityVersion, setScheduleActivityVersion] = useState(0);
   const [pendingSchedulePublicationId, setPendingSchedulePublicationId] = useState<string | null>(
     null,
   );
@@ -49,6 +50,7 @@ export function usePublicationScheduleWorkspace({
     setScheduleValidationError(false);
     setScheduleErrorStatus(null);
     setScheduleResult(null);
+    setScheduleActivityVersion(0);
     setPendingSchedulePublicationId(null);
   }, [postVariantId]);
 
@@ -71,11 +73,11 @@ export function usePublicationScheduleWorkspace({
   const scheduleTimeIsFuture = scheduledAtIso !== null && Date.parse(scheduledAtIso) > Date.now();
   const canSchedule = Boolean(
     canMutate &&
-    postVariantId &&
-    readiness?.canPublish &&
-    scheduleDestinationId &&
-    scheduleTimeIsFuture &&
-    !schedulingPublication,
+      postVariantId &&
+      readiness?.canPublish &&
+      scheduleDestinationId &&
+      scheduleTimeIsFuture &&
+      !schedulingPublication,
   );
 
   const resetIntentResult = useCallback(() => {
@@ -148,6 +150,7 @@ export function usePublicationScheduleWorkspace({
       setScheduleErrorStatus(error instanceof PublicationApiError ? error.status : 0);
     } finally {
       setSchedulingPublication(false);
+      setScheduleActivityVersion((current) => current + 1);
     }
   }, [
     apiUrl,
@@ -172,6 +175,7 @@ export function usePublicationScheduleWorkspace({
     scheduleValidationError,
     scheduleErrorStatus,
     scheduleResult,
+    scheduleActivityVersion,
     scheduleTimeIsFuture,
     canSchedule,
     setScheduleDestinationId,
