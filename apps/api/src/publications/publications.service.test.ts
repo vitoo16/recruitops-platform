@@ -224,6 +224,29 @@ describe('PublicationsService', () => {
     expect(repository.clearQueueEnqueueFailure).toHaveBeenCalledWith(publicationId, 'SCHEDULED');
   });
 
+  it('rejects a schedule that outlives the connected account credential', async () => {
+    const { service, repository, queue } = harness();
+    repository.findPublishContext.mockResolvedValueOnce({
+      ...context(),
+      destination: {
+        ...context().destination,
+        socialAccount: {
+          ...context().destination.socialAccount!,
+          expiresAt: new Date('2026-09-29T03:30:00.000Z'),
+        },
+      },
+    });
+
+    await expect(service.schedulePublication(scheduleCommand(), now)).rejects.toMatchObject({
+      response: expect.objectContaining({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_EXPIRES_BEFORE_SCHEDULE',
+      }),
+    });
+
+    expect(repository.upsertScheduledPublication).not.toHaveBeenCalled();
+    expect(queue.enqueue).not.toHaveBeenCalled();
+  });
+
   it('rejects a scheduled publication time that is not in the future', async () => {
     const { service, repository, queue } = harness();
 
