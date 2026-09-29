@@ -31,7 +31,9 @@ async function waitForState(
     if (currentState() === expected) return;
     await delay(25);
   }
-  throw new Error(`Timed out waiting for publication state ${expected}; received ${currentState()}`);
+  throw new Error(
+    `Timed out waiting for publication state ${expected}; received ${currentState()}`,
+  );
 }
 
 function createMutableRepository(publicationId: string, initialState: PublicationState) {
@@ -148,7 +150,7 @@ async function createRuntime(publicationId: string, initialState: PublicationSta
 }
 
 describe('publication pipeline integration', () => {
-  it('executes an immediate publication once and suppresses a duplicate Publication UUID', async () => {
+  it('publishes once and suppresses a duplicate Publication UUID', async () => {
     const publicationId = '33333333-3333-4333-8333-333333333333';
     const runtime = await createRuntime(publicationId, 'PENDING');
 
