@@ -51,7 +51,7 @@ test('keyboard users can reveal the skip link and move focus to main content', a
 
   await page.keyboard.press('Tab');
 
-  const skipLink = page.getByRole('link', { name: /skip|bỏ qua/i });
+  const skipLink = page.locator('a[href="#main-content"]');
   await expect(skipLink).toBeFocused();
   await expect(skipLink).toBeVisible();
 
@@ -59,5 +59,6 @@ test('keyboard users can reveal the skip link and move focus to main content', a
   await expect(page).toHaveURL(/#main-content$/);
 
   const main = page.locator('#main-content');
+  await expect(main).toBeFocused();
   await expect(main).toBeVisible();
 });
