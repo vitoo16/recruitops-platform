@@ -36,6 +36,14 @@ Planned domains that are not yet represented as persisted models include:
 - OAuth provider token payloads are never modeled as plaintext columns. `SocialCredential` stores an AES-256-GCM envelope (`keyId`, algorithm, IV, authentication tag and ciphertext), while `SocialAccount.credentialRef` is a unique optional relation to that envelope.
 - The `social_credentials` hosted table is API-owned with RLS enabled and no browser-facing policy; the migration additionally revokes `anon` and `authenticated` table privileges.
 
+## Performance and indexes
+
+The current Prisma schema indexes implemented Job/Content, publication/scheduling/retry, social-account lifecycle, candidate deduplication and application-pipeline access paths.
+
+The 2026-09-30 hosted performance review found no evidence-based index migration to apply: business tables still have no representative production rows, and Supabase Performance Advisor reports only informational unused-index findings. Existing intentional indexes are therefore preserved until realistic workload/query statistics justify a change.
+
+See [`database-performance.md`](./database-performance.md) for the hosted evidence, index rationale, revisit thresholds, and production-readiness review method.
+
 ## Migration ownership
 
 `packages/database/prisma/schema.prisma` remains the canonical application data model. Hosted production DDL is committed under `infra/supabase/migrations/` and tracked/executed by Supabase according to ADR 0006. RecruitOps does not introduce a parallel hosted `prisma migrate deploy` history.
@@ -50,5 +58,6 @@ See:
 - `../product/job-content-domain.md`
 - `../product/candidate-application-domain.md`
 - `social-domain.md`
+- `database-performance.md`
 - `../diagrams/database-erd.md`
 - `../diagrams/social-domain-erd.md`
