@@ -8,7 +8,7 @@ const inheritedEnv = Object.fromEntries(
 
 export default defineConfig({
   testDir: './e2e',
-  globalTimeout: 120_000,
+  globalTimeout: 240_000,
   timeout: 20_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
@@ -24,10 +24,13 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm exec next dev --hostname 127.0.0.1 --port 3100',
+    command:
+      'pnpm --filter @recruitops/contracts build && pnpm exec next dev --hostname 127.0.0.1 --port 3100',
     url: 'http://127.0.0.1:3100',
-    timeout: 45_000,
+    timeout: 90_000,
     reuseExistingServer: !process.env.CI,
+    stdout: 'pipe',
+    stderr: 'pipe',
     env: {
       ...inheritedEnv,
       NEXT_PUBLIC_API_URL: 'http://127.0.0.1:8787',
