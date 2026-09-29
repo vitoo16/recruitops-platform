@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RedisService } from '../redis/redis.service.js';
-import { LINKEDIN_OAUTH_STATE_TTL_SECONDS, LinkedInOAuthStateStore } from './linkedin-oauth-state.store.js';
+import {
+  LINKEDIN_OAUTH_STATE_TTL_SECONDS,
+  LinkedInOAuthStateStore,
+} from './linkedin-oauth-state.store.js';
 
 const userId = '2ca934f4-8e91-4c9f-a64b-04f7cf992f88';
 const state = 'a'.repeat(43);
@@ -27,7 +30,10 @@ describe('LinkedInOAuthStateStore', () => {
   });
 
   it('atomically consumes state with GETDEL so replay returns no session', async () => {
-    const serialized = JSON.stringify({ userId, createdAt: '2026-09-30T03:50:00.000Z' });
+    const serialized = JSON.stringify({
+      userId,
+      createdAt: '2026-09-30T03:50:00.000Z',
+    });
     const client = {
       getDel: vi.fn().mockResolvedValueOnce(serialized).mockResolvedValueOnce(null),
     };
