@@ -6,10 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NextFunction, Response } from 'express';
 import { parseApiEnv } from '@recruitops/config';
 import { AppModule } from './app.module.js';
-import {
-  normalizeIncomingRequestId,
-  type RequestWithContext,
-} from './common/request-context.js';
+import { normalizeIncomingRequestId, type RequestWithContext } from './common/request-context.js';
 import { getSafeRequestPath } from './common/request-path.js';
 
 async function bootstrap() {
