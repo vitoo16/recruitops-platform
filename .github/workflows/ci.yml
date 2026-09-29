@@ -6,17 +6,18 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: feat/publication-schedule-calendar
+
+      - name: Secret-management guardrail
+        run: node tooling/scripts/check-secrets.mjs
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -31,28 +32,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Apply canonical formatting
-        run: |
-          pnpm exec prettier --write \
-            apps/api/src/publications/publications.service.test.ts \
-            apps/web/src/components/content/publication-schedule-panel.tsx \
-            apps/web/src/components/content/publication-schedule-utils.test.ts \
-            apps/web/src/components/content/use-publication-schedule-workspace.ts \
-            apps/web/src/lib/publications/api.ts
-          if git diff --quiet; then
-            echo "Formatting already current"
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add \
-              apps/api/src/publications/publications.service.test.ts \
-              apps/web/src/components/content/publication-schedule-panel.tsx \
-              apps/web/src/components/content/publication-schedule-utils.test.ts \
-              apps/web/src/components/content/use-publication-schedule-workspace.ts \
-              apps/web/src/lib/publications/api.ts
-            git commit -m "style: format publication schedule workflow"
-            git push origin HEAD:feat/publication-schedule-calendar
-          fi
+      - name: Format check
+        run: pnpm format:check
 
-      - name: Stop after formatter sync
-        run: exit 1
+      - name: Validate local infrastructure configuration
+        run: |
+          node tooling/scripts/init-local-infra.mjs --infra-only
+          docker compose --env-file infra/docker/.env.local -f infra/docker/docker-compose.yml config --quiet
+
+      - name: Typecheck
+        run: pnpm typecheck
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
+
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://recruitops:recruitops@localhost:5432/recruitops?schema=public
+          REDIS_URL: redis://localhost:6379
