@@ -150,7 +150,7 @@
 - [ ] Add tracing/correlation across API → queue → worker → provider.
 - [ ] Add queue metrics and alerts.
 - [ ] Add provider latency/error/rate-limit telemetry.
-- [ ] Add database performance review/indexes.
+- [x] Add database performance review/indexes.
 - [x] Add dependency/security scanning.
 - [x] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
