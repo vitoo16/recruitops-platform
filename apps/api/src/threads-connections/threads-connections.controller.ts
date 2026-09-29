@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Header,
+  Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Res,
@@ -41,6 +43,14 @@ export class ThreadsConnectionsController {
   @Header('Cache-Control', 'no-store')
   list() {
     return this.threadsConnections.list();
+  }
+
+  @Post('accounts/:accountId/refresh')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  @Header('Cache-Control', 'no-store')
+  refresh(@Param('accountId', new ParseUUIDPipe()) accountId: string) {
+    return this.threadsConnections.refresh(accountId);
   }
 
   @Post('start')

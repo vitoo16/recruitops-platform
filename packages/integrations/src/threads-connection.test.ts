@@ -82,6 +82,40 @@ describe('ThreadsConnectionProvider', () => {
     expect(init.headers).toEqual({ authorization: 'Bearer short-token' });
   });
 
+  it('refreshes a long-lived token with bearer auth and no token query parameter', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      jsonResponse({
+        access_token: 'refreshed-token',
+        token_type: 'bearer',
+        expires_in: 5_184_000,
+      }),
+    );
+    const provider = new ThreadsConnectionProvider(config, fetchFn as unknown as typeof fetch);
+
+    await expect(provider.refreshLongLivedToken('long-token')).resolves.toEqual({
+      accessToken: 'refreshed-token',
+      tokenType: 'bearer',
+      expiresInSeconds: 5_184_000,
+    });
+
+    const [url, init] = fetchFn.mock.calls[0] as [URL, RequestInit];
+    expect(url.origin).toBe('https://graph.threads.net');
+    expect(url.pathname).toBe('/refresh_access_token');
+    expect(url.searchParams.get('grant_type')).toBe('th_refresh_token');
+    expect(url.searchParams.has('access_token')).toBe(false);
+    expect(init.headers).toEqual({ authorization: 'Bearer long-token' });
+  });
+
+  it('fails closed when a refresh response does not contain a token', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(jsonResponse({}));
+    const provider = new ThreadsConnectionProvider(config, fetchFn as unknown as typeof fetch);
+
+    await expect(provider.refreshLongLivedToken('long-token')).rejects.toMatchObject({
+      name: 'ThreadsConnectionError',
+      code: 'THREADS_TOKEN_REFRESH_RESPONSE_INVALID',
+    });
+  });
+
   it('retrieves the app-scoped Threads profile with bearer auth', async () => {
     const fetchFn = vi
       .fn()

@@ -7,6 +7,8 @@ import { ThreadsConnectionsService } from './threads-connections.service.js';
 import type { ThreadsOAuthStateStore } from './threads-oauth-state.store.js';
 
 const userId = '11111111-1111-4111-8111-111111111111';
+const accountId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const credentialRef = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const validState = 's'.repeat(43);
 
 function encryptedThreads() {
@@ -41,6 +43,11 @@ function createHarness() {
       tokenType: 'bearer',
       expiresInSeconds: 5_184_000,
     }),
+    refreshLongLivedToken: vi.fn().mockResolvedValue({
+      accessToken: 'refreshed-token',
+      tokenType: 'bearer',
+      expiresInSeconds: 5_184_000,
+    }),
     getProfile: vi.fn().mockResolvedValue({
       id: '12345',
       username: 'recruitops',
@@ -50,6 +57,12 @@ function createHarness() {
   const clients = { create: vi.fn().mockReturnValue(provider) };
   const cipher = {
     encrypt: vi.fn().mockReturnValue(encryptedThreads()),
+    decrypt: vi.fn().mockReturnValue({
+      accessToken: 'long-token',
+      tokenType: 'bearer',
+      scopes: ['threads_basic', 'threads_content_publish'],
+      expiresAt: '2026-11-28T01:00:00.000Z',
+    }),
   };
   const repository = {
     list: vi.fn().mockResolvedValue([]),
@@ -60,6 +73,19 @@ function createHarness() {
       displayName: 'RecruitOps',
       expiresAt: '2026-11-28T01:00:00.000Z',
     }),
+    findRefreshTarget: vi.fn().mockResolvedValue({
+      id: accountId,
+      externalAccountId: '12345',
+      displayName: 'RecruitOps',
+      status: 'CONNECTED',
+      scopes: ['threads_basic', 'threads_content_publish'],
+      expiresAt: new Date('2026-11-28T01:00:00.000Z'),
+      credentialRef,
+      credentialUpdatedAt: new Date('2026-09-29T00:30:00.000Z'),
+      credential: encryptedThreads(),
+    }),
+    persistRefresh: vi.fn().mockResolvedValue(undefined),
+    markStatus: vi.fn().mockResolvedValue(undefined),
   };
   const service = new ThreadsConnectionsService(
     states as unknown as ThreadsOAuthStateStore,
@@ -177,5 +203,84 @@ describe('ThreadsConnectionsService', () => {
         message: 'Threads provider request failed',
       },
     });
+  });
+
+  it('refreshes and re-encrypts a valid connected Threads credential', async () => {
+    const now = new Date('2026-09-29T01:00:00.000Z');
+    const { service, provider, cipher, repository } = createHarness();
+
+    const result = await service.refresh(accountId, now);
+
+    expect(cipher.decrypt).toHaveBeenCalledWith(encryptedThreads());
+    expect(provider.refreshLongLivedToken).toHaveBeenCalledWith('long-token');
+    expect(provider.getProfile).toHaveBeenCalledWith('refreshed-token');
+    expect(cipher.encrypt).toHaveBeenCalledWith('THREADS', {
+      accessToken: 'refreshed-token',
+      tokenType: 'bearer',
+      scopes: ['threads_basic', 'threads_content_publish'],
+      expiresAt: '2026-11-28T01:00:00.000Z',
+    });
+    expect(repository.persistRefresh).toHaveBeenCalledWith({
+      accountId,
+      credentialRef,
+      expectedCredentialUpdatedAt: new Date('2026-09-29T00:30:00.000Z'),
+      displayName: 'RecruitOps',
+      expiresAt: '2026-11-28T01:00:00.000Z',
+      credential: encryptedThreads(),
+    });
+    expect(result.refreshedAt).toBe('2026-09-29T01:00:00.000Z');
+    expect(JSON.stringify(result)).not.toContain('refreshed-token');
+  });
+
+  it('marks an already expired credential before making a provider request', async () => {
+    const now = new Date('2026-09-29T01:00:00.000Z');
+    const { service, repository, provider } = createHarness();
+    repository.findRefreshTarget.mockResolvedValueOnce({
+      id: accountId,
+      externalAccountId: '12345',
+      displayName: 'RecruitOps',
+      status: 'CONNECTED',
+      scopes: ['threads_basic', 'threads_content_publish'],
+      expiresAt: new Date('2026-09-29T00:59:59.000Z'),
+      credentialRef,
+      credentialUpdatedAt: new Date('2026-09-29T00:30:00.000Z'),
+      credential: encryptedThreads(),
+    });
+
+    await expect(service.refresh(accountId, now)).rejects.toMatchObject({
+      response: expect.objectContaining({
+        code: 'THREADS_CREDENTIAL_EXPIRED_RECONNECT_REQUIRED',
+      }),
+    });
+    expect(repository.markStatus).toHaveBeenCalledWith(accountId, 'EXPIRED');
+    expect(provider.refreshLongLivedToken).not.toHaveBeenCalled();
+  });
+
+  it('marks a provider-invalid token expired and requires a later reconnect', async () => {
+    const { service, provider, repository } = createHarness();
+    provider.refreshLongLivedToken.mockRejectedValueOnce(
+      new ThreadsConnectionError('THREADS_TOKEN_REFRESH_FAILED_PROVIDER_190', 401),
+    );
+
+    await expect(
+      service.refresh(accountId, new Date('2026-09-29T01:00:00.000Z')),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'THREADS_TOKEN_REFRESH_FAILED_PROVIDER_190' }),
+    });
+    expect(repository.markStatus).toHaveBeenCalledWith(accountId, 'EXPIRED');
+    expect(repository.persistRefresh).not.toHaveBeenCalled();
+  });
+
+  it('fails closed and marks error when a refreshed token resolves to another account', async () => {
+    const { service, provider, repository } = createHarness();
+    provider.getProfile.mockResolvedValueOnce({ id: '99999', username: 'different-user' });
+
+    await expect(
+      service.refresh(accountId, new Date('2026-09-29T01:00:00.000Z')),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'THREADS_REFRESH_ACCOUNT_MISMATCH' }),
+    });
+    expect(repository.markStatus).toHaveBeenCalledWith(accountId, 'ERROR');
+    expect(repository.persistRefresh).not.toHaveBeenCalled();
   });
 });
