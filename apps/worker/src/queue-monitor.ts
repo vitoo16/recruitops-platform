@@ -112,13 +112,18 @@ export function startPublicationQueueMonitor(input: {
 }): { close(): Promise<void> } {
   const config = input.config ?? defaultPublicationQueueMonitorConfig;
   const openQueue = input.openQueue ?? createPublicationQueue;
-  const handlePromise = openQueue(input.redisUrl);
+  let handlePromise: Promise<PublicationQueueHandle> | undefined;
   let closed = false;
+
+  const getHandle = () => {
+    handlePromise ??= openQueue(input.redisUrl);
+    return handlePromise;
+  };
 
   const sample = async () => {
     if (closed) return;
     try {
-      const handle = await handlePromise;
+      const handle = await getHandle();
       await samplePublicationQueue(handle.queue, input.logger, config);
     } catch {
       input.logger.error('publication_queue_monitor_error', {
@@ -129,13 +134,13 @@ export function startPublicationQueueMonitor(input: {
 
   const timer = setInterval(() => void sample(), config.intervalMs);
   timer.unref?.();
-  void sample();
 
   return {
     async close() {
       if (closed) return;
       closed = true;
       clearInterval(timer);
+      if (!handlePromise) return;
       const handle = await handlePromise.catch(() => undefined);
       await handle?.close();
     },
