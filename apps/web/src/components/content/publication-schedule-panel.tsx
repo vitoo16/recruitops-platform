@@ -192,13 +192,19 @@ export function PublicationSchedulePanel({
       ) : null}
 
       {validationError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {t('futureRequired')}
         </p>
       ) : null}
 
       {errorStatus !== null ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {errorStatus === 503 ? t('queueUnconfirmed') : t('scheduleFailed')}
         </p>
       ) : null}
@@ -225,7 +231,9 @@ export function PublicationSchedulePanel({
 
       <div className="space-y-4 border-t pt-5" aria-labelledby="publication-calendar-title">
         <div>
-          <p className="text-sm font-medium text-[var(--content-secondary)]">{t('calendarEyebrow')}</p>
+          <p className="text-sm font-medium text-[var(--content-secondary)]">
+            {t('calendarEyebrow')}
+          </p>
           <h4 id="publication-calendar-title" className="mt-1 font-semibold">
             {t('calendarTitle')}
           </h4>
@@ -250,7 +258,9 @@ export function PublicationSchedulePanel({
                         className="flex min-w-0 flex-wrap items-start justify-between gap-3 rounded-xl border bg-[var(--surface-subtle)] px-4 py-3"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{publication.destination.name}</p>
+                          <p className="truncate text-sm font-medium">
+                            {publication.destination.name}
+                          </p>
                           <p className="mt-1 flex items-center gap-2 text-sm text-[var(--content-secondary)]">
                             <Clock3 className="size-4 shrink-0" aria-hidden="true" />
                             <time dateTime={publication.scheduledAt!}>

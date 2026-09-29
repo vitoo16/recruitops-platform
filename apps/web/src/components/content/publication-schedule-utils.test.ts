@@ -1,6 +1,10 @@
 import type { PublicationStatusRecord } from '@recruitops/contracts';
 import { describe, expect, it } from 'vitest';
-import { localDateValue, localScheduleToIso, scheduledPublications } from './publication-schedule-utils';
+import {
+  localDateValue,
+  localScheduleToIso,
+  scheduledPublications,
+} from './publication-schedule-utils';
 
 function status(id: string, state: PublicationStatusRecord['state'], scheduledAt: string | null) {
   return {

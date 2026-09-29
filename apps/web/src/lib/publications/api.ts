@@ -51,10 +51,15 @@ export function schedulePublication(
   accessToken: string,
   command: SchedulePublicationCommand,
 ) {
-  return requestJson(SchedulePublicationResponseSchema, `${apiUrl}/publications/schedule`, accessToken, {
-    method: 'POST',
-    body: JSON.stringify(command),
-  });
+  return requestJson(
+    SchedulePublicationResponseSchema,
+    `${apiUrl}/publications/schedule`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify(command),
+    },
+  );
 }
 
 export function getPublicationStatus(apiUrl: string, accessToken: string, postVariantId: string) {

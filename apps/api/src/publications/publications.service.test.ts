@@ -58,8 +58,8 @@ function persisted(
 }
 
 function statusRow(
-  state: 'PENDING' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'RETRY_WAITING' | 'FAILED' =
-    'FAILED',
+  state:
+    'PENDING' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'RETRY_WAITING' | 'FAILED' = 'FAILED',
   lastErrorCode: string | null = 'PROVIDER_TEMPORARY_ERROR',
 ) {
   return {
