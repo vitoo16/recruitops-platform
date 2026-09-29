@@ -8,7 +8,8 @@ const inheritedEnv = Object.fromEntries(
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  globalTimeout: 120_000,
+  timeout: 20_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
@@ -25,7 +26,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm exec next dev --hostname 127.0.0.1 --port 3100',
     url: 'http://127.0.0.1:3100',
-    timeout: 120_000,
+    timeout: 45_000,
     reuseExistingServer: !process.env.CI,
     env: {
       ...inheritedEnv,
