@@ -6,7 +6,6 @@
     "dev": "next dev",
     "prebuild": "pnpm --filter @recruitops/contracts build",
     "build": "next build",
-    "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --exclude \"e2e/**\"",
     "test:e2e": "playwright test"
