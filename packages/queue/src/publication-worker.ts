@@ -71,10 +71,22 @@ export function validatePublicationQueueJob(input: unknown): PublicationQueueJob
     throw new Error('PUBLICATION_SCHEDULED_AT_INVALID');
   }
 
+  let correlationId: string | undefined;
+  if (candidate.correlationId !== undefined) {
+    if (typeof candidate.correlationId !== 'string') {
+      throw new Error('PUBLICATION_CORRELATION_ID_INVALID');
+    }
+    correlationId = candidate.correlationId.trim();
+    if (!correlationId || correlationId.length > 128) {
+      throw new Error('PUBLICATION_CORRELATION_ID_INVALID');
+    }
+  }
+
   return {
     publicationId,
     idempotencyKey: expectedIdempotencyKey,
     scheduledAt: new Date(candidate.scheduledAt).toISOString(),
+    ...(correlationId ? { correlationId } : {}),
   };
 }
 
