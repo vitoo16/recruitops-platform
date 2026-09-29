@@ -1,8 +1,4 @@
-export const linkedinMemberConnectionScopes = [
-  'openid',
-  'profile',
-  'w_member_social',
-] as const;
+export const linkedinMemberConnectionScopes = ['openid', 'profile', 'w_member_social'] as const;
 
 export interface LinkedInConnectionConfig {
   clientId: string;
@@ -45,9 +41,7 @@ function normalizeRedirectUri(value: string): string {
     const url = new URL(redirectUri);
     const localDevelopment =
       url.protocol === 'http:' &&
-      (url.hostname === 'localhost' ||
-        url.hostname === '127.0.0.1' ||
-        url.hostname === '[::1]');
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]');
     if (url.protocol !== 'https:' && !localDevelopment) {
       throw new Error('redirect uri must use https outside localhost');
     }
@@ -124,11 +118,7 @@ function parseProfile(input: unknown): LinkedInMemberProfile {
     throw new LinkedInConnectionError('LINKEDIN_PROFILE_RESPONSE_INVALID');
   }
   const data = input as Record<string, unknown>;
-  if (
-    typeof data.sub !== 'string' ||
-    data.sub.trim().length === 0 ||
-    data.sub.length > 255
-  ) {
+  if (typeof data.sub !== 'string' || data.sub.trim().length === 0 || data.sub.length > 255) {
     throw new LinkedInConnectionError('LINKEDIN_PROFILE_RESPONSE_INVALID');
   }
   if (data.name !== undefined && typeof data.name !== 'string') {
