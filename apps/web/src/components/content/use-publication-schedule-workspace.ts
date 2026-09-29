@@ -73,11 +73,11 @@ export function usePublicationScheduleWorkspace({
   const scheduleTimeIsFuture = scheduledAtIso !== null && Date.parse(scheduledAtIso) > Date.now();
   const canSchedule = Boolean(
     canMutate &&
-      postVariantId &&
-      readiness?.canPublish &&
-      scheduleDestinationId &&
-      scheduleTimeIsFuture &&
-      !schedulingPublication,
+    postVariantId &&
+    readiness?.canPublish &&
+    scheduleDestinationId &&
+    scheduleTimeIsFuture &&
+    !schedulingPublication,
   );
 
   const resetIntentResult = useCallback(() => {
