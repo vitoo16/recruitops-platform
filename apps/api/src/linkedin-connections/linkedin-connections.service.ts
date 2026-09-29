@@ -44,7 +44,9 @@ function parseGrantedScopes(scope: string | undefined): readonly string[] {
     .split(/[ ,]+/u)
     .map((value) => value.trim())
     .filter(Boolean);
-  const missing = linkedinMemberConnectionScopes.filter((required) => !scopes.includes(required));
+  const missing = linkedinMemberConnectionScopes.filter(
+    (required) => !scopes.includes(required),
+  );
   if (missing.length > 0) {
     throw new BadGatewayException({
       code: 'LINKEDIN_OAUTH_REQUIRED_SCOPE_MISSING',
@@ -104,7 +106,9 @@ export class LinkedInConnectionsService {
       const token = await provider.exchangeAuthorizationCode(request.code!);
       const profile = await provider.getProfile(token.accessToken);
       const scopes = parseGrantedScopes(token.scope);
-      const expiresAt = new Date(Date.now() + token.expiresInSeconds * 1_000).toISOString();
+      const expiresAt = new Date(
+        Date.now() + token.expiresInSeconds * 1_000,
+      ).toISOString();
       const displayName = profile.name ?? 'LinkedIn member';
       const credential = this.cipher.encrypt('LINKEDIN', {
         accessToken: token.accessToken,
