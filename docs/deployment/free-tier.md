@@ -127,6 +127,8 @@ REDIS_URL=<private/internal Render Key Value connection URL>
 
 Prefer the provider's private/internal connection path from services in the same region. Never commit the credential-bearing URL.
 
+For production BullMQ operation, treat Key Value as a queue broker rather than a cache and use a queue-safe `noeviction` policy before increasing worker capacity. Capacity/connection pressure must be monitored as worker concurrency or instance count increases.
+
 ## QStash
 
 The Render API can sleep when idle. Future scheduled publishing may use QStash to call an authenticated API endpoint at a scheduled time. QStash is only a delivery/wake-up bridge, not the business source of truth.
@@ -158,9 +160,13 @@ Leave future social credentials unset until each integration phase starts.
 - Render Free Web Services can sleep after inactivity and cold-start on the next request.
 - Free compute, bandwidth, build minutes, storage and Redis capacity are bounded.
 - Do not promise exact-time publishing from a sleeping free API.
-- Do not deploy business-critical background processing until an always-on worker is available.
+- Do not claim an always-on publication worker until a dedicated hosted worker is explicitly provisioned and verified.
 
-## Production upgrade path
+## Production worker upgrade path
+
+The repository worker runtime is designed for a Render Background Worker, but the current `render.yaml` intentionally does not provision one.
+
+The production progression is:
 
 ```text
 Render Static Site
@@ -169,7 +175,15 @@ Always-on API
        |
 PostgreSQL + Object Storage
        |
-Redis queue
+Queue-safe Key Value broker
        |
-Dedicated Worker(s)
+1 Background Worker
+       |
+Measured concurrency tuning
+       |
+Manual horizontal scale
+       |
+Professional+ autoscaling if justified
 ```
+
+See [`../architecture/worker-scaling.md`](../architecture/worker-scaling.md) for the provider-aware capacity model, database/Redis budgets, graceful shutdown requirements, and the gates that must be satisfied before hosted worker activation or scale-out.

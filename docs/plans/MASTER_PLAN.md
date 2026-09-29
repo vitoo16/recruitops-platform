@@ -154,7 +154,7 @@
 - [x] Add dependency/security scanning.
 - [x] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
-- [ ] Add platform-specific worker scaling strategy.
+- [x] Add platform-specific worker scaling strategy.
 - [ ] Execute accessibility review.
 - [ ] Execute web performance review.
 - [ ] Execute security review.
