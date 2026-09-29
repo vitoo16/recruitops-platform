@@ -2,7 +2,9 @@ import { randomBytes } from 'node:crypto';
 import {
   BadGatewayException,
   BadRequestException,
+  ConflictException,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
@@ -37,6 +39,12 @@ const ThreadsOAuthCallbackSchema = z
       });
     }
   });
+
+function isExpired(expiresAt: Date | string | null | undefined, now: Date): boolean {
+  if (!expiresAt) return false;
+  const value = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
+  return Number.isFinite(value.getTime()) && value.getTime() <= now.getTime();
+}
 
 @Injectable()
 export class ThreadsConnectionsService {
@@ -123,6 +131,110 @@ export class ThreadsConnectionsService {
     }
   }
 
+  async refresh(accountId: string, now = new Date()) {
+    this.assertCredentialEncryptionConfigured();
+    const target = await this.repository.findRefreshTarget(accountId);
+    if (!target) {
+      throw new NotFoundException({
+        code: 'THREADS_ACCOUNT_NOT_FOUND',
+        message: 'Threads account was not found',
+      });
+    }
+
+    if (target.status !== 'CONNECTED') {
+      throw new BadRequestException({
+        code: 'THREADS_RECONNECT_REQUIRED',
+        message: 'Threads account must be reconnected before its credential can be refreshed',
+      });
+    }
+
+    if (
+      !target.credential ||
+      !target.credentialRef ||
+      !target.credentialUpdatedAt ||
+      !target.scopes.includes('threads_basic')
+    ) {
+      await this.repository.markStatus(accountId, 'ERROR');
+      throw new ConflictException({
+        code: 'THREADS_CREDENTIAL_INVALID_RECONNECT_REQUIRED',
+        message: 'Stored Threads credential is incomplete and must be reconnected',
+      });
+    }
+
+    let payload;
+    try {
+      payload = this.cipher.decrypt(target.credential);
+    } catch {
+      await this.repository.markStatus(accountId, 'ERROR');
+      throw new ConflictException({
+        code: 'THREADS_CREDENTIAL_INVALID_RECONNECT_REQUIRED',
+        message: 'Stored Threads credential could not be decrypted and must be reconnected',
+      });
+    }
+
+    if (isExpired(target.expiresAt, now) || isExpired(payload.expiresAt, now)) {
+      await this.repository.markStatus(accountId, 'EXPIRED');
+      throw new BadRequestException({
+        code: 'THREADS_CREDENTIAL_EXPIRED_RECONNECT_REQUIRED',
+        message: 'Threads credential has expired and must be reconnected',
+      });
+    }
+
+    const provider = this.clients.create();
+    try {
+      const refreshed = await provider.refreshLongLivedToken(payload.accessToken);
+      if (!refreshed.expiresInSeconds || refreshed.expiresInSeconds <= 0) {
+        throw new ThreadsConnectionError('THREADS_TOKEN_REFRESH_RESPONSE_INVALID');
+      }
+
+      const profile = await provider.getProfile(refreshed.accessToken);
+      if (profile.id !== target.externalAccountId) {
+        await this.repository.markStatus(accountId, 'ERROR');
+        throw new BadGatewayException({
+          code: 'THREADS_REFRESH_ACCOUNT_MISMATCH',
+          message: 'Refreshed Threads credential did not match the connected account',
+        });
+      }
+
+      const expiresAt = new Date(now.getTime() + refreshed.expiresInSeconds * 1_000).toISOString();
+      const displayName = profile.name ?? `@${profile.username}`;
+      const credential = this.cipher.encrypt('THREADS', {
+        accessToken: refreshed.accessToken,
+        ...(refreshed.tokenType || payload.tokenType
+          ? { tokenType: refreshed.tokenType ?? payload.tokenType }
+          : {}),
+        scopes: payload.scopes.length > 0 ? payload.scopes : [...target.scopes],
+        expiresAt,
+      });
+
+      await this.repository.persistRefresh({
+        accountId,
+        credentialRef: target.credentialRef,
+        expectedCredentialUpdatedAt: target.credentialUpdatedAt,
+        displayName,
+        expiresAt,
+        credential,
+      });
+
+      return {
+        account: {
+          id: accountId,
+          externalAccountId: target.externalAccountId,
+          displayName,
+          status: 'CONNECTED' as const,
+          scopes: target.scopes,
+          expiresAt,
+        },
+        refreshedAt: now.toISOString(),
+      };
+    } catch (error) {
+      if (error instanceof ThreadsConnectionError && this.isExpiredProviderCredential(error)) {
+        await this.repository.markStatus(accountId, 'EXPIRED');
+      }
+      this.rethrowProviderError(error);
+    }
+  }
+
   private assertCredentialEncryptionConfigured(): void {
     try {
       parseOAuthCredentialKeyring();
@@ -132,6 +244,10 @@ export class ThreadsConnectionsService {
         message: 'OAuth credential encryption is not configured',
       });
     }
+  }
+
+  private isExpiredProviderCredential(error: ThreadsConnectionError): boolean {
+    return error.status === 401 || error.code.includes('PROVIDER_190');
   }
 
   private rethrowProviderError(error: unknown): never {
