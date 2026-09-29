@@ -120,10 +120,7 @@ function redisConnectionOptions(url: string) {
   };
 }
 
-async function createRuntime(
-  publicationId: string,
-  initialState: PublicationState,
-) {
+async function createRuntime(publicationId: string, initialState: PublicationState) {
   const queueRuntime = await createPublicationQueue(redisUrl);
   await queueRuntime.queue.obliterate({ force: true });
 
