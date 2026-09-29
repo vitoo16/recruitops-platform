@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { MediaWorkspacePanel } from './media-workspace-panel';
 import { PostDraftPanel } from './post-draft-panel';
 import { PostVariantMediaPanel } from './post-variant-media-panel';
+import { PublicationSchedulePanel } from './publication-schedule-panel';
 import { PublicationStatusPanel } from './publication-status-panel';
 import { PublishNowPanel } from './publish-now-panel';
 import { useContentStudio } from './use-content-studio';
@@ -107,6 +108,28 @@ export function ContentMediaWorkspace() {
         onDestinationChange={studio.setPublishDestinationId}
         onRefreshReadiness={() => void studio.loadPublishReadiness()}
         onPublishNow={() => void studio.queuePublishNow()}
+      />
+
+      <PublicationSchedulePanel
+        postVariantId={studio.selectedVariant?.id ?? null}
+        readiness={studio.publishReadiness}
+        statuses={studio.publicationStatuses}
+        statusesTruncated={studio.publicationStatusesTruncated}
+        destinationId={studio.scheduleDestinationId}
+        scheduleDate={studio.scheduleDate}
+        scheduleTime={studio.scheduleTime}
+        timeZone={studio.scheduleTimeZone}
+        minimumDate={studio.minimumScheduleDate}
+        scheduling={studio.schedulingPublication}
+        validationError={studio.scheduleValidationError}
+        errorStatus={studio.scheduleErrorStatus}
+        result={studio.scheduleResult}
+        canSchedule={studio.canSchedule}
+        canMutate={studio.canMutate}
+        onDestinationChange={studio.setScheduleDestinationId}
+        onDateChange={studio.setScheduleDate}
+        onTimeChange={studio.setScheduleTime}
+        onSchedule={() => void studio.schedulePublication()}
       />
 
       <PublicationStatusPanel
