@@ -151,7 +151,7 @@
 - [ ] Add queue metrics and alerts.
 - [ ] Add provider latency/error/rate-limit telemetry.
 - [ ] Add database performance review/indexes.
-- [ ] Add dependency/security scanning.
+- [x] Add dependency/security scanning.
 - [ ] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
 - [ ] Add platform-specific worker scaling strategy.
