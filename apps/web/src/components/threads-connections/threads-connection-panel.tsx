@@ -86,7 +86,7 @@ export function ThreadsConnectionPanel() {
         <Button
           type="button"
           className="min-h-11"
-          disabled={workspace.redirecting}
+          disabled={workspace.redirecting || workspace.refreshingAccountId !== null}
           onClick={() => void workspace.connect()}
         >
           <AtSign className="mr-2 size-4" aria-hidden="true" />
@@ -100,7 +100,7 @@ export function ThreadsConnectionPanel() {
           type="button"
           variant="outline"
           className="min-h-11"
-          disabled={workspace.loading}
+          disabled={workspace.loading || workspace.refreshingAccountId !== null}
           onClick={() => void workspace.refresh()}
         >
           <RefreshCw
@@ -125,35 +125,75 @@ export function ThreadsConnectionPanel() {
 
         {workspace.accounts.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2">
-            {workspace.accounts.map((account) => (
-              <article
-                key={account.id}
-                className="min-w-0 rounded-xl border bg-[var(--surface-subtle)] p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <AtSign className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{account.displayName}</h3>
-                    <p className="mt-2 break-all text-xs text-[var(--content-secondary)]">
-                      {t('accountId', { id: account.externalAccountId })}
-                    </p>
-                    <p className="mt-2 text-sm text-[var(--content-primary)]">
-                      {t('status', { value: t(`statusValues.${account.status}`) })}
-                    </p>
-                    {account.expiresAt ? (
-                      <p className="mt-2 text-sm text-[var(--content-secondary)]">
-                        {t('expires', {
-                          value: dateFormatter.format(new Date(account.expiresAt)),
-                        })}
+            {workspace.accounts.map((account) => {
+              const refreshing = workspace.refreshingAccountId === account.id;
+              const reconnectRequired = account.status !== 'CONNECTED';
+
+              return (
+                <article
+                  key={account.id}
+                  className="min-w-0 rounded-xl border bg-[var(--surface-subtle)] p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AtSign className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold">{account.displayName}</h3>
+                      <p className="mt-2 break-all text-xs text-[var(--content-secondary)]">
+                        {t('accountId', { id: account.externalAccountId })}
                       </p>
-                    ) : null}
-                    <p className="mt-2 break-words text-sm text-[var(--content-secondary)]">
-                      {t('scopes', { value: account.scopes.join(', ') })}
-                    </p>
+                      <p className="mt-2 text-sm text-[var(--content-primary)]">
+                        {t('status', { value: t(`statusValues.${account.status}`) })}
+                      </p>
+                      {account.expiresAt ? (
+                        <p className="mt-2 text-sm text-[var(--content-secondary)]">
+                          {t('expires', {
+                            value: dateFormatter.format(new Date(account.expiresAt)),
+                          })}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 break-words text-sm text-[var(--content-secondary)]">
+                        {t('scopes', { value: account.scopes.join(', ') })}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        {reconnectRequired ? (
+                          <p className="text-sm font-medium text-amber-700" role="status">
+                            {t('reconnectRequired')}
+                          </p>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="min-h-11"
+                            disabled={workspace.refreshingAccountId !== null || workspace.redirecting}
+                            onClick={() => void workspace.refreshCredential(account.id)}
+                          >
+                            <RefreshCw
+                              className="mr-2 size-4 data-[loading=true]:animate-spin motion-reduce:animate-none"
+                              data-loading={refreshing}
+                              aria-hidden="true"
+                            />
+                            {refreshing ? t('refreshingCredential') : t('refreshCredential')}
+                          </Button>
+                        )}
+                      </div>
+
+                      {workspace.refreshedAccountId === account.id ? (
+                        <p className="mt-3 text-sm text-emerald-700" role="status">
+                          {t('credentialRefreshed')}
+                        </p>
+                      ) : null}
+
+                      {workspace.credentialRefreshErrorAccountId === account.id ? (
+                        <p className="mt-3 text-sm text-red-700" role="alert">
+                          {t('credentialRefreshFailed')}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         ) : null}
       </div>
