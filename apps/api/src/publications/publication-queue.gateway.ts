@@ -20,17 +20,28 @@ const alreadyQueuedStates = new Set([
 export class PublicationQueueGateway implements OnModuleDestroy {
   private queueHandlePromise: Promise<PublicationQueueHandle> | undefined;
 
-  async enqueue(publicationId: string, scheduledAt: Date): Promise<void> {
+  async enqueue(
+    publicationId: string,
+    scheduledAt: Date,
+    correlationId?: string,
+  ): Promise<void> {
     const handle = await this.getQueueHandle();
-    await enqueuePublication(handle.queue, { publicationId, scheduledAt });
+    await enqueuePublication(handle.queue, { publicationId, scheduledAt, correlationId });
   }
 
-  async retryFailed(publicationId: string): Promise<PublicationManualRetryAcceptance> {
+  async retryFailed(
+    publicationId: string,
+    correlationId?: string,
+  ): Promise<PublicationManualRetryAcceptance> {
     const handle = await this.getQueueHandle();
     const job = await handle.queue.getJob(publicationId);
 
     if (!job) {
-      await enqueuePublication(handle.queue, { publicationId, scheduledAt: new Date() });
+      await enqueuePublication(handle.queue, {
+        publicationId,
+        scheduledAt: new Date(),
+        correlationId,
+      });
       return 'REENQUEUED';
     }
 
