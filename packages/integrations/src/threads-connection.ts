@@ -215,6 +215,22 @@ export class ThreadsConnectionProvider {
     return parseAccessToken(payload, 'LONG_LIVED_TOKEN_EXCHANGE');
   }
 
+  async refreshLongLivedToken(longLivedAccessToken: string): Promise<ThreadsAccessToken> {
+    const token = requireNonEmpty('ACCESS_TOKEN', longLivedAccessToken);
+    const url = new URL('https://graph.threads.net/refresh_access_token');
+    url.searchParams.set('grant_type', 'th_refresh_token');
+    const payload = await requestJson<unknown>(
+      this.fetchFn,
+      url,
+      {
+        method: 'GET',
+        headers: { authorization: `Bearer ${token}` },
+      },
+      'TOKEN_REFRESH',
+    );
+    return parseAccessToken(payload, 'TOKEN_REFRESH');
+  }
+
   async getProfile(accessToken: string): Promise<ThreadsProfile> {
     const token = requireNonEmpty('ACCESS_TOKEN', accessToken);
     const url = new URL('https://graph.threads.net/me');
