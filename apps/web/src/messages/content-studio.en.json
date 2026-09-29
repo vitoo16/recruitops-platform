@@ -55,5 +55,42 @@
     "alreadyAccepted": "This publication request was already accepted. Current state: {state}.",
     "queueUnconfirmed": "Queue acceptance could not be confirmed. Retry this action without changing the destination; RecruitOps will reuse the same publication ID to avoid duplicates.",
     "publishFailed": "RecruitOps could not start this publication. Refresh readiness and try again."
+  },
+  "publicationStatus": {
+    "eyebrow": "Publication operations",
+    "title": "Status, errors and retry",
+    "description": "Review recent dispatch state for this platform variant. Automatic retries remain worker-owned; manual retry is available only when the previous provider outcome is known to have failed.",
+    "saveVariantFirst": "Save a platform variant before reviewing publication status.",
+    "refresh": "Refresh status",
+    "loading": "Loading publication status…",
+    "loadFailed": "RecruitOps could not load publication status.",
+    "empty": "No publication attempts exist for this platform variant yet.",
+    "state": "State: {value}",
+    "states": {
+      "PENDING": "Pending",
+      "SCHEDULED": "Scheduled",
+      "PUBLISHING": "Publishing",
+      "PROCESSING": "Processing",
+      "PUBLISHED": "Published",
+      "RETRY_WAITING": "Automatic retry waiting",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "platformLabel": "Platform",
+    "attemptsLabel": "Recorded retry attempts",
+    "scheduledLabel": "Scheduled",
+    "publishedLabel": "Published",
+    "nextRetryLabel": "Next automatic retry",
+    "retry": "Retry failed publication",
+    "retrying": "Retrying…",
+    "retryFailed": "RecruitOps could not confirm this manual retry. Refresh status before trying again.",
+    "manualReviewRequired": "Manual retry is blocked because the previous provider outcome may be ambiguous or the publication identity needs review. Verify the provider before taking another action.",
+    "readOnly": "Your role can inspect failures but cannot retry publications.",
+    "truncated": "Showing the 50 most recent publication attempts for this variant.",
+    "retryAcceptance": {
+      "RETRIED": "The failed BullMQ job was moved back to the waiting queue.",
+      "REENQUEUED": "The retained failed job was no longer present, so RecruitOps safely created a new queue job with the same publication identity.",
+      "ALREADY_QUEUED": "This publication is already waiting or being processed; no duplicate retry was added."
+    }
   }
 }
