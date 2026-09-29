@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { MediaWorkspacePanel } from './media-workspace-panel';
 import { PostDraftPanel } from './post-draft-panel';
 import { PostVariantMediaPanel } from './post-variant-media-panel';
+import { PublishNowPanel } from './publish-now-panel';
 import { useContentStudio } from './use-content-studio';
 
 export function ContentMediaWorkspace() {
@@ -90,6 +91,21 @@ export function ContentMediaWorkspace() {
         onToggleMedia={studio.toggleSelectedMedia}
         onMoveMedia={studio.moveSelectedMedia}
         onSaveSelection={() => void studio.saveMediaSelection()}
+      />
+
+      <PublishNowPanel
+        postVariantId={studio.selectedVariant?.id ?? null}
+        readiness={studio.publishReadiness}
+        destinationId={studio.publishDestinationId}
+        loadingReadiness={studio.loadingPublishReadiness}
+        readinessError={studio.publishReadinessError}
+        publishing={studio.publishingNow}
+        publishErrorStatus={studio.publishNowErrorStatus}
+        result={studio.publishNowResult}
+        canMutate={studio.canMutate}
+        onDestinationChange={studio.setPublishDestinationId}
+        onRefreshReadiness={() => void studio.loadPublishReadiness()}
+        onPublishNow={() => void studio.queuePublishNow()}
       />
     </section>
   );
