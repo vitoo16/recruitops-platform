@@ -12,6 +12,7 @@ import {
   WorkerProviderMediaResolutionError,
   type SupabaseProviderMediaSignerConfig,
 } from './provider-media-url-resolver.js';
+import { createProviderTelemetryRegistry } from './provider-telemetry.js';
 import { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 import { createPublicationJobHandler } from './publication-handler.js';
 
@@ -234,7 +235,8 @@ export function startPublicationWorkerRuntime(
         ? { threadsMediaResolver: providerMediaResolver }
         : {}),
     });
-  const handler = createPublicationJobHandler(repository, publishers);
+  const instrumentedPublishers = createProviderTelemetryRegistry(publishers, logger);
+  const handler = createPublicationJobHandler(repository, instrumentedPublishers);
   const worker = (dependencies.createWorker ?? createPublicationWorker)({
     connection: buildRedisConnectionOptions(config.redisUrl),
     handler,
