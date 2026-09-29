@@ -58,6 +58,7 @@ export interface SocialPublisherRegistry {
 export interface PublicationExecutionJob {
   publicationId: string;
   idempotencyKey: string;
+  correlationId?: string | undefined;
 }
 
 export type PublicationExecutionOutcome =
@@ -181,6 +182,7 @@ export async function executePublication(
     socialAccountId: record.socialAccount!.id,
     destinationId: record.destination.id,
     idempotencyKey: record.idempotencyKey,
+    ...(job.correlationId ? { correlationId: job.correlationId } : {}),
     payload: record.payload,
   };
 

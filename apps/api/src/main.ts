@@ -6,7 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NextFunction, Response } from 'express';
 import { parseApiEnv } from '@recruitops/config';
 import { AppModule } from './app.module.js';
-import type { RequestWithContext } from './common/request-context.js';
+import { normalizeIncomingRequestId, type RequestWithContext } from './common/request-context.js';
 import { getSafeRequestPath } from './common/request-path.js';
 
 async function bootstrap() {
@@ -26,8 +26,7 @@ async function bootstrap() {
   });
 
   app.use((request: RequestWithContext, response: Response, next: NextFunction) => {
-    const incoming = request.header('x-request-id');
-    const requestId = incoming && incoming.length <= 128 ? incoming : randomUUID();
+    const requestId = normalizeIncomingRequestId(request.header('x-request-id')) ?? randomUUID();
     const startedAt = Date.now();
 
     request.requestId = requestId;

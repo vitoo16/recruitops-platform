@@ -70,6 +70,7 @@ function registry(publisher?: SocialPublisher) {
 const job = {
   publicationId: baseRecord.id,
   idempotencyKey: baseRecord.idempotencyKey,
+  correlationId: 'request-123',
 };
 
 describe('executePublication', () => {
@@ -87,6 +88,7 @@ describe('executePublication', () => {
       expect.objectContaining({
         platform: 'FACEBOOK',
         idempotencyKey: baseRecord.idempotencyKey,
+        correlationId: 'request-123',
       }),
     );
     expect(patches[0]).toMatchObject({ state: 'PUBLISHING' });

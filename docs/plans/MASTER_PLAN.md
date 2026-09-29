@@ -147,7 +147,7 @@
 
 - [ ] Add frontend error monitoring.
 - [ ] Add API/worker error monitoring.
-- [ ] Add tracing/correlation across API → queue → worker → provider.
+- [x] Add tracing/correlation across API → queue → worker → provider (normalized bounded request IDs are persisted on Publication, propagated in BullMQ jobs, validated by the worker, forwarded through vendor-neutral `PublishCommand`, and reused for manual/automatic retry chains with regression coverage).
 - [ ] Add queue metrics and alerts.
 - [ ] Add provider latency/error/rate-limit telemetry.
 - [x] Add database performance review/indexes.

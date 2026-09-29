@@ -31,6 +31,21 @@ describe('publication queue scheduling', () => {
     });
   });
 
+  it('carries a bounded correlation id in the queue payload', () => {
+    const scheduledAt = new Date('2026-09-27T16:00:00.000Z');
+
+    expect(
+      buildPublicationQueueJob({ publicationId, scheduledAt, correlationId: ' request-123 ' }),
+    ).toMatchObject({
+      publicationId,
+      correlationId: 'request-123',
+    });
+
+    expect(() =>
+      buildPublicationQueueJob({ publicationId, scheduledAt, correlationId: ' '.repeat(3) }),
+    ).toThrow('correlationId must be 1-128 characters');
+  });
+
   it('never creates a negative delay for publish-now scheduling', () => {
     const scheduledAt = new Date('2026-09-27T15:00:00.000Z');
     expect(
@@ -46,11 +61,15 @@ describe('publication queue scheduling', () => {
     const queue = { add } as PublicationQueueLike;
     const scheduledAt = new Date('2026-09-27T16:00:00.000Z');
 
-    await enqueuePublication(queue, { publicationId, scheduledAt }, scheduledAt.getTime());
+    await enqueuePublication(
+      queue,
+      { publicationId, scheduledAt, correlationId: 'request-123' },
+      scheduledAt.getTime(),
+    );
 
     expect(add).toHaveBeenCalledWith(
       PUBLICATION_JOB_NAME,
-      expect.objectContaining({ publicationId }),
+      expect.objectContaining({ publicationId, correlationId: 'request-123' }),
       expect.objectContaining({ jobId: publicationId, delay: 0 }),
     );
   });

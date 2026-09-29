@@ -13,11 +13,13 @@ export interface PublicationQueueJob {
   publicationId: string;
   idempotencyKey: string;
   scheduledAt: string;
+  correlationId?: string | undefined;
 }
 
 export interface SchedulePublicationInput {
   publicationId: string;
   scheduledAt: Date;
+  correlationId?: string | undefined;
 }
 
 export interface PublicationQueueLike {
@@ -28,16 +30,25 @@ export interface PublicationQueueLike {
   ): Promise<unknown>;
 }
 
+function normalizeCorrelationId(input: string | undefined): string | undefined {
+  if (input === undefined) return undefined;
+  const value = input.trim();
+  if (!value || value.length > 128) throw new RangeError('correlationId must be 1-128 characters');
+  return value;
+}
+
 export function buildPublicationQueueJob(input: SchedulePublicationInput): PublicationQueueJob {
   const { publicationId } = PublicationIdentitySchema.parse({ publicationId: input.publicationId });
   if (Number.isNaN(input.scheduledAt.getTime())) {
     throw new RangeError('scheduledAt must be a valid Date');
   }
 
+  const correlationId = normalizeCorrelationId(input.correlationId);
   return {
     publicationId,
     idempotencyKey: buildPublicationIdempotencyKey(publicationId),
     scheduledAt: input.scheduledAt.toISOString(),
+    ...(correlationId ? { correlationId } : {}),
   };
 }
 

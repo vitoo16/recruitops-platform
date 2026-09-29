@@ -109,6 +109,7 @@ export interface PublishCommand {
   socialAccountId: string;
   destinationId: string;
   idempotencyKey: string;
+  correlationId?: string | undefined;
   payload: SocialPostPayload;
 }
 

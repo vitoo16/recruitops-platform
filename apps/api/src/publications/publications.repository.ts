@@ -52,6 +52,7 @@ export interface PersistedPublication {
   state: PublicationState;
   idempotencyKey: string;
   scheduledAt: Date | null;
+  correlationId: string | null;
   lastErrorCode: string | null;
 }
 
@@ -64,6 +65,7 @@ export interface PublicationStatusRow {
   publishedAt: Date | null;
   nextRetryAt: Date | null;
   retryCount: number;
+  correlationId: string | null;
   lastErrorCode: string | null;
   lastErrorMessage: string | null;
   updatedAt: Date;
@@ -83,6 +85,7 @@ const persistedPublicationSelect = {
   state: true,
   idempotencyKey: true,
   scheduledAt: true,
+  correlationId: true,
   lastErrorCode: true,
 } as const;
 
@@ -95,6 +98,7 @@ const publicationStatusSelect = {
   publishedAt: true,
   nextRetryAt: true,
   retryCount: true,
+  correlationId: true,
   lastErrorCode: true,
   lastErrorMessage: true,
   updatedAt: true,
@@ -215,6 +219,7 @@ export class PublicationsRepository {
     command: PublishNowCommand,
     socialAccountId: string,
     scheduledAt: Date,
+    correlationId?: string,
   ): Promise<PersistedPublication> {
     const idempotencyKey = buildPublicationIdempotencyKey(command.publicationId);
     const publication = await this.database.client.publication.upsert({
@@ -227,6 +232,7 @@ export class PublicationsRepository {
         state: 'PENDING',
         idempotencyKey,
         scheduledAt,
+        ...(correlationId ? { correlationId } : {}),
       },
       update: {},
       select: persistedPublicationSelect,
@@ -240,6 +246,7 @@ export class PublicationsRepository {
     command: SchedulePublicationCommand,
     socialAccountId: string,
     scheduledAt: Date,
+    correlationId?: string,
   ): Promise<PersistedPublication> {
     const idempotencyKey = buildPublicationIdempotencyKey(command.publicationId);
     const publication = await this.database.client.publication.upsert({
@@ -252,6 +259,7 @@ export class PublicationsRepository {
         state: 'SCHEDULED',
         idempotencyKey,
         scheduledAt,
+        ...(correlationId ? { correlationId } : {}),
       },
       update: {},
       select: persistedPublicationSelect,

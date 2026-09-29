@@ -6,11 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
+import type { RequestWithContext } from '../common/request-context.js';
 import { PublicationsService } from './publications.service.js';
 
 @Controller('publications')
@@ -35,15 +37,15 @@ export class PublicationsController {
   @Post('publish-now')
   @Header('Cache-Control', 'no-store')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')
-  publishNow(@Body() body: unknown) {
-    return this.publications.publishNow(body);
+  publishNow(@Body() body: unknown, @Req() request: RequestWithContext) {
+    return this.publications.publishNow(body, new Date(), request.requestId);
   }
 
   @Post('schedule')
   @Header('Cache-Control', 'no-store')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')
-  schedulePublication(@Body() body: unknown) {
-    return this.publications.schedulePublication(body);
+  schedulePublication(@Body() body: unknown, @Req() request: RequestWithContext) {
+    return this.publications.schedulePublication(body, new Date(), request.requestId);
   }
 
   @Post(':publicationId/retry')

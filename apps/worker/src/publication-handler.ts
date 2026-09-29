@@ -14,6 +14,7 @@ export function createPublicationJobHandler(
       {
         publicationId: job.publicationId,
         idempotencyKey: job.idempotencyKey,
+        ...(job.correlationId ? { correlationId: job.correlationId } : {}),
       },
       repository,
       publishers,
