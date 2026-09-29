@@ -4,7 +4,7 @@
 
 The publication executor is the stateful boundary between a validated BullMQ publication job and a vendor-neutral `SocialPublisher` implementation.
 
-It deliberately does not own provider credentials, provider SDK setup, or media URL generation. Those remain runtime resolver responsibilities.
+It deliberately does not own provider credentials, provider SDK setup, media URL generation, or operator-facing retry decisions. Provider context stays behind runtime resolvers, while status/retry commands remain an API control-plane concern over the durable `Publication` record.
 
 ## Execution rules
 
@@ -58,41 +58,33 @@ Private storage keys do not enter the generic executor payload.
 
 `PrismaProviderMediaResolver` is the worker-only bridge from explicit `payload.mediaIds` to provider-readable media sources. It performs a narrow Prisma lookup after publication selection, preserves the incoming media order, rejects duplicate/excessive IDs, fails closed when an asset is missing, and refuses `DOCUMENT` assets.
 
-`SupabaseProviderMediaUrlSigner` then creates a short-lived signed URL from the private `recruitops-private` bucket using the server-only modern Supabase secret-key form. The signer accepts only HTTPS Supabase URLs, validates the returned signed URL remains on the configured Supabase origin, and bounds the signed URL lifetime to 60–3600 seconds (900 seconds by default).
+`SupabaseProviderMediaUrlSigner` creates a short-lived signed URL from the private `recruitops-private` bucket using the server-only Supabase secret-key form. The signer accepts only HTTPS Supabase URLs, validates that returned URLs remain on the configured Supabase origin, and bounds lifetime to 60–3600 seconds with a 900-second default.
 
-The signed URL is an in-memory bearer capability used only for the immediate provider request. RecruitOps does not persist/log the URL, query token, private storage key, or Supabase secret key. Browser contracts continue to exchange opaque MediaAsset UUIDs only.
+The signed URL is an in-memory bearer capability used only for the immediate provider request. RecruitOps does not persist or log the URL, query token, private storage key, or Supabase secret key. Browser contracts continue to exchange opaque MediaAsset UUIDs only.
 
-The resolver implements both the Instagram and Threads media-resolver interfaces so those provider runtimes can share one private-media boundary.
+The resolver implements both the Instagram and Threads media-resolver interfaces so those provider runtimes share one private-media boundary.
 
 ## Queue handler composition
 
 `createPublicationJobHandler` adapts the validated BullMQ `PublicationQueueJob` into the executor identity contract. Queue scheduling metadata is not treated as provider input; the durable Publication row remains the source of truth for execution state.
 
+The BullMQ job ID is the Publication UUID. Queue retries and manual retries therefore preserve the same business identity instead of creating a second Publication record.
+
 ## Credential and publisher runtime
 
 OAuth credential crypto is shared between API writes and worker reads through the same AES-256-GCM implementation and payload contract. A provider-specific resolver loads the exact `Destination -> SocialAccount -> SocialCredential` relation only after the executor has selected a publisher, verifies account/platform ownership again, and decrypts in memory at the execution point.
 
-Facebook remains always registered in the current production registry.
+Facebook remains registered by default in the current worker registry.
 
-Instagram now has a complete worker composition path but is **disabled by default**. It is registered only when `PUBLISHING_INSTAGRAM_ENABLED=true` and valid private-media signing configuration is present. Enabling the flag without valid `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY`, bucket and TTL configuration fails worker bootstrap instead of silently creating a partial publisher.
+Instagram has a complete worker composition path but is **disabled by default**. It is registered only when `PUBLISHING_INSTAGRAM_ENABLED=true` and valid private-media signing configuration is present. Enabling the flag without valid server-only signing configuration fails worker bootstrap instead of creating a partial publisher.
 
-`PrismaInstagramPublishingContextResolver` verifies all of the following before exposing a decrypted token to the adapter:
+Threads also has a complete code-side worker composition path and is **disabled by default**. It is registered only when `PUBLISHING_THREADS_ENABLED=true` and the same trusted private-media signing boundary is available. Dedicated Threads OAuth/account promotion, encrypted long-lived credential storage, reconnect handling, manual long-lived-token refresh, and integration-health reporting are implemented on the API side. Hosted activation, real Threads app/access configuration, and real-provider publishing/refresh E2E remain separate production gates.
 
-- the Publication command targets Instagram;
-- the Destination and selected SocialAccount match each other and the command;
-- both records are Instagram records and the account is still `CONNECTED`;
-- the persisted account includes `instagram_basic` and `instagram_content_publish`;
-- the encrypted credential is also an Instagram credential and uses the supported encryption algorithm;
-- the decrypted credential payload still records the required Instagram scopes;
-- the destination external ID is a valid numeric Instagram Professional account ID.
+Requests for an unregistered provider fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
 
-The token promoted by the existing Meta connection flow is the linked Page access token associated with the Instagram Professional account. This matches the repository's current Facebook Login integration model and the official Meta publishing flow.
+## Automatic retry behavior
 
-Threads remains unregistered in the production worker until its dedicated connection/runtime prerequisites are completed. Requests for an unregistered platform fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
-
-## Retry behavior
-
-The existing publication retry policy remains authoritative:
+The existing publication retry policy remains authoritative for retryable worker failures:
 
 - at most five attempts;
 - exponential delay beginning at one second;
@@ -102,23 +94,44 @@ The existing publication retry policy remains authoritative:
 
 The executor stores normalized error codes/messages only. Raw provider response bodies, tokens, credentials and signed media URLs are never persisted through this boundary.
 
+## Publication status and manual retry control path
+
+The authenticated Publications API exposes bounded, recent operational status for a PostVariant from persisted `Publication` rows. The UI does not infer provider success from a button click or from queue acceptance.
+
+Status output is intentionally limited to the latest 50 attempts per variant and includes only operational fields such as state, destination, timestamps, retry count, retry timing, and normalized error metadata. Provider secrets and raw provider response bodies are not exposed.
+
+Manual retry follows stricter rules than automatic retry:
+
+- only a persisted `FAILED` Publication can be retried manually;
+- `RETRY_WAITING` remains owned by automatic BullMQ/worker backoff and exposes no manual retry action;
+- `PUBLICATION_AMBIGUOUS_OUTCOME` and `PUBLICATION_IDEMPOTENCY_KEY_MISMATCH` require manual review and cannot be replayed through the retry endpoint;
+- the API performs an optimistic `updatedAt` check before resetting the retry budget, preventing a stale operator action from racing a newer state change;
+- the previous error metadata remains persisted until the worker actually claims the retry and clears it through the normal execution transition;
+- when the retained BullMQ job is still `failed`, the API uses BullMQ's failed-job retry operation with attempts reset;
+- when retention has already removed the failed job, the API re-enqueues the **same Publication UUID** rather than creating a new Publication;
+- if the job is already waiting, delayed, prioritized, active, or waiting on children because another retry won the race, the API reports `ALREADY_QUEUED` and does not create a duplicate job.
+
+A queue-side retry failure causes the UI to refresh authoritative persisted state before offering another action.
+
 ## Ambiguous provider outcome
 
 A process can crash after a provider accepted a publish request but before RecruitOps persisted the provider result. Re-running that request blindly can create duplicate social posts because not every provider operation offers a RecruitOps-controlled idempotency primitive.
 
-Therefore, redelivery of a Publication that is already persisted as `PUBLISHING` fails closed with `PUBLICATION_AMBIGUOUS_OUTCOME`. It is not automatically published again.
+Therefore, redelivery of a Publication that is already persisted as `PUBLISHING` fails closed with `PUBLICATION_AMBIGUOUS_OUTCOME`. It is not automatically published again and the manual retry API also blocks replay. An operator must verify the provider before taking another action.
 
 ## Concurrency
 
 The repository boundary exposes compare-and-set state updates. Only the worker that successfully transitions the current Publication state to `PUBLISHING` owns that execution attempt. Concurrent or stale workers receive a no-op outcome rather than invoking the provider.
 
+The manual retry control path similarly uses optimistic concurrency on the Publication row, and BullMQ job-state inspection prevents concurrent operators from manufacturing duplicate retries for the same Publication ID.
+
 ## Worker lifecycle
 
-`apps/worker/src/main.ts` validates server-only database, Redis, Meta Graph version and OAuth keyring configuration before consuming the queue. Instagram activation is additionally gated by the explicit runtime flag and server-only media-signing configuration. Startup logs contain only normalized configuration metadata and enabled publisher names, never connection strings, provider tokens, encryption keys, signed URLs or Supabase secret keys.
+`apps/worker/src/main.ts` validates server-only database, Redis, provider configuration and OAuth keyring configuration before consuming the queue. Instagram and Threads activation are additionally gated by explicit runtime flags and server-only media-signing configuration. Startup logs contain only normalized configuration metadata and enabled publisher names, never connection strings, provider tokens, encryption keys, signed URLs or Supabase secret keys.
 
 BullMQ closes before Prisma disconnects during graceful shutdown so no new job can continue after the persistence layer is torn down.
 
-## Sequence
+## Execution sequence
 
 ```mermaid
 sequenceDiagram
@@ -154,10 +167,40 @@ sequenceDiagram
     end
 ```
 
+## Manual retry sequence
+
+```mermaid
+sequenceDiagram
+    participant Operator
+    participant API as Publications API
+    participant DB as Prisma
+    participant Queue as BullMQ
+    participant Worker
+
+    Operator->>API: POST /publications/:id/retry
+    API->>DB: load persisted Publication status
+    alt not FAILED or requires manual review
+        API-->>Operator: 409 fail closed
+    else retry eligible
+        API->>DB: optimistic reset retryCount/nextRetryAt
+        API->>Queue: getJob(publicationId)
+        alt retained failed job
+            API->>Queue: retry failed job, reset attempts
+        else job missing after retention
+            API->>Queue: enqueue same publicationId
+        else job already queued/active
+            Queue-->>API: current queued state
+        end
+        Queue-->>Worker: same Publication identity
+        API->>DB: reload authoritative status
+        API-->>Operator: retry acceptance + status
+    end
+```
+
 ## Remaining runtime work
 
-- inject the Instagram activation flag and `SUPABASE_SECRET_KEY` only into a trusted worker deployment after real Meta app/account configuration is verified;
-- verify Instagram queue/database/provider behavior with real integration/E2E coverage before claiming production readiness;
-- build the dedicated Threads connection/runtime path before registering Threads;
+- inject Instagram/Threads activation flags and `SUPABASE_SECRET_KEY` only into a trusted worker deployment after real provider app/account configuration is verified;
+- verify Facebook/Instagram/Threads queue/database/provider behavior with real integration/E2E coverage before claiming production readiness;
 - provision a deployed always-on worker when the infrastructure tier supports it;
-- add recovery/reconciliation handling for ambiguous external outcomes and provider-processing states.
+- add reconciliation handling for ambiguous external outcomes and provider-processing states;
+- complete scheduled-publication operator/calendar flows and broader publication runbooks.

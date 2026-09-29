@@ -55,5 +55,42 @@
     "alreadyAccepted": "Yêu cầu xuất bản này đã được tiếp nhận trước đó. Trạng thái hiện tại: {state}.",
     "queueUnconfirmed": "Không thể xác nhận hàng đợi đã nhận yêu cầu. Hãy thử lại mà không đổi đích; RecruitOps sẽ dùng lại cùng publication ID để tránh đăng trùng.",
     "publishFailed": "RecruitOps không thể bắt đầu yêu cầu xuất bản này. Hãy làm mới trạng thái và thử lại."
+  },
+  "publicationStatus": {
+    "eyebrow": "Vận hành xuất bản",
+    "title": "Trạng thái, lỗi và thử lại",
+    "description": "Theo dõi các lần phân phối gần đây của biến thể nền tảng này. Retry tự động vẫn do worker quản lý; retry thủ công chỉ mở khi lần gọi provider trước đã xác định là thất bại.",
+    "saveVariantFirst": "Hãy lưu biến thể nền tảng trước khi xem trạng thái xuất bản.",
+    "refresh": "Làm mới trạng thái",
+    "loading": "Đang tải trạng thái xuất bản…",
+    "loadFailed": "RecruitOps không thể tải trạng thái xuất bản.",
+    "empty": "Biến thể nền tảng này chưa có lần xuất bản nào.",
+    "state": "Trạng thái: {value}",
+    "states": {
+      "PENDING": "Đang chờ",
+      "SCHEDULED": "Đã lên lịch",
+      "PUBLISHING": "Đang xuất bản",
+      "PROCESSING": "Provider đang xử lý",
+      "PUBLISHED": "Đã xuất bản",
+      "RETRY_WAITING": "Đang chờ retry tự động",
+      "FAILED": "Thất bại",
+      "CANCELLED": "Đã hủy"
+    },
+    "platformLabel": "Nền tảng",
+    "attemptsLabel": "Số lần retry đã ghi nhận",
+    "scheduledLabel": "Thời điểm phân phối",
+    "publishedLabel": "Đã xuất bản lúc",
+    "nextRetryLabel": "Retry tự động tiếp theo",
+    "retry": "Thử lại lần xuất bản lỗi",
+    "retrying": "Đang thử lại…",
+    "retryFailed": "RecruitOps không thể xác nhận retry thủ công này. Hãy làm mới trạng thái trước khi thử lại.",
+    "manualReviewRequired": "Retry thủ công bị khóa vì kết quả provider trước đó có thể chưa xác định hoặc định danh publication cần được kiểm tra. Hãy xác minh trên provider trước khi thực hiện thêm hành động.",
+    "readOnly": "Vai trò của bạn có thể xem lỗi nhưng không thể retry publication.",
+    "truncated": "Đang hiển thị 50 lần xuất bản gần nhất của biến thể này.",
+    "retryAcceptance": {
+      "RETRIED": "BullMQ đã đưa job thất bại trở lại hàng đợi chờ xử lý.",
+      "REENQUEUED": "Job lỗi cũ không còn được giữ trong hàng đợi, nên RecruitOps đã tạo lại job an toàn với cùng định danh publication.",
+      "ALREADY_QUEUED": "Publication này đã đang chờ hoặc đang được xử lý; hệ thống không tạo thêm retry trùng lặp."
+    }
   }
 }

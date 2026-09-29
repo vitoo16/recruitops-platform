@@ -25,10 +25,24 @@ export class PublicationsController {
     return this.publications.getPublishNowReadiness(postVariantId);
   }
 
+  @Get('status/:postVariantId')
+  @Header('Cache-Control', 'no-store')
+  @Roles('OWNER', 'ADMIN', 'RECRUITER', 'VIEWER')
+  listStatus(@Param('postVariantId', new ParseUUIDPipe()) postVariantId: string) {
+    return this.publications.listStatus(postVariantId);
+  }
+
   @Post('publish-now')
   @Header('Cache-Control', 'no-store')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')
   publishNow(@Body() body: unknown) {
     return this.publications.publishNow(body);
+  }
+
+  @Post(':publicationId/retry')
+  @Header('Cache-Control', 'no-store')
+  @Roles('OWNER', 'ADMIN', 'RECRUITER')
+  retryPublication(@Param('publicationId', new ParseUUIDPipe()) publicationId: string) {
+    return this.publications.retryPublication(publicationId);
   }
 }

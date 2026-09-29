@@ -1,4 +1,6 @@
 import {
+  PublicationManualRetryResponseSchema,
+  PublicationStatusListSchema,
   PublishNowReadinessSchema,
   PublishNowResponseSchema,
   type PublishNowCommand,
@@ -40,4 +42,21 @@ export function queuePublishNow(apiUrl: string, accessToken: string, command: Pu
     method: 'POST',
     body: JSON.stringify(command),
   });
+}
+
+export function getPublicationStatus(apiUrl: string, accessToken: string, postVariantId: string) {
+  return requestJson(
+    PublicationStatusListSchema,
+    `${apiUrl}/publications/status/${encodeURIComponent(postVariantId)}`,
+    accessToken,
+  );
+}
+
+export function retryPublication(apiUrl: string, accessToken: string, publicationId: string) {
+  return requestJson(
+    PublicationManualRetryResponseSchema,
+    `${apiUrl}/publications/${encodeURIComponent(publicationId)}/retry`,
+    accessToken,
+    { method: 'POST' },
+  );
 }

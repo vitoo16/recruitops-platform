@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { MediaWorkspacePanel } from './media-workspace-panel';
 import { PostDraftPanel } from './post-draft-panel';
 import { PostVariantMediaPanel } from './post-variant-media-panel';
+import { PublicationStatusPanel } from './publication-status-panel';
 import { PublishNowPanel } from './publish-now-panel';
 import { useContentStudio } from './use-content-studio';
 
@@ -106,6 +107,20 @@ export function ContentMediaWorkspace() {
         onDestinationChange={studio.setPublishDestinationId}
         onRefreshReadiness={() => void studio.loadPublishReadiness()}
         onPublishNow={() => void studio.queuePublishNow()}
+      />
+
+      <PublicationStatusPanel
+        postVariantId={studio.selectedVariant?.id ?? null}
+        items={studio.publicationStatuses}
+        truncated={studio.publicationStatusesTruncated}
+        loading={studio.loadingPublicationStatuses}
+        loadError={studio.publicationStatusLoadError}
+        retryingPublicationId={studio.retryingPublicationId}
+        retryErrorId={studio.publicationRetryErrorId}
+        retryAcceptance={studio.publicationRetryAcceptance}
+        canMutate={studio.canMutate}
+        onRefresh={() => void studio.loadPublicationStatuses()}
+        onRetry={(publicationId) => void studio.retryPublication(publicationId)}
       />
     </section>
   );
