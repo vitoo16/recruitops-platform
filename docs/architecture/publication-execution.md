@@ -4,7 +4,7 @@
 
 The publication executor is the stateful boundary between a validated BullMQ publication job and a vendor-neutral `SocialPublisher` implementation.
 
-It deliberately does not own provider credentials, provider SDK setup, media URL generation, or operator-facing retry decisions. Provider context stays behind runtime resolvers, while status/retry commands remain an API control-plane concern over the durable `Publication` record.
+It deliberately does not own provider credentials, provider SDK setup, media URL generation, operator-facing retry decisions, or schedule authoring. Provider context stays behind runtime resolvers, while immediate dispatch, scheduled dispatch, status and retry commands remain API control-plane concerns over the durable `Publication` record.
 
 ## Execution rules
 
@@ -68,7 +68,9 @@ The resolver implements both the Instagram and Threads media-resolver interfaces
 
 `createPublicationJobHandler` adapts the validated BullMQ `PublicationQueueJob` into the executor identity contract. Queue scheduling metadata is not treated as provider input; the durable Publication row remains the source of truth for execution state.
 
-The BullMQ job ID is the Publication UUID. Queue retries and manual retries therefore preserve the same business identity instead of creating a second Publication record.
+The BullMQ job ID is the Publication UUID. Immediate dispatch, delayed scheduling, automatic retries and manual retries therefore preserve the same business identity instead of creating a second Publication record.
+
+For a scheduled Publication, BullMQ delay is calculated from the persisted `scheduledAt` instant. The worker does not call a social provider at schedule-authoring time; it receives the job only after the delay expires and then executes the normal Publication claim/provider flow.
 
 ## Credential and publisher runtime
 
@@ -81,6 +83,20 @@ Instagram has a complete worker composition path but is **disabled by default**.
 Threads also has a complete code-side worker composition path and is **disabled by default**. It is registered only when `PUBLISHING_THREADS_ENABLED=true` and the same trusted private-media signing boundary is available. Dedicated Threads OAuth/account promotion, encrypted long-lived credential storage, reconnect handling, manual long-lived-token refresh, and integration-health reporting are implemented on the API side. Hosted activation, real Threads app/access configuration, and real-provider publishing/refresh E2E remain separate production gates.
 
 Requests for an unregistered provider fail closed as `PUBLICATION_PUBLISHER_UNAVAILABLE`.
+
+## Immediate and scheduled publication control path
+
+Publish Now and Schedule share the same server-side eligibility boundary: the Post must be `READY`; the selected Destination must be enabled, API-mode and platform-compatible; and the linked SocialAccount must still be connected.
+
+Publish Now persists a `PENDING` Publication with a dispatch time at the current server instant and immediately enqueues it.
+
+Schedule persists a `SCHEDULED` Publication with the requested future absolute instant and enqueues the same Publication UUID as a delayed BullMQ job. The API rejects a scheduled time that is not later than the current server time. If the SocialAccount already has a known `expiresAt`, the API also rejects a requested dispatch at or after that expiry rather than knowingly accepting a job whose credential lifecycle is already invalid at execution time.
+
+The product requirements currently define neither a business timezone nor a maximum scheduling horizon. The browser therefore converts the operator's local date/time to an absolute ISO instant, while PostgreSQL `timestamptz` / the durable `scheduledAt` value remains authoritative after persistence.
+
+Both immediate and scheduled commands preserve the same client-generated Publication UUID across an uncertain queue-enqueue response. Repeating the unchanged intent reconciles the same durable Publication rather than creating another one. Changing destination or schedule time creates a new intent/UUID on the client.
+
+Queue acceptance is not provider success. A persisted `SCHEDULED` record means the delayed dispatch was accepted into RecruitOps' publication workflow; provider execution still occurs later through the normal worker boundary and can fail because of runtime/provider conditions that did not exist when the schedule was created.
 
 ## Automatic retry behavior
 
@@ -100,6 +116,8 @@ The authenticated Publications API exposes bounded, recent operational status fo
 
 Status output is intentionally limited to the latest 50 attempts per variant and includes only operational fields such as state, destination, timestamps, retry count, retry timing, and normalized error metadata. Provider secrets and raw provider response bodies are not exposed.
 
+The schedule calendar also derives its upcoming entries from these persisted `SCHEDULED` rows rather than optimistic browser state. If a scheduled instant passes while the row is still `SCHEDULED`, the UI treats that as an overdue operational signal for worker/queue investigation, not as proof of provider failure.
+
 Manual retry follows stricter rules than automatic retry:
 
 - only a persisted `FAILED` Publication can be retried manually;
@@ -111,7 +129,7 @@ Manual retry follows stricter rules than automatic retry:
 - when retention has already removed the failed job, the API re-enqueues the **same Publication UUID** rather than creating a new Publication;
 - if the job is already waiting, delayed, prioritized, active, or waiting on children because another retry won the race, the API reports `ALREADY_QUEUED` and does not create a duplicate job.
 
-A queue-side retry failure causes the UI to refresh authoritative persisted state before offering another action.
+A queue-side retry failure causes the UI to refresh authoritative persisted state before offering another action. Schedule requests likewise refresh persisted status after the API request settles so an uncertain enqueue cannot leave the browser showing only stale calendar state.
 
 ## Ambiguous provider outcome
 
@@ -167,6 +185,32 @@ sequenceDiagram
     end
 ```
 
+## Scheduling sequence
+
+```mermaid
+sequenceDiagram
+    participant Operator
+    participant UI as Content Studio
+    participant API as Publications API
+    participant DB as Prisma
+    participant Queue as BullMQ
+    participant Worker
+
+    Operator->>UI: choose destination + local date/time
+    UI->>UI: convert local time to ISO instant
+    UI->>API: POST /publications/schedule
+    API->>API: validate READY/API/account/future/known-expiry rules
+    API->>DB: upsert SCHEDULED Publication with same UUID
+    API->>Queue: enqueue(publicationId, scheduledAt)
+    Queue-->>API: delayed job accepted
+    API-->>UI: SCHEDULED + persisted timestamp
+    UI->>API: reload Publication status
+    API-->>UI: persisted SCHEDULED calendar entry
+    Note over Queue,Worker: wait until delay expires
+    Queue-->>Worker: same Publication UUID
+    Worker->>DB: claim SCHEDULED -> PUBLISHING
+```
+
 ## Manual retry sequence
 
 ```mermaid
@@ -203,4 +247,4 @@ sequenceDiagram
 - verify Facebook/Instagram/Threads queue/database/provider behavior with real integration/E2E coverage before claiming production readiness;
 - provision a deployed always-on worker when the infrastructure tier supports it;
 - add reconciliation handling for ambiguous external outcomes and provider-processing states;
-- complete scheduled-publication operator/calendar flows and broader publication runbooks.
+- complete broader publication runbooks and production operations guidance.

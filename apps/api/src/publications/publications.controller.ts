@@ -39,6 +39,13 @@ export class PublicationsController {
     return this.publications.publishNow(body);
   }
 
+  @Post('schedule')
+  @Header('Cache-Control', 'no-store')
+  @Roles('OWNER', 'ADMIN', 'RECRUITER')
+  schedulePublication(@Body() body: unknown) {
+    return this.publications.schedulePublication(body);
+  }
+
   @Post(':publicationId/retry')
   @Header('Cache-Control', 'no-store')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')

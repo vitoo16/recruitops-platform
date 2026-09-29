@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useContentStudioSession } from './use-content-studio-session';
 import { usePostMediaWorkspace } from './use-post-media-workspace';
 import { usePostVariantWorkspace } from './use-post-variant-workspace';
+import { usePublicationScheduleWorkspace } from './use-publication-schedule-workspace';
 import { usePublicationStatusWorkspace } from './use-publication-status-workspace';
 import { usePublishNowWorkspace } from './use-publish-now-workspace';
 
@@ -34,12 +35,20 @@ export function useContentStudio() {
     canMutate: context.canMutate,
     postVariantId: variants.selectedVariant?.id ?? null,
   });
+  const scheduling = usePublicationScheduleWorkspace({
+    session: context.session,
+    apiUrl: context.apiUrl,
+    canMutate: context.canMutate,
+    postVariantId: variants.selectedVariant?.id ?? null,
+    readiness: publishing.publishReadiness,
+  });
   const publicationStatus = usePublicationStatusWorkspace({
     session: context.session,
     apiUrl: context.apiUrl,
     canMutate: context.canMutate,
     postVariantId: variants.selectedVariant?.id ?? null,
     publishResultId: publishing.publishNowResult?.publication.id ?? null,
+    scheduleActivityVersion: scheduling.scheduleActivityVersion,
   });
 
   return {
@@ -47,6 +56,7 @@ export function useContentStudio() {
     ...postMedia,
     ...variants,
     ...publishing,
+    ...scheduling,
     ...publicationStatus,
     error,
   };

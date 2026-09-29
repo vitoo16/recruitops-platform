@@ -17,6 +17,7 @@ interface UsePublicationStatusWorkspaceInput {
   canMutate: boolean;
   postVariantId: string | null;
   publishResultId: string | null;
+  scheduleActivityVersion: number;
 }
 
 export function usePublicationStatusWorkspace({
@@ -25,6 +26,7 @@ export function usePublicationStatusWorkspace({
   canMutate,
   postVariantId,
   publishResultId,
+  scheduleActivityVersion,
 }: UsePublicationStatusWorkspaceInput) {
   const requestVersion = useRef(0);
   const [publicationStatuses, setPublicationStatuses] = useState<
@@ -75,9 +77,9 @@ export function usePublicationStatusWorkspace({
   }, [loadPublicationStatuses, postVariantId]);
 
   useEffect(() => {
-    if (!publishResultId || !postVariantId) return;
+    if ((!publishResultId && scheduleActivityVersion === 0) || !postVariantId) return;
     void loadPublicationStatuses();
-  }, [loadPublicationStatuses, postVariantId, publishResultId]);
+  }, [loadPublicationStatuses, postVariantId, publishResultId, scheduleActivityVersion]);
 
   const retryPublication = useCallback(
     async (publicationId: string) => {

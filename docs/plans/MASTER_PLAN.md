@@ -103,7 +103,7 @@
 - [ ] Implement Zalo adapter for currently supported official capabilities.
 - [x] Implement Manual Assist provider for unsupported destinations such as arbitrary groups where official APIs do not allow posting.
 - [x] Implement publish-now UI (READY-post readiness, explicit eligible API destination selection, retry-stable Publication UUID and durable BullMQ queue acceptance implemented with VI/EN operator feedback).
-- [ ] Implement schedule UI/calendar.
+- [x] Implement schedule UI/calendar (future absolute-instant scheduling, browser-timezone disclosure, native date/time controls, API eligibility revalidation, known-account-expiry guard, retry-stable Publication UUID, delayed BullMQ enqueue and persisted upcoming `SCHEDULED` calendar with overdue operational signal implemented).
 - [x] Implement publication status/error/retry UI (bounded recent status history, sanitized errors, automatic retry timing, FAILED-only manual retry, BullMQ failed-job retry/re-enqueue reconciliation and ambiguous-outcome manual-review gate implemented).
 - [ ] Add integration and E2E coverage.
 - [ ] Update sequence/state diagrams and runbooks.

@@ -3,7 +3,9 @@ import {
   PublicationStatusListSchema,
   PublishNowReadinessSchema,
   PublishNowResponseSchema,
+  SchedulePublicationResponseSchema,
   type PublishNowCommand,
+  type SchedulePublicationCommand,
 } from '@recruitops/contracts';
 import { z } from 'zod';
 
@@ -42,6 +44,22 @@ export function queuePublishNow(apiUrl: string, accessToken: string, command: Pu
     method: 'POST',
     body: JSON.stringify(command),
   });
+}
+
+export function schedulePublication(
+  apiUrl: string,
+  accessToken: string,
+  command: SchedulePublicationCommand,
+) {
+  return requestJson(
+    SchedulePublicationResponseSchema,
+    `${apiUrl}/publications/schedule`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify(command),
+    },
+  );
 }
 
 export function getPublicationStatus(apiUrl: string, accessToken: string, postVariantId: string) {

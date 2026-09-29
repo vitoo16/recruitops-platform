@@ -3,6 +3,7 @@ import {
   buildPublicationIdempotencyKey,
   type PublicationState,
   type PublishNowCommand,
+  type SchedulePublicationCommand,
 } from '@recruitops/contracts';
 import { DatabaseService } from '../database/database.service.js';
 
@@ -73,6 +74,17 @@ export interface PublicationStatusRow {
     name: string;
   };
 }
+
+const persistedPublicationSelect = {
+  id: true,
+  postVariantId: true,
+  destinationId: true,
+  socialAccountId: true,
+  state: true,
+  idempotencyKey: true,
+  scheduledAt: true,
+  lastErrorCode: true,
+} as const;
 
 const publicationStatusSelect = {
   id: true,
@@ -217,30 +229,41 @@ export class PublicationsRepository {
         scheduledAt,
       },
       update: {},
-      select: {
-        id: true,
-        postVariantId: true,
-        destinationId: true,
-        socialAccountId: true,
-        state: true,
-        idempotencyKey: true,
-        scheduledAt: true,
-        lastErrorCode: true,
-      },
+      select: persistedPublicationSelect,
     });
 
-    if (
-      publication.postVariantId !== command.postVariantId ||
-      publication.destinationId !== command.destinationId ||
-      publication.socialAccountId !== socialAccountId ||
-      publication.idempotencyKey !== idempotencyKey
-    ) {
+    this.assertPublicationIdentity(publication, command, socialAccountId, idempotencyKey);
+    return publication;
+  }
+
+  async upsertScheduledPublication(
+    command: SchedulePublicationCommand,
+    socialAccountId: string,
+    scheduledAt: Date,
+  ): Promise<PersistedPublication> {
+    const idempotencyKey = buildPublicationIdempotencyKey(command.publicationId);
+    const publication = await this.database.client.publication.upsert({
+      where: { id: command.publicationId },
+      create: {
+        id: command.publicationId,
+        postVariantId: command.postVariantId,
+        destinationId: command.destinationId,
+        socialAccountId,
+        state: 'SCHEDULED',
+        idempotencyKey,
+        scheduledAt,
+      },
+      update: {},
+      select: persistedPublicationSelect,
+    });
+
+    this.assertPublicationIdentity(publication, command, socialAccountId, idempotencyKey);
+    if (!publication.scheduledAt || publication.scheduledAt.getTime() !== scheduledAt.getTime()) {
       throw new ConflictException({
         code: 'PUBLICATION_IDEMPOTENCY_CONFLICT',
-        message: 'Publication ID is already associated with another publish command',
+        message: 'Publication ID is already associated with another scheduled time',
       });
     }
-
     return publication;
   }
 
@@ -282,9 +305,12 @@ export class PublicationsRepository {
     return result.count === 1;
   }
 
-  async recordQueueEnqueueFailure(publicationId: string): Promise<void> {
+  async recordQueueEnqueueFailure(
+    publicationId: string,
+    expectedState: 'PENDING' | 'SCHEDULED',
+  ): Promise<void> {
     await this.database.client.publication.updateMany({
-      where: { id: publicationId, state: 'PENDING' },
+      where: { id: publicationId, state: expectedState },
       data: {
         lastErrorCode: PUBLICATION_QUEUE_ENQUEUE_FAILED,
         lastErrorMessage:
@@ -293,11 +319,14 @@ export class PublicationsRepository {
     });
   }
 
-  async clearQueueEnqueueFailure(publicationId: string): Promise<void> {
+  async clearQueueEnqueueFailure(
+    publicationId: string,
+    expectedState: 'PENDING' | 'SCHEDULED',
+  ): Promise<void> {
     await this.database.client.publication.updateMany({
       where: {
         id: publicationId,
-        state: 'PENDING',
+        state: expectedState,
         lastErrorCode: PUBLICATION_QUEUE_ENQUEUE_FAILED,
       },
       data: {
@@ -305,5 +334,24 @@ export class PublicationsRepository {
         lastErrorMessage: null,
       },
     });
+  }
+
+  private assertPublicationIdentity(
+    publication: PersistedPublication,
+    command: Pick<PublishNowCommand, 'publicationId' | 'postVariantId' | 'destinationId'>,
+    socialAccountId: string,
+    idempotencyKey: string,
+  ): void {
+    if (
+      publication.postVariantId !== command.postVariantId ||
+      publication.destinationId !== command.destinationId ||
+      publication.socialAccountId !== socialAccountId ||
+      publication.idempotencyKey !== idempotencyKey
+    ) {
+      throw new ConflictException({
+        code: 'PUBLICATION_IDEMPOTENCY_CONFLICT',
+        message: 'Publication ID is already associated with another publication command',
+      });
+    }
   }
 }

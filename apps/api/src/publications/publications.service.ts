@@ -12,8 +12,11 @@ import {
   PublishNowCommandSchema,
   PublishNowReadinessSchema,
   PublishNowResponseSchema,
+  SchedulePublicationCommandSchema,
+  SchedulePublicationResponseSchema,
   type PublicationStatusRecord,
   type PublishNowResponse,
+  type SchedulePublicationResponse,
 } from '@recruitops/contracts';
 import { parseRequest } from '../common/zod-request.js';
 import { PublicationQueueGateway } from './publication-queue.gateway.js';
@@ -69,75 +72,11 @@ export class PublicationsService {
 
   async publishNow(body: unknown, now = new Date()): Promise<PublishNowResponse> {
     const command = parseRequest(PublishNowCommandSchema, body);
-    const context = await this.repository.findPublishContext(
+    const { socialAccount } = await this.requireEligiblePublishContext(
       command.postVariantId,
       command.destinationId,
+      now,
     );
-
-    if (!context) {
-      throw new NotFoundException({
-        code: 'POST_VARIANT_NOT_FOUND',
-        message: 'Post variant was not found',
-      });
-    }
-    if (context.postStatus !== 'READY') {
-      throw new BadRequestException({
-        code: 'PUBLICATION_POST_NOT_READY',
-        message: 'Only READY posts can enter the publication workflow',
-      });
-    }
-
-    const destination = context.destination;
-    if (!destination) {
-      throw new NotFoundException({
-        code: 'PUBLICATION_DESTINATION_NOT_FOUND',
-        message: 'Publication destination was not found',
-      });
-    }
-    if (!destination.enabled) {
-      throw new BadRequestException({
-        code: 'PUBLICATION_DESTINATION_DISABLED',
-        message: 'Publication destination is disabled',
-      });
-    }
-    if (destination.postingMode !== 'API') {
-      throw new BadRequestException({
-        code: 'PUBLICATION_DESTINATION_NOT_API',
-        message: 'Publish Now only accepts API-mode destinations',
-      });
-    }
-    if (destination.platform !== context.platform) {
-      throw new BadRequestException({
-        code: 'PUBLICATION_PLATFORM_MISMATCH',
-        message: 'Post variant and destination platforms do not match',
-      });
-    }
-
-    const socialAccount = destination.socialAccount;
-    if (!destination.socialAccountId || !socialAccount) {
-      throw new BadRequestException({
-        code: 'PUBLICATION_SOCIAL_ACCOUNT_REQUIRED',
-        message: 'API publishing requires a connected social account',
-      });
-    }
-    if (
-      socialAccount.id !== destination.socialAccountId ||
-      socialAccount.platform !== context.platform
-    ) {
-      throw new BadRequestException({
-        code: 'PUBLICATION_SOCIAL_ACCOUNT_MISMATCH',
-        message: 'Destination social account does not match the publication platform',
-      });
-    }
-    if (
-      socialAccount.status !== 'CONNECTED' ||
-      (socialAccount.expiresAt && socialAccount.expiresAt.getTime() <= now.getTime())
-    ) {
-      throw new BadRequestException({
-        code: 'PUBLICATION_SOCIAL_ACCOUNT_NOT_CONNECTED',
-        message: 'Destination social account must be reconnected before publishing',
-      });
-    }
 
     const publication = await this.repository.upsertPublication(command, socialAccount.id, now);
 
@@ -149,15 +88,15 @@ export class PublicationsService {
     }
 
     if (publication.state !== 'PENDING') {
-      return this.response('ALREADY_ACCEPTED', publication);
+      return this.publishNowResponse('ALREADY_ACCEPTED', publication);
     }
 
     const scheduledAt = publication.scheduledAt ?? now;
     try {
       await this.queue.enqueue(publication.id, scheduledAt);
-      await this.repository.clearQueueEnqueueFailure(publication.id);
+      await this.repository.clearQueueEnqueueFailure(publication.id, 'PENDING');
     } catch {
-      await this.repository.recordQueueEnqueueFailure(publication.id);
+      await this.repository.recordQueueEnqueueFailure(publication.id, 'PENDING');
       throw new ServiceUnavailableException({
         code: 'PUBLICATION_QUEUE_ENQUEUE_UNCONFIRMED',
         message:
@@ -165,7 +104,61 @@ export class PublicationsService {
       });
     }
 
-    return this.response('QUEUED', { ...publication, scheduledAt });
+    return this.publishNowResponse('QUEUED', { ...publication, scheduledAt });
+  }
+
+  async schedulePublication(body: unknown, now = new Date()): Promise<SchedulePublicationResponse> {
+    const command = parseRequest(SchedulePublicationCommandSchema, body);
+    const scheduledAt = new Date(command.scheduledAt);
+    if (scheduledAt.getTime() <= now.getTime()) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SCHEDULE_NOT_FUTURE',
+        message: 'Scheduled publication time must be in the future',
+      });
+    }
+
+    const { socialAccount } = await this.requireEligiblePublishContext(
+      command.postVariantId,
+      command.destinationId,
+      now,
+    );
+    if (socialAccount.expiresAt && socialAccount.expiresAt.getTime() <= scheduledAt.getTime()) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_EXPIRES_BEFORE_SCHEDULE',
+        message: 'Destination social account expires before the scheduled publication time',
+      });
+    }
+
+    const publication = await this.repository.upsertScheduledPublication(
+      command,
+      socialAccount.id,
+      scheduledAt,
+    );
+
+    if (publication.state === 'CANCELLED') {
+      throw new ConflictException({
+        code: 'PUBLICATION_IDEMPOTENCY_TERMINAL',
+        message: 'Cancelled publication IDs cannot be reused for a scheduled publication',
+      });
+    }
+
+    if (publication.state !== 'SCHEDULED') {
+      return this.scheduleResponse('ALREADY_ACCEPTED', publication);
+    }
+
+    try {
+      await this.queue.enqueue(publication.id, scheduledAt);
+      await this.repository.clearQueueEnqueueFailure(publication.id, 'SCHEDULED');
+    } catch {
+      await this.repository.recordQueueEnqueueFailure(publication.id, 'SCHEDULED');
+      throw new ServiceUnavailableException({
+        code: 'PUBLICATION_SCHEDULE_QUEUE_UNCONFIRMED',
+        message:
+          'Scheduled queue acceptance could not be confirmed. Retry the same schedule without changing its publication ID.',
+      });
+    }
+
+    return this.scheduleResponse('SCHEDULED', publication);
   }
 
   async retryPublication(publicationId: string) {
@@ -213,6 +206,80 @@ export class PublicationsService {
     });
   }
 
+  private async requireEligiblePublishContext(
+    postVariantId: string,
+    destinationId: string,
+    now: Date,
+  ) {
+    const context = await this.repository.findPublishContext(postVariantId, destinationId);
+    if (!context) {
+      throw new NotFoundException({
+        code: 'POST_VARIANT_NOT_FOUND',
+        message: 'Post variant was not found',
+      });
+    }
+    if (context.postStatus !== 'READY') {
+      throw new BadRequestException({
+        code: 'PUBLICATION_POST_NOT_READY',
+        message: 'Only READY posts can enter the publication workflow',
+      });
+    }
+
+    const destination = context.destination;
+    if (!destination) {
+      throw new NotFoundException({
+        code: 'PUBLICATION_DESTINATION_NOT_FOUND',
+        message: 'Publication destination was not found',
+      });
+    }
+    if (!destination.enabled) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_DESTINATION_DISABLED',
+        message: 'Publication destination is disabled',
+      });
+    }
+    if (destination.postingMode !== 'API') {
+      throw new BadRequestException({
+        code: 'PUBLICATION_DESTINATION_NOT_API',
+        message: 'Publication commands accept API-mode destinations only',
+      });
+    }
+    if (destination.platform !== context.platform) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_PLATFORM_MISMATCH',
+        message: 'Post variant and destination platforms do not match',
+      });
+    }
+
+    const socialAccount = destination.socialAccount;
+    if (!destination.socialAccountId || !socialAccount) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_REQUIRED',
+        message: 'API publishing requires a connected social account',
+      });
+    }
+    if (
+      socialAccount.id !== destination.socialAccountId ||
+      socialAccount.platform !== context.platform
+    ) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_MISMATCH',
+        message: 'Destination social account does not match the publication platform',
+      });
+    }
+    if (
+      socialAccount.status !== 'CONNECTED' ||
+      (socialAccount.expiresAt && socialAccount.expiresAt.getTime() <= now.getTime())
+    ) {
+      throw new BadRequestException({
+        code: 'PUBLICATION_SOCIAL_ACCOUNT_NOT_CONNECTED',
+        message: 'Destination social account must be reconnected before publishing',
+      });
+    }
+
+    return { context, destination, socialAccount };
+  }
+
   private statusRecord(publication: PublicationStatusRow): PublicationStatusRecord {
     const requiresManualReview = this.requiresManualReview(publication.lastErrorCode);
     return PublicationStatusRecordSchema.parse({
@@ -238,10 +305,27 @@ export class PublicationsService {
     return errorCode !== null && manualReviewErrorCodes.has(errorCode);
   }
 
-  private response(
+  private publishNowResponse(
     acceptance: 'QUEUED' | 'ALREADY_ACCEPTED',
     publication: PersistedPublication,
   ): PublishNowResponse {
+    return PublishNowResponseSchema.parse({
+      acceptance,
+      publication: this.publicationResponseRecord(publication),
+    });
+  }
+
+  private scheduleResponse(
+    acceptance: 'SCHEDULED' | 'ALREADY_ACCEPTED',
+    publication: PersistedPublication,
+  ): SchedulePublicationResponse {
+    return SchedulePublicationResponseSchema.parse({
+      acceptance,
+      publication: this.publicationResponseRecord(publication),
+    });
+  }
+
+  private publicationResponseRecord(publication: PersistedPublication) {
     if (!publication.socialAccountId || !publication.scheduledAt) {
       throw new ConflictException({
         code: 'PUBLICATION_RECORD_INCOMPLETE',
@@ -249,16 +333,13 @@ export class PublicationsService {
       });
     }
 
-    return PublishNowResponseSchema.parse({
-      acceptance,
-      publication: {
-        id: publication.id,
-        postVariantId: publication.postVariantId,
-        destinationId: publication.destinationId,
-        socialAccountId: publication.socialAccountId,
-        state: publication.state,
-        scheduledAt: publication.scheduledAt.toISOString(),
-      },
-    });
+    return {
+      id: publication.id,
+      postVariantId: publication.postVariantId,
+      destinationId: publication.destinationId,
+      socialAccountId: publication.socialAccountId,
+      state: publication.state,
+      scheduledAt: publication.scheduledAt.toISOString(),
+    };
   }
 }
