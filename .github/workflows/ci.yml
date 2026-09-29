@@ -32,19 +32,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Format preview
-        run: |
-          pnpm exec prettier --write \
-            apps/api/src/linkedin-connections/linkedin-connections.service.test.ts \
-            apps/api/src/linkedin-connections/linkedin-connections.service.ts \
-            apps/web/src/components/linkedin-connections/linkedin-connection-panel.tsx \
-            packages/integrations/src/linkedin-connection.ts
-          git diff -- \
-            apps/api/src/linkedin-connections/linkedin-connections.service.test.ts \
-            apps/api/src/linkedin-connections/linkedin-connections.service.ts \
-            apps/web/src/components/linkedin-connections/linkedin-connection-panel.tsx \
-            packages/integrations/src/linkedin-connection.ts
-          exit 1
+      - name: Format check
+        run: pnpm format:check
 
       - name: Validate local infrastructure configuration
         run: |
