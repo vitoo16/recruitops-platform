@@ -7,6 +7,7 @@ import {
 import { DatabaseService } from '../database/database.service.js';
 
 export const PUBLICATION_QUEUE_ENQUEUE_FAILED = 'PUBLICATION_QUEUE_ENQUEUE_FAILED';
+export const PUBLICATION_STATUS_LIMIT = 50;
 
 export interface PublishNowCommandContext {
   postVariantId: string;
@@ -52,6 +53,48 @@ export interface PersistedPublication {
   scheduledAt: Date | null;
   lastErrorCode: string | null;
 }
+
+export interface PublicationStatusRow {
+  id: string;
+  postVariantId: string;
+  socialAccountId: string | null;
+  state: PublicationState;
+  scheduledAt: Date | null;
+  publishedAt: Date | null;
+  nextRetryAt: Date | null;
+  retryCount: number;
+  lastErrorCode: string | null;
+  lastErrorMessage: string | null;
+  updatedAt: Date;
+  destination: {
+    id: string;
+    platform: PublishNowCommandContext['platform'];
+    type: 'PAGE' | 'PROFILE' | 'GROUP' | 'ORGANIZATION' | 'OA' | 'OTHER';
+    name: string;
+  };
+}
+
+const publicationStatusSelect = {
+  id: true,
+  postVariantId: true,
+  socialAccountId: true,
+  state: true,
+  scheduledAt: true,
+  publishedAt: true,
+  nextRetryAt: true,
+  retryCount: true,
+  lastErrorCode: true,
+  lastErrorMessage: true,
+  updatedAt: true,
+  destination: {
+    select: {
+      id: true,
+      platform: true,
+      type: true,
+      name: true,
+    },
+  },
+} as const;
 
 @Injectable()
 export class PublicationsRepository {
@@ -199,6 +242,44 @@ export class PublicationsRepository {
     }
 
     return publication;
+  }
+
+  async listStatusByVariant(
+    postVariantId: string,
+  ): Promise<{ items: PublicationStatusRow[]; truncated: boolean }> {
+    const rows = await this.database.client.publication.findMany({
+      where: { postVariantId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: PUBLICATION_STATUS_LIMIT + 1,
+      select: publicationStatusSelect,
+    });
+
+    return {
+      items: rows.slice(0, PUBLICATION_STATUS_LIMIT),
+      truncated: rows.length > PUBLICATION_STATUS_LIMIT,
+    };
+  }
+
+  async findStatusById(publicationId: string): Promise<PublicationStatusRow | null> {
+    return this.database.client.publication.findUnique({
+      where: { id: publicationId },
+      select: publicationStatusSelect,
+    });
+  }
+
+  async prepareManualRetry(publicationId: string, expectedUpdatedAt: Date): Promise<boolean> {
+    const result = await this.database.client.publication.updateMany({
+      where: {
+        id: publicationId,
+        state: 'FAILED',
+        updatedAt: expectedUpdatedAt,
+      },
+      data: {
+        retryCount: 0,
+        nextRetryAt: null,
+      },
+    });
+    return result.count === 1;
   }
 
   async recordQueueEnqueueFailure(publicationId: string): Promise<void> {

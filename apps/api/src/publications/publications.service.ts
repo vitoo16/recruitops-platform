@@ -6,14 +6,27 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  PublicationManualRetryResponseSchema,
+  PublicationStatusListSchema,
+  PublicationStatusRecordSchema,
   PublishNowCommandSchema,
   PublishNowReadinessSchema,
   PublishNowResponseSchema,
+  type PublicationStatusRecord,
   type PublishNowResponse,
 } from '@recruitops/contracts';
 import { parseRequest } from '../common/zod-request.js';
 import { PublicationQueueGateway } from './publication-queue.gateway.js';
-import { PublicationsRepository, type PersistedPublication } from './publications.repository.js';
+import {
+  PublicationsRepository,
+  type PersistedPublication,
+  type PublicationStatusRow,
+} from './publications.repository.js';
+
+const manualReviewErrorCodes = new Set([
+  'PUBLICATION_AMBIGUOUS_OUTCOME',
+  'PUBLICATION_IDEMPOTENCY_KEY_MISMATCH',
+]);
 
 @Injectable()
 export class PublicationsService {
@@ -43,6 +56,14 @@ export class PublicationsService {
       canPublish: blockingReasons.length === 0,
       blockingReasons,
       destinations: context.destinations,
+    });
+  }
+
+  async listStatus(postVariantId: string) {
+    const result = await this.repository.listStatusByVariant(postVariantId);
+    return PublicationStatusListSchema.parse({
+      items: result.items.map((item) => this.statusRecord(item)),
+      truncated: result.truncated,
     });
   }
 
@@ -145,6 +166,75 @@ export class PublicationsService {
     }
 
     return this.response('QUEUED', { ...publication, scheduledAt });
+  }
+
+  async retryPublication(publicationId: string) {
+    const publication = await this.repository.findStatusById(publicationId);
+    if (!publication) {
+      throw new NotFoundException({
+        code: 'PUBLICATION_NOT_FOUND',
+        message: 'Publication was not found',
+      });
+    }
+    if (publication.state !== 'FAILED') {
+      throw new ConflictException({
+        code: 'PUBLICATION_RETRY_STATE_INVALID',
+        message: 'Only FAILED publications can be retried manually',
+      });
+    }
+    if (this.requiresManualReview(publication.lastErrorCode)) {
+      throw new ConflictException({
+        code: 'PUBLICATION_RETRY_MANUAL_REVIEW_REQUIRED',
+        message: 'This publication requires manual review before another provider attempt',
+      });
+    }
+
+    const prepared = await this.repository.prepareManualRetry(publicationId, publication.updatedAt);
+    if (!prepared) {
+      throw new ConflictException({
+        code: 'PUBLICATION_RETRY_CONFLICT',
+        message: 'Publication changed while retry was being prepared; refresh before retrying again',
+      });
+    }
+
+    const acceptance = await this.queue.retryFailed(publicationId);
+    const refreshed = await this.repository.findStatusById(publicationId);
+    if (!refreshed) {
+      throw new ConflictException({
+        code: 'PUBLICATION_RETRY_RECORD_LOST',
+        message: 'Publication could not be reloaded after queue retry',
+      });
+    }
+
+    return PublicationManualRetryResponseSchema.parse({
+      acceptance,
+      publication: this.statusRecord(refreshed),
+    });
+  }
+
+  private statusRecord(publication: PublicationStatusRow): PublicationStatusRecord {
+    const requiresManualReview = this.requiresManualReview(publication.lastErrorCode);
+    return PublicationStatusRecordSchema.parse({
+      id: publication.id,
+      postVariantId: publication.postVariantId,
+      socialAccountId: publication.socialAccountId,
+      state: publication.state,
+      destination: publication.destination,
+      scheduledAt: publication.scheduledAt?.toISOString() ?? null,
+      publishedAt: publication.publishedAt?.toISOString() ?? null,
+      nextRetryAt: publication.nextRetryAt?.toISOString() ?? null,
+      retryCount: publication.retryCount,
+      lastErrorCode: publication.lastErrorCode,
+      lastErrorMessage: publication.lastErrorMessage,
+      updatedAt: publication.updatedAt.toISOString(),
+      canRetry: publication.state === 'FAILED' && !requiresManualReview,
+      retryBlockReason:
+        publication.state === 'FAILED' && requiresManualReview ? 'MANUAL_REVIEW_REQUIRED' : null,
+    });
+  }
+
+  private requiresManualReview(errorCode: string | null): boolean {
+    return errorCode !== null && manualReviewErrorCodes.has(errorCode);
   }
 
   private response(

@@ -49,6 +49,31 @@ function persisted(state: 'PENDING' | 'PUBLISHED' | 'FAILED' = 'PENDING') {
   };
 }
 
+function statusRow(
+  state: 'PENDING' | 'PUBLISHING' | 'PUBLISHED' | 'RETRY_WAITING' | 'FAILED' = 'FAILED',
+  lastErrorCode: string | null = 'PROVIDER_TEMPORARY_ERROR',
+) {
+  return {
+    id: publicationId,
+    postVariantId,
+    socialAccountId,
+    state,
+    scheduledAt: now,
+    publishedAt: state === 'PUBLISHED' ? now : null,
+    nextRetryAt: state === 'RETRY_WAITING' ? new Date('2026-09-29T03:01:00.000Z') : null,
+    retryCount: state === 'FAILED' ? 5 : 0,
+    lastErrorCode,
+    lastErrorMessage: lastErrorCode ? `Provider operation failed: ${lastErrorCode}` : null,
+    updatedAt: new Date('2026-09-29T03:05:00.000Z'),
+    destination: {
+      id: destinationId,
+      platform: 'FACEBOOK' as const,
+      type: 'PAGE' as const,
+      name: 'RecruitOps Page',
+    },
+  };
+}
+
 function harness() {
   const repository = {
     findReadiness: vi.fn().mockResolvedValue({
@@ -68,10 +93,16 @@ function harness() {
     }),
     findPublishContext: vi.fn().mockResolvedValue(context()),
     upsertPublication: vi.fn().mockResolvedValue(persisted()),
+    listStatusByVariant: vi.fn().mockResolvedValue({ items: [statusRow()], truncated: false }),
+    findStatusById: vi.fn().mockResolvedValue(statusRow()),
+    prepareManualRetry: vi.fn().mockResolvedValue(true),
     recordQueueEnqueueFailure: vi.fn().mockResolvedValue(undefined),
     clearQueueEnqueueFailure: vi.fn().mockResolvedValue(undefined),
   };
-  const queue = { enqueue: vi.fn().mockResolvedValue(undefined) };
+  const queue = {
+    enqueue: vi.fn().mockResolvedValue(undefined),
+    retryFailed: vi.fn().mockResolvedValue('RETRIED'),
+  };
   const service = new PublicationsService(
     repository as unknown as PublicationsRepository,
     queue as unknown as PublicationQueueGateway,
@@ -191,5 +222,60 @@ describe('PublicationsService', () => {
     });
     expect(repository.upsertPublication).not.toHaveBeenCalled();
     expect(queue.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('returns sanitized publication status with retry eligibility', async () => {
+    const { service } = harness();
+
+    const result = await service.listStatus(postVariantId);
+
+    expect(result.truncated).toBe(false);
+    expect(result.items[0]).toMatchObject({
+      id: publicationId,
+      state: 'FAILED',
+      canRetry: true,
+      retryBlockReason: null,
+      lastErrorCode: 'PROVIDER_TEMPORARY_ERROR',
+    });
+  });
+
+  it('resets retry budget before asking BullMQ to retry the failed job', async () => {
+    const { service, repository, queue } = harness();
+    repository.findStatusById
+      .mockResolvedValueOnce(statusRow())
+      .mockResolvedValueOnce({ ...statusRow(), retryCount: 0 });
+
+    const result = await service.retryPublication(publicationId);
+
+    expect(repository.prepareManualRetry).toHaveBeenCalledWith(
+      publicationId,
+      statusRow().updatedAt,
+    );
+    expect(queue.retryFailed).toHaveBeenCalledWith(publicationId);
+    expect(result.acceptance).toBe('RETRIED');
+    expect(result.publication.retryCount).toBe(0);
+  });
+
+  it('blocks manual retry when provider outcome is ambiguous', async () => {
+    const { service, repository, queue } = harness();
+    repository.findStatusById.mockResolvedValueOnce(
+      statusRow('FAILED', 'PUBLICATION_AMBIGUOUS_OUTCOME'),
+    );
+
+    await expect(service.retryPublication(publicationId)).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'PUBLICATION_RETRY_MANUAL_REVIEW_REQUIRED' }),
+    });
+    expect(repository.prepareManualRetry).not.toHaveBeenCalled();
+    expect(queue.retryFailed).not.toHaveBeenCalled();
+  });
+
+  it('blocks manual retry while automatic retry is already waiting', async () => {
+    const { service, repository, queue } = harness();
+    repository.findStatusById.mockResolvedValueOnce(statusRow('RETRY_WAITING'));
+
+    await expect(service.retryPublication(publicationId)).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'PUBLICATION_RETRY_STATE_INVALID' }),
+    });
+    expect(queue.retryFailed).not.toHaveBeenCalled();
   });
 });

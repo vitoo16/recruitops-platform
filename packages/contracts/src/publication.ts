@@ -99,12 +99,69 @@ export const PublishNowResponseSchema = z
   })
   .strict();
 
+export const PublicationRetryBlockReasonSchema = z.enum(['MANUAL_REVIEW_REQUIRED']);
+
+export const PublicationStatusDestinationSchema = z
+  .object({
+    id: z.uuid(),
+    platform: SocialPlatformSchema,
+    type: DestinationTypeSchema,
+    name: z.string().trim().min(1).max(160),
+  })
+  .strict();
+
+export const PublicationStatusRecordSchema = z
+  .object({
+    id: z.uuid(),
+    postVariantId: z.uuid(),
+    socialAccountId: z.uuid().nullable(),
+    state: PublicationStateSchema,
+    destination: PublicationStatusDestinationSchema,
+    scheduledAt: z.iso.datetime({ offset: true }).nullable(),
+    publishedAt: z.iso.datetime({ offset: true }).nullable(),
+    nextRetryAt: z.iso.datetime({ offset: true }).nullable(),
+    retryCount: z.number().int().nonnegative(),
+    lastErrorCode: z.string().trim().min(1).max(160).nullable(),
+    lastErrorMessage: z.string().trim().min(1).max(1_000).nullable(),
+    updatedAt: z.iso.datetime({ offset: true }),
+    canRetry: z.boolean(),
+    retryBlockReason: PublicationRetryBlockReasonSchema.nullable(),
+  })
+  .strict();
+
+export const PublicationStatusListSchema = z
+  .object({
+    items: z.array(PublicationStatusRecordSchema),
+    truncated: z.boolean(),
+  })
+  .strict();
+
+export const PublicationManualRetryAcceptanceSchema = z.enum([
+  'RETRIED',
+  'REENQUEUED',
+  'ALREADY_QUEUED',
+]);
+
+export const PublicationManualRetryResponseSchema = z
+  .object({
+    acceptance: PublicationManualRetryAcceptanceSchema,
+    publication: PublicationStatusRecordSchema,
+  })
+  .strict();
+
 export type PublishNowCommand = z.infer<typeof PublishNowCommandSchema>;
 export type PublishNowBlockingReason = z.infer<typeof PublishNowBlockingReasonSchema>;
 export type PublishNowDestination = z.infer<typeof PublishNowDestinationSchema>;
 export type PublishNowReadiness = z.infer<typeof PublishNowReadinessSchema>;
 export type PublishNowAcceptance = z.infer<typeof PublishNowAcceptanceSchema>;
 export type PublishNowResponse = z.infer<typeof PublishNowResponseSchema>;
+export type PublicationRetryBlockReason = z.infer<typeof PublicationRetryBlockReasonSchema>;
+export type PublicationStatusRecord = z.infer<typeof PublicationStatusRecordSchema>;
+export type PublicationStatusList = z.infer<typeof PublicationStatusListSchema>;
+export type PublicationManualRetryAcceptance = z.infer<
+  typeof PublicationManualRetryAcceptanceSchema
+>;
+export type PublicationManualRetryResponse = z.infer<typeof PublicationManualRetryResponseSchema>;
 
 export interface RetryPolicy {
   maxAttempts: number;
