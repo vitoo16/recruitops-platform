@@ -1,0 +1,30 @@
+{
+  "eyebrow": "LinkedIn connection",
+  "title": "Connect a LinkedIn member",
+  "description": "RecruitOps uses LinkedIn's official authorization-code flow with OpenID profile access and Share on LinkedIn. Access tokens stay server-side and are encrypted before durable storage.",
+  "connect": "Connect LinkedIn",
+  "reconnect": "Reconnect",
+  "redirecting": "Redirecting to LinkedIn…",
+  "refresh": "Refresh accounts",
+  "reconnectRequired": "Reconnect required before publishing can continue.",
+  "loading": "Loading connected LinkedIn accounts…",
+  "noAccounts": "No LinkedIn member is connected yet.",
+  "connectedNotice": "LinkedIn authorization completed and the member connection was refreshed.",
+  "deniedNotice": "LinkedIn authorization was cancelled. No account was changed.",
+  "dismiss": "Dismiss",
+  "loadFailed": "RecruitOps could not load LinkedIn accounts. Try refreshing.",
+  "startFailed": "RecruitOps could not start LinkedIn authorization. Check the server configuration and try again.",
+  "missingApiConfig": "The frontend API connection is not configured.",
+  "signInRequired": "Sign in to connect LinkedIn.",
+  "ownerAdminRequired": "Only OWNER and ADMIN accounts can manage LinkedIn connections.",
+  "accountId": "LinkedIn OIDC subject: {id}",
+  "status": "Status: {value}",
+  "expires": "Credential expiry: {value}",
+  "scopes": "Granted scopes: {value}",
+  "statusValues": {
+    "CONNECTED": "Connected",
+    "EXPIRED": "Expired",
+    "REVOKED": "Revoked",
+    "ERROR": "Error"
+  }
+}
