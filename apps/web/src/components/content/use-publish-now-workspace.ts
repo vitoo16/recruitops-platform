@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getPublishNowReadiness,
   PublicationApiError,
-  queuePublishNow,
+  queuePublishNow as queuePublishNowRequest,
 } from '@/lib/publications/api';
 
 interface UsePublishNowWorkspaceInput {
@@ -23,118 +23,117 @@ export function usePublishNowWorkspace({
   postVariantId,
 }: UsePublishNowWorkspaceInput) {
   const requestVersion = useRef(0);
-  const [readiness, setReadiness] = useState<PublishNowReadiness | null>(null);
-  const [destinationId, setDestinationIdState] = useState('');
-  const [loadingReadiness, setLoadingReadiness] = useState(false);
-  const [readinessError, setReadinessError] = useState(false);
-  const [publishing, setPublishing] = useState(false);
-  const [publishErrorStatus, setPublishErrorStatus] = useState<number | null>(null);
-  const [result, setResult] = useState<PublishNowResponse | null>(null);
+  const [publishReadiness, setPublishReadiness] = useState<PublishNowReadiness | null>(null);
+  const [publishDestinationId, setPublishDestinationIdState] = useState('');
+  const [loadingPublishReadiness, setLoadingPublishReadiness] = useState(false);
+  const [publishReadinessError, setPublishReadinessError] = useState(false);
+  const [publishingNow, setPublishingNow] = useState(false);
+  const [publishNowErrorStatus, setPublishNowErrorStatus] = useState<number | null>(null);
+  const [publishNowResult, setPublishNowResult] = useState<PublishNowResponse | null>(null);
   const [pendingPublicationId, setPendingPublicationId] = useState<string | null>(null);
 
-  const loadReadiness = useCallback(async () => {
+  const loadPublishReadiness = useCallback(async () => {
     if (!session?.access_token || !apiUrl || !postVariantId) {
-      setReadiness(null);
-      setDestinationIdState('');
+      setPublishReadiness(null);
+      setPublishDestinationIdState('');
       return;
     }
 
     const version = ++requestVersion.current;
-    setLoadingReadiness(true);
-    setReadinessError(false);
+    setLoadingPublishReadiness(true);
+    setPublishReadinessError(false);
     try {
       const response = await getPublishNowReadiness(apiUrl, session.access_token, postVariantId);
       if (version !== requestVersion.current) return;
-      setReadiness(response);
-      setDestinationIdState((current) =>
+      setPublishReadiness(response);
+      setPublishDestinationIdState((current) =>
         response.destinations.some((destination) => destination.id === current)
           ? current
           : (response.destinations[0]?.id ?? ''),
       );
     } catch {
       if (version !== requestVersion.current) return;
-      setReadiness(null);
-      setDestinationIdState('');
-      setReadinessError(true);
+      setPublishReadiness(null);
+      setPublishDestinationIdState('');
+      setPublishReadinessError(true);
     } finally {
-      if (version === requestVersion.current) setLoadingReadiness(false);
+      if (version === requestVersion.current) setLoadingPublishReadiness(false);
     }
   }, [apiUrl, postVariantId, session?.access_token]);
 
   useEffect(() => {
     requestVersion.current += 1;
-    setReadiness(null);
-    setDestinationIdState('');
-    setReadinessError(false);
-    setResult(null);
-    setPublishErrorStatus(null);
+    setPublishReadiness(null);
+    setPublishDestinationIdState('');
+    setPublishReadinessError(false);
+    setPublishNowResult(null);
+    setPublishNowErrorStatus(null);
     setPendingPublicationId(null);
-    if (postVariantId) void loadReadiness();
-  }, [loadReadiness, postVariantId]);
+    if (postVariantId) void loadPublishReadiness();
+  }, [loadPublishReadiness, postVariantId]);
 
-  const setDestinationId = useCallback((nextDestinationId: string) => {
-    setDestinationIdState(nextDestinationId);
-    setResult(null);
-    setPublishErrorStatus(null);
+  const setPublishDestinationId = useCallback((nextDestinationId: string) => {
+    setPublishDestinationIdState(nextDestinationId);
+    setPublishNowResult(null);
+    setPublishNowErrorStatus(null);
     setPendingPublicationId(null);
   }, []);
 
-  const publishNow = useCallback(async () => {
+  const queuePublishNow = useCallback(async () => {
     if (
       !session?.access_token ||
       !apiUrl ||
       !canMutate ||
       !postVariantId ||
-      !destinationId ||
-      !readiness?.canPublish ||
-      publishing
+      !publishDestinationId ||
+      !publishReadiness?.canPublish ||
+      publishingNow
     ) {
       return;
     }
 
     const publicationId = pendingPublicationId ?? globalThis.crypto.randomUUID();
     if (!pendingPublicationId) setPendingPublicationId(publicationId);
-    setPublishing(true);
-    setPublishErrorStatus(null);
-    setResult(null);
+    setPublishingNow(true);
+    setPublishNowErrorStatus(null);
+    setPublishNowResult(null);
 
     try {
-      const response = await queuePublishNow(apiUrl, session.access_token, {
+      const response = await queuePublishNowRequest(apiUrl, session.access_token, {
         publicationId,
         postVariantId,
-        destinationId,
+        destinationId: publishDestinationId,
       });
-      setResult(response);
+      setPublishNowResult(response);
       setPendingPublicationId(null);
     } catch (error) {
-      setPublishErrorStatus(error instanceof PublicationApiError ? error.status : 0);
-      await loadReadiness();
+      setPublishNowErrorStatus(error instanceof PublicationApiError ? error.status : 0);
+      await loadPublishReadiness();
     } finally {
-      setPublishing(false);
+      setPublishingNow(false);
     }
   }, [
     apiUrl,
     canMutate,
-    destinationId,
-    loadReadiness,
+    loadPublishReadiness,
     pendingPublicationId,
     postVariantId,
-    publishing,
-    readiness?.canPublish,
+    publishDestinationId,
+    publishingNow,
+    publishReadiness?.canPublish,
     session?.access_token,
   ]);
 
   return {
-    readiness,
-    destinationId,
-    loadingReadiness,
-    readinessError,
-    publishing,
-    publishErrorStatus,
-    result,
-    canMutate,
-    setDestinationId,
-    loadReadiness,
-    publishNow,
+    publishReadiness,
+    publishDestinationId,
+    loadingPublishReadiness,
+    publishReadinessError,
+    publishingNow,
+    publishNowErrorStatus,
+    publishNowResult,
+    setPublishDestinationId,
+    loadPublishReadiness,
+    queuePublishNow,
   };
 }
