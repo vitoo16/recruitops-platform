@@ -152,7 +152,7 @@
 - [ ] Add provider latency/error/rate-limit telemetry.
 - [ ] Add database performance review/indexes.
 - [x] Add dependency/security scanning.
-- [ ] Add backup/restore procedure.
+- [x] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
 - [ ] Add platform-specific worker scaling strategy.
 - [ ] Execute accessibility review.
