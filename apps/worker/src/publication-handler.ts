@@ -1,12 +1,12 @@
 import {
   executePublication,
+  type PublicationExecutionRepository,
   type PublicationJobHandler,
   type SocialPublisherRegistry,
 } from '@recruitops/queue';
-import { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 
 export function createPublicationJobHandler(
-  repository: PrismaPublicationExecutionRepository,
+  repository: PublicationExecutionRepository,
   publishers: SocialPublisherRegistry,
 ): PublicationJobHandler {
   return async (job) => {

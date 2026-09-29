@@ -11,6 +11,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "pnpm --filter @recruitops/worker test:integration",
     "e2e": "pnpm --filter @recruitops/web test:e2e",
     "format": "prettier --write \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,json,mjs}\" \"packages/**/*.{ts,tsx,json}\" \"*.{json,yaml,yml}\" \".github/workflows/*.{yml,yaml}\"",

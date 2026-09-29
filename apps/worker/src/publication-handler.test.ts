@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { SocialPublisherRegistry } from '@recruitops/queue';
+import type { PublicationExecutionRepository, SocialPublisherRegistry } from '@recruitops/queue';
 import { createPublicationJobHandler } from './publication-handler.js';
-import type { PrismaPublicationExecutionRepository } from './publication-execution.repository.js';
 
-function repositoryMock() {
+function repositoryMock(): PublicationExecutionRepository {
   return {
     loadForExecution: vi.fn().mockResolvedValue({
       id: '33333333-3333-4333-8333-333333333333',
@@ -26,7 +25,7 @@ function repositoryMock() {
       payload: { text: 'Already published', hashtags: [] },
     }),
     compareAndSet: vi.fn(),
-  } as unknown as PrismaPublicationExecutionRepository;
+  };
 }
 
 describe('createPublicationJobHandler', () => {
