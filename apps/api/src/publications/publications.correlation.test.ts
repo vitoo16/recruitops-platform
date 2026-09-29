@@ -97,7 +97,10 @@ describe('publication correlation propagation', () => {
   it('reuses the persisted publication correlation id when recreating a missing failed job', async () => {
     const row = statusRow();
     const repository = {
-      findStatusById: vi.fn().mockResolvedValueOnce(row).mockResolvedValueOnce({ ...row, retryCount: 0 }),
+      findStatusById: vi
+        .fn()
+        .mockResolvedValueOnce(row)
+        .mockResolvedValueOnce({ ...row, retryCount: 0 }),
       prepareManualRetry: vi.fn().mockResolvedValue(true),
     };
     const queue = { retryFailed: vi.fn().mockResolvedValue('REENQUEUED') };
