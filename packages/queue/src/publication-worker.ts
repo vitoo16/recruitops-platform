@@ -1,5 +1,13 @@
 import { PublicationIdentitySchema, buildPublicationIdempotencyKey } from '@recruitops/contracts';
-import { Worker, type ConnectionOptions, type Job, type WorkerOptions } from 'bullmq';
+import {
+  RedisConnection,
+  Worker,
+  createNodeRedisClient,
+  type ConnectionOptions,
+  type Job,
+  type WorkerOptions,
+} from 'bullmq';
+import { createClient } from 'redis';
 import {
   PUBLICATION_JOB_NAME,
   PUBLICATION_QUEUE_NAME,
@@ -20,6 +28,25 @@ export const defaultPublicationWorkerLimits: Readonly<PublicationWorkerLimits> =
 
 export interface PublicationJobHandler {
   (job: PublicationQueueJob): Promise<void>;
+}
+
+function ensureNodeRedisClientFactory(): void {
+  RedisConnection.clientFactory ??= (options) => {
+    const rawClient = options.url
+      ? createClient({ url: options.url })
+      : createClient({
+          socket: {
+            host: options.host ?? '127.0.0.1',
+            port: options.port ?? 6379,
+            ...(options.tls ? { tls: true } : {}),
+          },
+          ...(options.username ? { username: options.username } : {}),
+          ...(options.password ? { password: options.password } : {}),
+          ...(Number.isInteger(options.db) ? { database: options.db } : {}),
+        });
+
+    return createNodeRedisClient(rawClient);
+  };
 }
 
 export function validatePublicationQueueJob(input: unknown): PublicationQueueJob {
@@ -90,6 +117,8 @@ export function createPublicationWorker(input: {
   handler: PublicationJobHandler;
   limits?: Partial<PublicationWorkerLimits>;
 }) {
+  ensureNodeRedisClientFactory();
+
   const worker = new Worker<PublicationQueueJob>(
     PUBLICATION_QUEUE_NAME,
     async (job: Job<PublicationQueueJob>) => {
