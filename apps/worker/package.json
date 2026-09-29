@@ -8,7 +8,9 @@
     "build": "tsc -p tsconfig.json",
     "start:prod": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --exclude \"src/publication-pipeline.integration.test.ts\"",
+    "pretest:integration": "pnpm --filter @recruitops/contracts build && pnpm --filter @recruitops/queue build",
+    "test:integration": "vitest run src/publication-pipeline.integration.test.ts"
   },
   "dependencies": {
     "@recruitops/contracts": "workspace:*",
