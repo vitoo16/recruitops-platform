@@ -52,27 +52,45 @@ export function LinkedInConnectionPanel() {
           className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
           role="status"
         >
-          <span>{workspace.notice === 'connected' ? t('connectedNotice') : t('deniedNotice')}</span>
-          <Button type="button" variant="outline" className="min-h-11" onClick={workspace.dismissNotice}>
+          <span>
+            {workspace.notice === 'connected' ? t('connectedNotice') : t('deniedNotice')}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            onClick={workspace.dismissNotice}
+          >
             {t('dismiss')}
           </Button>
         </div>
       ) : null}
 
       {workspace.loadError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {t('loadFailed')}
         </p>
       ) : null}
 
       {workspace.startError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
           {t('startFailed')}
         </p>
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button type="button" className="min-h-11" disabled={workspace.redirecting} onClick={() => void workspace.connect()}>
+        <Button
+          type="button"
+          className="min-h-11"
+          disabled={workspace.redirecting}
+          onClick={() => void workspace.connect()}
+        >
           <Linkedin className="mr-2 size-4" aria-hidden="true" />
           {workspace.redirecting
             ? t('redirecting')
@@ -110,7 +128,10 @@ export function LinkedInConnectionPanel() {
         {workspace.accounts.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2">
             {workspace.accounts.map((account) => (
-              <article key={account.id} className="min-w-0 rounded-xl border bg-[var(--surface-subtle)] p-4">
+              <article
+                key={account.id}
+                className="min-w-0 rounded-xl border bg-[var(--surface-subtle)] p-4"
+              >
                 <div className="flex items-start gap-3">
                   <Linkedin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
@@ -123,7 +144,9 @@ export function LinkedInConnectionPanel() {
                     </p>
                     {account.expiresAt ? (
                       <p className="mt-2 text-sm text-[var(--content-secondary)]">
-                        {t('expires', { value: dateFormatter.format(new Date(account.expiresAt)) })}
+                        {t('expires', {
+                          value: dateFormatter.format(new Date(account.expiresAt)),
+                        })}
                       </p>
                     ) : null}
                     <p className="mt-2 break-words text-sm text-[var(--content-secondary)]">
