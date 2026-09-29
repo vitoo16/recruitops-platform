@@ -28,5 +28,32 @@
   "variantLoadFailed": "Không thể tải các biến thể nền tảng.",
   "selectionLoadFailed": "Không thể tải danh sách media đã chọn cho nền tảng này.",
   "variantSaveFailed": "Không thể lưu biến thể nền tảng. Vui lòng thử lại.",
-  "selectionSaveFailed": "Không thể lưu lựa chọn media. Hãy kiểm tra tất cả asset vẫn thuộc bài đăng này."
+  "selectionSaveFailed": "Không thể lưu lựa chọn media. Hãy kiểm tra tất cả asset vẫn thuộc bài đăng này.",
+  "publishNow": {
+    "eyebrow": "Phân phối",
+    "title": "Đăng ngay",
+    "description": "Chọn một đích API hợp lệ và gửi biến thể nền tảng đã lưu vào hàng đợi xuất bản bền vững.",
+    "saveVariantFirst": "Hãy lưu một biến thể nền tảng trước khi chuẩn bị xuất bản.",
+    "loading": "Đang kiểm tra khả năng xuất bản…",
+    "readinessFailed": "RecruitOps không thể kiểm tra khả năng xuất bản.",
+    "retryReadiness": "Kiểm tra lại",
+    "refreshReadiness": "Làm mới trạng thái",
+    "platform": "Nền tảng: {value}",
+    "postStatus": "Trạng thái bài: {value}",
+    "blockedTitle": "Chưa thể đăng ngay",
+    "blockingReasons": {
+      "POST_NOT_READY": "Chuyển bài gốc sang trạng thái READY trước khi bắt đầu quy trình xuất bản.",
+      "NO_ELIGIBLE_API_DESTINATION": "Không có đích API đang bật với tài khoản đã kết nối và chưa hết hạn cho nền tảng này."
+    },
+    "destination": "Đích API",
+    "destinationHint": "Chỉ hiển thị các đích đang bật, cùng nền tảng và có tài khoản mạng xã hội đã kết nối, chưa hết hạn.",
+    "readOnly": "Vai trò của bạn có thể xem trạng thái nhưng không thể bắt đầu xuất bản.",
+    "queueAction": "Đưa vào hàng đợi đăng ngay",
+    "queueing": "Đang đưa vào hàng đợi…",
+    "queueDisclaimer": "Đã vào hàng đợi chỉ có nghĩa yêu cầu phân phối được tiếp nhận. Điều này chưa có nghĩa nền tảng mạng xã hội đã đăng bài thành công.",
+    "queuedSuccess": "Đã đưa yêu cầu xuất bản vào hàng đợi. Trạng thái hiện tại: {state}.",
+    "alreadyAccepted": "Yêu cầu xuất bản này đã được tiếp nhận trước đó. Trạng thái hiện tại: {state}.",
+    "queueUnconfirmed": "Không thể xác nhận hàng đợi đã nhận yêu cầu. Hãy thử lại mà không đổi đích; RecruitOps sẽ dùng lại cùng publication ID để tránh đăng trùng.",
+    "publishFailed": "RecruitOps không thể bắt đầu yêu cầu xuất bản này. Hãy làm mới trạng thái và thử lại."
+  }
 }
