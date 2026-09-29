@@ -1,4 +1,5 @@
-import { Injectable, OnModuleDestroy, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import type { OnModuleDestroy } from '@nestjs/common';
 import { createPublicationQueue, enqueuePublication } from '@recruitops/queue';
 
 interface PublicationQueueHandle {
