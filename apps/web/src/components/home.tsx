@@ -8,12 +8,15 @@ import { CandidateCrm } from '@/components/candidates/candidate-crm';
 import { CandidateCvWorkspace } from '@/components/candidates/candidate-cv-workspace';
 import { ContentMediaWorkspace } from '@/components/content/content-media-workspace';
 import { JobHub } from '@/components/jobs/job-hub';
+import { LinkedInConnectionPanel } from '@/components/linkedin-connections/linkedin-connection-panel';
 import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
 import { ThreadsConnectionPanel } from '@/components/threads-connections/threads-connection-panel';
 import { Button } from '@/components/ui/button';
 import contentStudioEn from '@/messages/content-studio.en.json';
 import contentStudioVi from '@/messages/content-studio.vi.json';
 import en from '@/messages/en.json';
+import linkedinEn from '@/messages/linkedin-connections.en.json';
+import linkedinVi from '@/messages/linkedin-connections.vi.json';
 import metaEn from '@/messages/meta-connections.en.json';
 import metaVi from '@/messages/meta-connections.vi.json';
 import threadsEn from '@/messages/threads-connections.en.json';
@@ -82,6 +85,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
 
         <MetaConnectionPanel />
         <ThreadsConnectionPanel />
+        <LinkedInConnectionPanel />
         <JobHub />
         <ContentMediaWorkspace />
         <CandidateCrm />
@@ -96,6 +100,7 @@ export function Home() {
   const baseMessages = locale === 'vi' ? vi : en;
   const messages = {
     ...baseMessages,
+    linkedinConnections: locale === 'vi' ? linkedinVi : linkedinEn,
     metaConnections: locale === 'vi' ? metaVi : metaEn,
     threadsConnections: locale === 'vi' ? threadsVi : threadsEn,
     contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
