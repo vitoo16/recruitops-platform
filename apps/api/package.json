@@ -18,6 +18,7 @@
     "@recruitops/contracts": "workspace:*",
     "@recruitops/database": "workspace:*",
     "@recruitops/integrations": "workspace:*",
+    "@recruitops/queue": "workspace:*",
     "dotenv": "^17.2.2",
     "redis": "^6.2.1",
     "reflect-metadata": "^0.2.2",

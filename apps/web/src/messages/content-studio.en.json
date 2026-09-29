@@ -28,5 +28,32 @@
   "variantLoadFailed": "Platform variants could not be loaded.",
   "selectionLoadFailed": "The selected media for this platform could not be loaded.",
   "variantSaveFailed": "The platform variant could not be saved. Try again.",
-  "selectionSaveFailed": "The media selection could not be saved. Check that every asset still belongs to this post."
+  "selectionSaveFailed": "The media selection could not be saved. Check that every asset still belongs to this post.",
+  "publishNow": {
+    "eyebrow": "Dispatch",
+    "title": "Publish now",
+    "description": "Choose an eligible API destination and submit this saved platform variant to the durable publication queue.",
+    "saveVariantFirst": "Save a platform variant before preparing a publication.",
+    "loading": "Checking publication readiness…",
+    "readinessFailed": "RecruitOps could not check publication readiness.",
+    "retryReadiness": "Retry readiness check",
+    "refreshReadiness": "Refresh readiness",
+    "platform": "Platform: {value}",
+    "postStatus": "Post status: {value}",
+    "blockedTitle": "Publish now is blocked",
+    "blockingReasons": {
+      "POST_NOT_READY": "Mark the canonical post READY before starting the publication workflow.",
+      "NO_ELIGIBLE_API_DESTINATION": "No enabled API destination with a connected, unexpired account is available for this platform."
+    },
+    "destination": "API destination",
+    "destinationHint": "Only enabled destinations on the same platform with a connected, unexpired social account are listed.",
+    "readOnly": "Your role can review readiness but cannot start a publication.",
+    "queueAction": "Queue publish now",
+    "queueing": "Queueing publication…",
+    "queueDisclaimer": "Queued means the dispatch request was accepted. It does not mean the social provider has published the post yet.",
+    "queuedSuccess": "Publication queued. Current state: {state}.",
+    "alreadyAccepted": "This publication request was already accepted. Current state: {state}.",
+    "queueUnconfirmed": "Queue acceptance could not be confirmed. Retry this action without changing the destination; RecruitOps will reuse the same publication ID to avoid duplicates.",
+    "publishFailed": "RecruitOps could not start this publication. Refresh readiness and try again."
+  }
 }

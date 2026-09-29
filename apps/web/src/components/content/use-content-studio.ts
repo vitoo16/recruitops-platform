@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useContentStudioSession } from './use-content-studio-session';
 import { usePostMediaWorkspace } from './use-post-media-workspace';
 import { usePostVariantWorkspace } from './use-post-variant-workspace';
+import { usePublishNowWorkspace } from './use-publish-now-workspace';
 
 export type { ContentStudioPostForm } from './content-studio-types';
 
@@ -26,11 +27,18 @@ export function useContentStudio() {
     baseContent: postMedia.selectedPost?.baseContent ?? '',
     reportError,
   });
+  const publishing = usePublishNowWorkspace({
+    session: context.session,
+    apiUrl: context.apiUrl,
+    canMutate: context.canMutate,
+    postVariantId: variants.selectedVariant?.id ?? null,
+  });
 
   return {
     ...context,
     ...postMedia,
     ...variants,
+    ...publishing,
     error,
   };
 }

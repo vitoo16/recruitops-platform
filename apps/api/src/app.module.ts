@@ -9,6 +9,7 @@ import { HealthController } from './health/health.controller.js';
 import { IntegrationHealthModule } from './integration-health/integration-health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { MetaConnectionsModule } from './meta-connections/meta-connections.module.js';
+import { PublicationsModule } from './publications/publications.module.js';
 import { SocialCredentialsModule } from './social-credentials/social-credentials.module.js';
 import { ThreadsConnectionsModule } from './threads-connections/threads-connections.module.js';
 
@@ -23,6 +24,7 @@ import { ThreadsConnectionsModule } from './threads-connections/threads-connecti
     IntegrationHealthModule,
     JobsModule,
     MetaConnectionsModule,
+    PublicationsModule,
     SocialCredentialsModule,
     ThreadsConnectionsModule,
   ],
