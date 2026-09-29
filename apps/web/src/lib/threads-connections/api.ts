@@ -26,6 +26,13 @@ const ThreadsStartResponseSchema = z
   })
   .strict();
 
+const ThreadsCredentialRefreshResponseSchema = z
+  .object({
+    account: ThreadsConnectedAccountSchema,
+    refreshedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
 export type ThreadsConnectedAccount = z.infer<typeof ThreadsConnectedAccountSchema>;
 
 async function requestJson<TSchema extends z.ZodType>(
@@ -46,6 +53,19 @@ export async function listThreadsAccounts(apiUrl: string, accessToken: string) {
     ThreadsAccountsResponseSchema,
     `${apiUrl}/integrations/threads/oauth/accounts`,
     accessToken,
+  );
+}
+
+export async function refreshThreadsCredential(
+  apiUrl: string,
+  accessToken: string,
+  accountId: string,
+) {
+  return requestJson(
+    ThreadsCredentialRefreshResponseSchema,
+    `${apiUrl}/integrations/threads/oauth/accounts/${encodeURIComponent(accountId)}/refresh`,
+    accessToken,
+    { method: 'POST' },
   );
 }
 
