@@ -11,8 +11,12 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { createPublicationJobHandler } from './publication-handler.js';
 
-const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) throw new Error('REDIS_URL_REQUIRED_FOR_PUBLICATION_INTEGRATION_TEST');
+function requireRedisUrl(value: string | undefined): string {
+  if (!value) throw new Error('REDIS_URL_REQUIRED_FOR_PUBLICATION_INTEGRATION_TEST');
+  return value;
+}
+
+const redisUrl = requireRedisUrl(process.env.REDIS_URL);
 
 const destinationId = '22222222-2222-4222-8222-222222222222';
 const socialAccountId = '11111111-1111-4111-8111-111111111111';
