@@ -10,7 +10,11 @@ export function initializeWorkerErrorMonitoring(nodeEnv: string): boolean {
   Sentry.init({
     dsn,
     environment: nodeEnv,
-    sendDefaultPii: false,
+    beforeSend(event) {
+      delete event.user;
+      delete event.request;
+      return event;
+    },
   });
   Sentry.setTag('service', 'recruitops-worker');
   return true;
