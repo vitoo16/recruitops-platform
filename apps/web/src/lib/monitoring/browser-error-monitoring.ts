@@ -76,7 +76,6 @@ export function initializeBrowserErrorMonitoring(): Promise<BrowserSentryModule 
       sentry.init({
         dsn: monitoring.dsn,
         environment: monitoring.environment,
-        sendDefaultPii: false,
         sampleRate: 1,
         defaultIntegrations: false,
         tracesSampleRate: 0,
