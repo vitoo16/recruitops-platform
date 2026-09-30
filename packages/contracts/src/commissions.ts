@@ -57,7 +57,7 @@ export const ReconciliationBatchSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   transactionCount: z.number().int().nonnegative(),
-  totalAmountMinor: moneyMinorSchema,
+  totalAmountMinor: moneyMinorSchema.nullable(),
   currency: z.string().length(3).nullable(),
 });
 
