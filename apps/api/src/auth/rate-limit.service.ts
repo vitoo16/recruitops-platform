@@ -50,7 +50,10 @@ export class RateLimitService {
   constructor(private readonly redis: RedisService) {}
 
   async consumePrincipal(principalId: string): Promise<RateLimitDecision> {
-    const limit = parsePositiveInteger(process.env.API_RATE_LIMIT_MAX_REQUESTS, DEFAULT_MAX_REQUESTS);
+    const limit = parsePositiveInteger(
+      process.env.API_RATE_LIMIT_MAX_REQUESTS,
+      DEFAULT_MAX_REQUESTS,
+    );
     const windowSeconds = parsePositiveInteger(
       process.env.API_RATE_LIMIT_WINDOW_SECONDS,
       DEFAULT_WINDOW_SECONDS,
