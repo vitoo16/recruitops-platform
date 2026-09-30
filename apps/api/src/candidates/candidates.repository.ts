@@ -180,7 +180,10 @@ export class CandidatesRepository {
     return candidates.map(mapDatabaseCandidate);
   }
 
-  async createApplication(input: CreateApplicationInput, sourceUserId: string): Promise<Application> {
+  async createApplication(
+    input: CreateApplicationInput,
+    sourceUserId: string,
+  ): Promise<Application> {
     const [candidate, job, destination] = await Promise.all([
       this.database.client.candidate.findUnique({
         where: { id: input.candidateId },
