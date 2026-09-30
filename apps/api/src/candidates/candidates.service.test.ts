@@ -10,9 +10,11 @@ const application = {
   status: 'SUBMITTED' as const,
   sourcePlatform: null,
   sourceDestinationId: null,
+  sourceUserId: '550e8400-e29b-41d4-a716-446655440013',
   sourceLabel: null,
   sourcedAt: '2026-09-27T08:00:00.000Z',
   submittedAt: '2026-09-27T08:05:00.000Z',
+  interviewInvitedAt: null,
   interviewAt: null,
   hiredAt: null,
   startedAt: null,
@@ -22,6 +24,25 @@ const application = {
 };
 
 describe('CandidatesService', () => {
+  it('passes the authenticated principal into application source attribution', async () => {
+    const createApplication = vi.fn().mockResolvedValue(application);
+    const repository = { createApplication } as unknown as CandidatesRepository;
+    const service = new CandidatesService(repository);
+    const input = {
+      candidateId: application.candidateId,
+      jobId: application.jobId,
+      status: 'SUBMITTED',
+    };
+
+    await expect(service.createApplication(application.sourceUserId, input)).resolves.toEqual(
+      application,
+    );
+    expect(createApplication).toHaveBeenCalledWith(
+      expect.objectContaining(input),
+      application.sourceUserId,
+    );
+  });
+
   it('rejects invalid application status transitions', async () => {
     const repository = {
       getApplicationById: vi.fn().mockResolvedValue(application),
@@ -36,7 +57,11 @@ describe('CandidatesService', () => {
   });
 
   it('persists a valid transition with the supplied occurrence time', async () => {
-    const updated = { ...application, status: 'INTERVIEW_INVITED' as const };
+    const updated = {
+      ...application,
+      status: 'INTERVIEW_INVITED' as const,
+      interviewInvitedAt: '2026-09-28T02:00:00.000Z',
+    };
     const repository = {
       getApplicationById: vi.fn().mockResolvedValue(application),
       updateApplicationStatus: vi.fn().mockResolvedValue(updated),
