@@ -47,6 +47,8 @@ Shutdown and startup-failure paths perform a bounded flush so queued monitoring 
 
 Configure `SENTRY_DSN` and, when browser monitoring is desired, `NEXT_PUBLIC_SENTRY_DSN` only through the deployment platform's environment management. Never commit a DSN value or Sentry auth token to the repository. Changes to `NEXT_PUBLIC_*` values require a new frontend build because they are compiled into the static client bundle.
 
+`render.yaml` declares both server-side `SENTRY_DSN` and frontend build-time `NEXT_PUBLIC_SENTRY_DSN` as `sync: false` placeholders. The Blueprint therefore documents the expected configuration without committing either value; an already-created Render service still requires the value to be set/verified in the hosted environment before monitoring can be considered production-verified.
+
 A real hosted Sentry project/DSN is an environment concern and is not required for local development or CI. CI verifies the disabled path without hosted credentials.
 
 Source-map upload is not enabled in this baseline because it requires a Sentry build/auth configuration and is not necessary for fail-closed error capture. Production source-map policy should be decided during production-readiness work before introducing any Sentry auth token into build infrastructure.
