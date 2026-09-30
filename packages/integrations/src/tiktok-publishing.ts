@@ -23,6 +23,9 @@ export interface TikTokDirectPostVideoInput {
   disableComment?: boolean | undefined;
   disableDuet?: boolean | undefined;
   disableStitch?: boolean | undefined;
+  brandContentToggle?: boolean | undefined;
+  brandOrganicToggle?: boolean | undefined;
+  isAigc?: boolean | undefined;
   videoSize: number;
   chunkSize: number;
   totalChunkCount: number;
@@ -288,6 +291,9 @@ export class TikTokPublishingProvider {
               : {}),
             ...(input.disableDuet !== undefined ? { disable_duet: input.disableDuet } : {}),
             ...(input.disableStitch !== undefined ? { disable_stitch: input.disableStitch } : {}),
+            brand_content_toggle: input.brandContentToggle ?? false,
+            brand_organic_toggle: input.brandOrganicToggle ?? false,
+            ...(input.isAigc !== undefined ? { is_aigc: input.isAigc } : {}),
           },
           source_info: {
             source: 'FILE_UPLOAD',
