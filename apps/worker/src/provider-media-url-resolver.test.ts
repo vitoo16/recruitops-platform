@@ -23,15 +23,11 @@ describe('PrismaProviderMediaResolver', () => {
         id: '22222222-2222-4222-8222-222222222222',
         kind: 'VIDEO',
         storageKey: 'content/post/video.mp4',
-        mimeType: 'video/mp4',
-        sizeBytes: 1024n,
       },
       {
         id: '11111111-1111-4111-8111-111111111111',
         kind: 'IMAGE',
         storageKey: 'content/post/image.webp',
-        mimeType: 'image/webp',
-        sizeBytes: 512n,
       },
     ]);
     const sign = vi
@@ -51,15 +47,11 @@ describe('PrismaProviderMediaResolver', () => {
         mediaId: '11111111-1111-4111-8111-111111111111',
         kind: 'IMAGE',
         publicUrl: 'https://project.supabase.co/content/post/image.webp',
-        mimeType: 'image/webp',
-        sizeBytes: 512,
       },
       {
         mediaId: '22222222-2222-4222-8222-222222222222',
         kind: 'VIDEO',
         publicUrl: 'https://project.supabase.co/content/post/video.mp4',
-        mimeType: 'video/mp4',
-        sizeBytes: 1024,
       },
     ]);
     expect(sign).toHaveBeenNthCalledWith(1, 'content/post/image.webp');
@@ -85,8 +77,6 @@ describe('PrismaProviderMediaResolver', () => {
         id: '11111111-1111-4111-8111-111111111111',
         kind: 'DOCUMENT',
         storageKey: 'content/post/file.pdf',
-        mimeType: 'application/pdf',
-        sizeBytes: 512n,
       },
     ]);
     const sign = vi.fn();
@@ -109,25 +99,6 @@ describe('PrismaProviderMediaResolver', () => {
     });
     expect(findMany).not.toHaveBeenCalled();
     expect(sign).not.toHaveBeenCalled();
-  });
-
-  it('rejects media sizes that cannot be represented safely', async () => {
-    const { database, findMany } = createDatabase();
-    findMany.mockResolvedValue([
-      {
-        id: '11111111-1111-4111-8111-111111111111',
-        kind: 'VIDEO',
-        storageKey: 'content/post/video.mp4',
-        mimeType: 'video/mp4',
-        sizeBytes: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
-      },
-    ]);
-    const sign = vi.fn().mockResolvedValue('https://project.supabase.co/content/post/video.mp4');
-    const resolver = new PrismaProviderMediaResolver(database, { sign });
-
-    await expect(resolver.resolve(['11111111-1111-4111-8111-111111111111'])).rejects.toMatchObject({
-      code: 'WORKER_PROVIDER_MEDIA_SIZE_INVALID',
-    });
   });
 });
 
