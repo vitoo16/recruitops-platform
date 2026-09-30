@@ -5,10 +5,11 @@ RecruitOps uses Sentry for server-side exception monitoring in the API and publi
 ## Runtime contract
 
 - `SENTRY_DSN` is optional. When it is empty or absent, monitoring is disabled and both services continue normally.
-- When configured, the API and worker initialize `@sentry/node` with the current `NODE_ENV` and `sendDefaultPii: false`.
+- When configured, the API and worker initialize `@sentry/node` with the current `NODE_ENV`.
+- A `beforeSend` sanitizer removes SDK-native user and request objects before transmission; RecruitOps adds only bounded safe operational context itself.
 - The API tags events with `service=recruitops-api` and, when available, the normalized request correlation ID.
 - The worker tags events with `service=recruitops-worker` plus bounded operational event/code tags.
-- No provider token, OAuth credential, CV/candidate PII, request body, signed media URL, database URL, Redis URL, or secret value is attached by this integration.
+- No provider token, OAuth credential, CV/candidate PII, request body, request headers/cookies/query string, signed media URL, database URL, Redis URL, or secret value is attached by this integration.
 
 ## API behavior
 
