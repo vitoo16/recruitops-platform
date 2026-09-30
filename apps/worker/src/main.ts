@@ -1,4 +1,10 @@
 import {
+  captureWorkerException,
+  flushWorkerErrorMonitoring,
+  initializeWorkerErrorMonitoring,
+  registerWorkerProcessErrorMonitoring,
+} from './error-monitoring.js';
+import {
   readWorkerRuntimeConfig,
   startPublicationWorkerRuntime,
   WorkerRuntimeConfigurationError,
@@ -10,18 +16,24 @@ function startupErrorCode(error: unknown): string {
 }
 
 async function main(): Promise<void> {
+  initializeWorkerErrorMonitoring(process.env.NODE_ENV ?? 'development');
+  registerWorkerProcessErrorMonitoring();
+
   let runtime: ReturnType<typeof startPublicationWorkerRuntime>;
   try {
     runtime = startPublicationWorkerRuntime(readWorkerRuntimeConfig());
   } catch (error) {
+    const code = startupErrorCode(error);
+    captureWorkerException(error, { event: 'publication_worker_startup_failed', code });
     console.error(
       JSON.stringify({
         level: 'error',
         service: 'recruitops-worker',
         event: 'publication_worker_startup_failed',
-        code: startupErrorCode(error),
+        code,
       }),
     );
+    await flushWorkerErrorMonitoring();
     process.exitCode = 1;
     return;
   }
@@ -40,7 +52,8 @@ async function main(): Promise<void> {
     );
     try {
       await runtime.close();
-    } catch {
+    } catch (error) {
+      captureWorkerException(error, { event: 'publication_worker_shutdown_failed', signal });
       console.error(
         JSON.stringify({
           level: 'error',
@@ -49,6 +62,8 @@ async function main(): Promise<void> {
         }),
       );
       process.exitCode = 1;
+    } finally {
+      await flushWorkerErrorMonitoring();
     }
   };
 
