@@ -3,7 +3,7 @@ import type { ExecutionContext } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import type { AuditService } from '../audit/audit.service.js';
 import { AuthGuard } from './auth.guard.js';
-import type { RateLimitService } from './rate-limit.service.js';
+import type { RateLimitDecision, RateLimitService } from './rate-limit.service.js';
 import type { SupabaseAuthService } from './supabase-auth.service.js';
 
 function createContext(authorization?: string): {
@@ -20,8 +20,10 @@ function createContext(authorization?: string): {
   };
 } {
   const request = {
-    header: (name: string) =>
-      name.toLowerCase() === 'authorization' ? authorization : undefined,
+    header: (name: string) => {
+      if (name.toLowerCase() === 'authorization') return authorization;
+      return undefined;
+    },
     requestId: 'req-123',
     method: 'GET',
     originalUrl: '/api/auth/me',
@@ -51,14 +53,7 @@ function createAuditService() {
   return { record: vi.fn() } as unknown as AuditService;
 }
 
-function createRateLimitService(
-  overrides: Partial<{
-    allowed: boolean;
-    limit: number;
-    remaining: number;
-    retryAfterSeconds: number;
-  }> = {},
-) {
+function createRateLimitService(overrides: Partial<RateLimitDecision> = {}) {
   const decision = {
     allowed: true,
     limit: 120,
