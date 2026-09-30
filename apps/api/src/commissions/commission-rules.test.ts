@@ -82,18 +82,18 @@ describe('commission rules', () => {
   });
 
   it('calculates the stakeholder day-5/day-15 payment cycle in Vietnam time', () => {
-    expect(nextCommissionPayableAt('INTERVIEW_INVITED', new Date('2026-10-03T00:00:00Z'))).toISOString()).toBe(
-      '2026-10-04T17:00:00.000Z',
-    );
-    expect(nextCommissionPayableAt('INTERVIEW_INVITED', new Date('2026-10-06T00:00:00Z'))).toISOString()).toBe(
-      '2026-11-04T17:00:00.000Z',
-    );
-    expect(nextCommissionPayableAt('WORKED_30_DAYS', new Date('2026-10-15T09:00:00Z'))).toISOString()).toBe(
-      '2026-10-14T17:00:00.000Z',
-    );
-    expect(nextCommissionPayableAt('WORKED_30_DAYS', new Date('2026-10-15T18:00:00Z'))).toISOString()).toBe(
-      '2026-11-14T17:00:00.000Z',
-    );
+    expect(
+      nextCommissionPayableAt('INTERVIEW_INVITED', new Date('2026-10-03T00:00:00Z')).toISOString(),
+    ).toBe('2026-10-04T17:00:00.000Z');
+    expect(
+      nextCommissionPayableAt('INTERVIEW_INVITED', new Date('2026-10-04T18:00:00Z')).toISOString(),
+    ).toBe('2026-11-04T17:00:00.000Z');
+    expect(
+      nextCommissionPayableAt('WORKED_30_DAYS', new Date('2026-10-14T09:00:00Z')).toISOString(),
+    ).toBe('2026-10-14T17:00:00.000Z');
+    expect(
+      nextCommissionPayableAt('WORKED_30_DAYS', new Date('2026-10-14T18:00:00Z')).toISOString(),
+    ).toBe('2026-11-14T17:00:00.000Z');
     expect(vietnamPaymentInstant('2026-10-15').toISOString()).toBe('2026-10-14T17:00:00.000Z');
   });
 
