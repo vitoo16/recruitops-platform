@@ -1,5 +1,5 @@
 export interface BrowserErrorMonitoringConfig {
-  dsn?: string;
+  dsn: string | undefined;
   enabled: boolean;
   environment: 'development' | 'test' | 'production';
 }
