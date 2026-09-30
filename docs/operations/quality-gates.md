@@ -10,6 +10,8 @@
 - [ ] E2E for critical flows
 - [ ] build
 - [ ] dependency audit passes; known vulnerabilities at `moderate` severity or higher are blocking
+- [ ] dependency review passes for dependency changes introduced by the pull request
+- [ ] CodeQL JavaScript/TypeScript scan completes and security findings are triaged
 - [ ] documentation impact reviewed
 - [ ] Mermaid impact reviewed
 - [ ] migration impact reviewed
@@ -23,7 +25,7 @@
 
 Dependabot is configured to propose weekly dependency updates for the root npm/pnpm workspace and GitHub Actions. Dependency update PRs must pass the same repository checks as human-authored changes; automation does not imply automatic merge.
 
-The dependency audit runs against the resolved pnpm dependency graph on pull requests and on pushes to `main`, so it does not depend on GitHub Dependency Graph repository settings.
+The resolved dependency audit runs on pull requests and pushes to `main`. GitHub Dependency Review separately evaluates dependency changes introduced by pull requests and blocks known vulnerabilities at `moderate` severity or higher. CodeQL analyzes JavaScript/TypeScript source with the `security-extended` suite on pull requests, `main`, and a weekly schedule.
 
 ## Critical E2E targets
 
