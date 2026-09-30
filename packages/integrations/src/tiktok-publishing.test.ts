@@ -51,7 +51,8 @@ describe('TikTokPublishingProvider', () => {
       jsonResponse({
         data: {
           publish_id: 'v_pub_file~v2-1.123',
-          upload_url: 'https://open-upload.tiktokapis.com/video/?upload_id=123&upload_token=abc',
+          upload_url:
+            'https://open-upload.tiktokapis.com/video/?upload_id=123&upload_token=abc',
         },
         error: okError,
       }),
