@@ -1,8 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type {
-  TikTokConnectionProvider,
-  TikTokPublishingProvider,
-} from '@recruitops/integrations';
+import type { TikTokConnectionProvider, TikTokPublishingProvider } from '@recruitops/integrations';
 import { TikTokPublishingError } from '@recruitops/integrations';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OAuthCredentialCipher } from '../social-credentials/oauth-credential-cipher.js';
@@ -92,13 +89,7 @@ function setup(scope = 'user.info.basic,video.publish') {
       .mockResolvedValue({ socialAccountId: 'account-id', destinationId: 'destination-id' }),
   } as unknown as TikTokConnectionsRepository;
   return {
-    service: new TikTokConnectionsService(
-      states,
-      cipher,
-      clients,
-      repository,
-      publishingClients,
-    ),
+    service: new TikTokConnectionsService(states, cipher, clients, repository, publishingClients),
     states,
     provider,
     publishingProvider,
