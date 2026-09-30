@@ -26,18 +26,16 @@ function createPublisher(response?: Response) {
       accessToken: 'linkedin-member-token',
     }),
   };
-  const fetchFn = vi
-    .fn<typeof fetch>()
-    .mockResolvedValue(
-      response ??
-        new Response(null, {
-          status: 201,
-          headers: {
-            'x-restli-id': 'urn:li:share:123456789',
-            'x-restli-request-id': 'request-123',
-          },
-        }),
-    );
+  const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(
+    response ??
+      new Response(null, {
+        status: 201,
+        headers: {
+          'x-restli-id': 'urn:li:share:123456789',
+          'x-restli-request-id': 'request-123',
+        },
+      }),
+  );
   return {
     publisher: new LinkedInMemberPublisher({ apiVersion: '202601' }, contexts, fetchFn),
     contexts,
