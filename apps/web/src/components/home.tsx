@@ -42,7 +42,8 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       </a>
       <main
         id="main-content"
-        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16"
+        tabIndex={-1}
+        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16 outline-none"
       >
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
