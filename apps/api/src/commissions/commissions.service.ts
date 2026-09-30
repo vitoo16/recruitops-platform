@@ -19,10 +19,7 @@ import {
   type ReconciliationBatchListResponse,
 } from '@recruitops/contracts';
 import type { AuthenticatedPrincipal } from '../auth/auth.types.js';
-import {
-  mapDatabaseApplication,
-  milestoneForStatus,
-} from '../candidates/candidates.repository.js';
+import { mapDatabaseApplication, milestoneForStatus } from '../candidates/candidates.repository.js';
 import { parseRequest } from '../common/zod-request.js';
 import { DatabaseService } from '../database/database.service.js';
 import {
@@ -33,10 +30,7 @@ import {
   selectEarliestCommissionBeneficiaries,
   vietnamPaymentInstant,
 } from './commission-rules.js';
-import {
-  CommissionsRepository,
-  mapDatabaseReconciliationBatch,
-} from './commissions.repository.js';
+import { CommissionsRepository, mapDatabaseReconciliationBatch } from './commissions.repository.js';
 
 @Injectable()
 export class CommissionsService {
@@ -51,16 +45,12 @@ export class CommissionsService {
   ): Promise<CommissionTransactionListResponse> {
     const parsed = parseRequest(CommissionTransactionListQuerySchema, query);
     return this.commissions.listTransactions(
-      principal.role === 'RECRUITER'
-        ? { ...parsed, beneficiaryActorId: principal.id }
-        : parsed,
+      principal.role === 'RECRUITER' ? { ...parsed, beneficiaryActorId: principal.id } : parsed,
     );
   }
 
   async listBatches(query: unknown): Promise<ReconciliationBatchListResponse> {
-    return this.commissions.listBatches(
-      parseRequest(ReconciliationBatchListQuerySchema, query),
-    );
+    return this.commissions.listBatches(parseRequest(ReconciliationBatchListQuerySchema, query));
   }
 
   async transitionApplicationStatus(id: unknown, input: unknown): Promise<Application> {
@@ -106,10 +96,7 @@ export class CommissionsService {
         });
 
         if (existingAllocation === 0) {
-          const grossAmountMinor = this.requireCommissionAmount(
-            current.job,
-            eventType,
-          );
+          const grossAmountMinor = this.requireCommissionAmount(current.job, eventType);
           const sources = await transaction.application.findMany({
             where: {
               candidateId: current.candidateId,
@@ -166,10 +153,7 @@ export class CommissionsService {
     });
   }
 
-  async createReconciliationBatch(
-    input: unknown,
-    actorId: string,
-  ): Promise<ReconciliationBatch> {
+  async createReconciliationBatch(input: unknown, actorId: string): Promise<ReconciliationBatch> {
     const parsed = parseRequest(CreateReconciliationBatchSchema, input);
     const payableOn = vietnamPaymentInstant(parsed.payableOn);
 
