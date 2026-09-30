@@ -33,6 +33,8 @@ export function mapDatabaseJob(job: DatabaseJob): Job {
     currency: job.currency,
     salaryMinMinor: safeMinorAmount(job.salaryMinMinor),
     salaryMaxMinor: safeMinorAmount(job.salaryMaxMinor),
+    interviewCommissionMinor: safeMinorAmount(job.interviewCommissionMinor),
+    worked30DaysCommissionMinor: safeMinorAmount(job.worked30DaysCommissionMinor),
     sourceRef: job.sourceRef,
     commissionNote: job.commissionNote,
     createdAt: job.createdAt.toISOString(),
@@ -59,6 +61,12 @@ export class JobsRepository {
           : {}),
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
+          : {}),
+        ...(input.interviewCommissionMinor !== undefined
+          ? { interviewCommissionMinor: BigInt(input.interviewCommissionMinor) }
+          : {}),
+        ...(input.worked30DaysCommissionMinor !== undefined
+          ? { worked30DaysCommissionMinor: BigInt(input.worked30DaysCommissionMinor) }
           : {}),
         ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
         ...(input.commissionNote !== undefined ? { commissionNote: input.commissionNote } : {}),
@@ -143,6 +151,12 @@ export class JobsRepository {
           : {}),
         ...(input.salaryMaxMinor !== undefined
           ? { salaryMaxMinor: BigInt(input.salaryMaxMinor) }
+          : {}),
+        ...(input.interviewCommissionMinor !== undefined
+          ? { interviewCommissionMinor: BigInt(input.interviewCommissionMinor) }
+          : {}),
+        ...(input.worked30DaysCommissionMinor !== undefined
+          ? { worked30DaysCommissionMinor: BigInt(input.worked30DaysCommissionMinor) }
           : {}),
         ...(input.sourceRef !== undefined ? { sourceRef: input.sourceRef } : {}),
         ...(input.commissionNote !== undefined ? { commissionNote: input.commissionNote } : {}),
