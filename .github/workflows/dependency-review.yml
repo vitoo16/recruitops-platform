@@ -24,7 +24,7 @@ jobs:
       - name: Review dependency changes
         uses: actions/dependency-review-action@v4
         with:
-          fail-on-severity: moderate
+          config-file: ./.github/dependency-review-config.yml
 
   dependency-audit:
     name: dependency-audit
