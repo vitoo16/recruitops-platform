@@ -27,22 +27,26 @@ async function installLoggedOutBoundary(page: Page): Promise<void> {
   });
 }
 
-function seriousViolations(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations']) {
-  return violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''));
+async function expectNoWcagAAViolations(page: Page): Promise<void> {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+
+  expect(results.violations).toEqual([]);
 }
 
-test('public shell has no serious or critical WCAG A/AA violations', async ({ page }) => {
+test('public shell has no automated WCAG A/AA violations in VI and EN', async ({ page }) => {
   await installLoggedOutBoundary(page);
   await page.goto('/');
 
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expectNoWcagAAViolations(page);
 
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-
-  expect(seriousViolations(results.violations)).toEqual([]);
+  const languageButton = page.getByRole('button', { name: /ngôn ngữ|language/i });
+  await languageButton.click();
+  await expect(languageButton).toContainText('VI');
+  await expectNoWcagAAViolations(page);
 });
 
 test('keyboard users can reveal the skip link and move focus to main content', async ({ page }) => {
