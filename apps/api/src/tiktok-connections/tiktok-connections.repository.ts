@@ -19,6 +19,14 @@ export interface TikTokConnectedAccount {
   expiresAt: string | null;
 }
 
+export interface TikTokPublishingCredentialRecord {
+  id: string;
+  status: 'CONNECTED' | 'EXPIRED' | 'REVOKED' | 'ERROR';
+  scopes: readonly string[];
+  expiresAt: Date | null;
+  credential: EncryptedOAuthCredential | null;
+}
+
 function dbBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
   const copy = new Uint8Array(value.byteLength);
   copy.set(value);
@@ -57,6 +65,50 @@ export class TikTokConnectionsRepository {
       ...account,
       expiresAt: account.expiresAt?.toISOString() ?? null,
     }));
+  }
+
+  async findPublishingCredential(
+    accountId: string,
+  ): Promise<TikTokPublishingCredentialRecord | null> {
+    const account = await this.database.client.socialAccount.findFirst({
+      where: { id: accountId, platform: 'TIKTOK' },
+      select: {
+        id: true,
+        status: true,
+        scopes: true,
+        expiresAt: true,
+        credential: {
+          select: {
+            platform: true,
+            keyId: true,
+            algorithm: true,
+            iv: true,
+            authTag: true,
+            ciphertext: true,
+          },
+        },
+      },
+    });
+    if (!account) return null;
+
+    const credential = account.credential;
+    return {
+      id: account.id,
+      status: account.status,
+      scopes: account.scopes,
+      expiresAt: account.expiresAt,
+      credential:
+        credential && credential.platform === 'TIKTOK' && credential.algorithm === 'aes-256-gcm'
+          ? {
+              platform: 'TIKTOK',
+              keyId: credential.keyId,
+              algorithm: 'aes-256-gcm',
+              iv: credential.iv,
+              authTag: credential.authTag,
+              ciphertext: credential.ciphertext,
+            }
+          : null,
+    };
   }
 
   async promote(record: TikTokPromotionRecord) {

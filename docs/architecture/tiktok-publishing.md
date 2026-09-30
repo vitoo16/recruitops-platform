@@ -13,11 +13,17 @@ RecruitOps uses TikTok's official Content Posting API Direct Post flow for the c
 
 The provider foundation lives in `packages/integrations/src/tiktok-publishing.ts`. It validates provider envelopes, keeps access tokens in bearer headers, validates provider upload URLs, restricts video MIME types to the official upload types, and normalizes async status without copying provider error messages into application errors.
 
+## Authenticated creator-info boundary
+
+The API exposes `POST /integrations/tiktok/oauth/accounts/:accountId/creator-info` to OWNER/ADMIN operators. The route is intentionally `no-store` and resolves the selected TikTok account server-side before calling the provider. It verifies connected status, account expiry, persisted `video.publish` scope, encrypted credential presence, decrypted credential scope and token expiry. The access token is decrypted only inside the API process and is never returned to the browser.
+
+The response contains only the current creator capability values required for the posting UI: creator identity labels, provider-returned privacy options, interaction restrictions and maximum post duration. Provider failures are mapped to bounded application error codes without returning provider message bodies.
+
 ## Why runtime activation is still fail-closed
 
-This foundation is deliberately **not** registered in the production worker yet. TikTok's current Direct Post rules require the app to query the creator's latest info, display the returned privacy/interaction options, and collect explicit user consent before initializing a post. RecruitOps currently has generic PostVariant metadata but no TikTok-specific creator-options/consent UI wired into publish-now or scheduling.
+The provider is deliberately **not** registered in the production worker yet. TikTok's current Direct Post rules require the app to query the creator's latest info, display the returned privacy/interaction options, and collect explicit user consent before initializing a post. RecruitOps now has the authenticated creator-info API boundary, but the Content Studio/publish-now/scheduling UI does not yet collect and durably snapshot the TikTok-specific posting settings and explicit consent.
 
-Registering the adapter before that UI/API boundary exists would allow the worker to publish with guessed or stale privacy settings, which would violate the provider flow. The next code-side slice must therefore expose creator-info through the authenticated API, persist/validate the user's chosen TikTok posting settings, and propagate them into the durable PostVariant metadata consumed by the worker.
+Registering the adapter before that UI/API publication boundary exists would allow the worker to publish with guessed or stale privacy settings, which would violate the provider flow. The next code-side slice must therefore collect the current creator options in the UI, validate the chosen TikTok settings against them, capture explicit user confirmation at the publish/schedule action, and propagate a durable snapshot to the worker.
 
 ## Media-transfer boundary
 

@@ -9,6 +9,7 @@ import { TikTokConnectionsController } from './tiktok-connections.controller.js'
 import { TikTokConnectionsRepository } from './tiktok-connections.repository.js';
 import { TikTokConnectionsService } from './tiktok-connections.service.js';
 import { TikTokOAuthStateStore } from './tiktok-oauth-state.store.js';
+import { TikTokPublishingClientFactory } from './tiktok-publishing-client.factory.js';
 
 @Module({
   imports: [AuthModule, DatabaseModule, RedisModule, SocialCredentialsModule],
@@ -19,6 +20,7 @@ import { TikTokOAuthStateStore } from './tiktok-oauth-state.store.js';
     TikTokConnectionsRepository,
     TikTokConnectionsService,
     TikTokOAuthStateStore,
+    TikTokPublishingClientFactory,
   ],
 })
 export class TikTokConnectionsModule {}

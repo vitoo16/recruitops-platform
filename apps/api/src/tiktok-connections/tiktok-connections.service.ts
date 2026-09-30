@@ -3,9 +3,14 @@ import {
   BadGatewayException,
   BadRequestException,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { TikTokConnectionError, tikTokConnectionScopes } from '@recruitops/integrations';
+import {
+  TikTokConnectionError,
+  TikTokPublishingError,
+  tikTokConnectionScopes,
+} from '@recruitops/integrations';
 import { z } from 'zod';
 import { parseRequest } from '../common/zod-request.js';
 import {
@@ -15,6 +20,7 @@ import {
 import { TikTokConnectionClientFactory } from './tiktok-connection-client.factory.js';
 import { TikTokConnectionsRepository } from './tiktok-connections.repository.js';
 import { TikTokOAuthStateStore } from './tiktok-oauth-state.store.js';
+import { TikTokPublishingClientFactory } from './tiktok-publishing-client.factory.js';
 
 const CallbackSchema = z
   .object({
@@ -32,6 +38,8 @@ const CallbackSchema = z
       });
     }
   });
+
+const AccountIdSchema = z.uuid();
 
 function scopesFrom(value: string): readonly string[] {
   const scopes = value
@@ -55,10 +63,70 @@ export class TikTokConnectionsService {
     private readonly cipher: OAuthCredentialCipher,
     private readonly clients: TikTokConnectionClientFactory,
     private readonly repository: TikTokConnectionsRepository,
+    private readonly publishingClients: TikTokPublishingClientFactory,
   ) {}
 
   async list() {
     return { accounts: await this.repository.list() };
+  }
+
+  async creatorInfo(accountIdInput: unknown, now = new Date()) {
+    const accountId = parseRequest(AccountIdSchema, accountIdInput);
+    const account = await this.repository.findPublishingCredential(accountId);
+    if (!account) {
+      throw new NotFoundException({
+        code: 'TIKTOK_ACCOUNT_NOT_FOUND',
+        message: 'TikTok social account was not found',
+      });
+    }
+    if (
+      account.status !== 'CONNECTED' ||
+      (account.expiresAt && account.expiresAt.getTime() <= now.getTime())
+    ) {
+      throw new BadRequestException({
+        code: 'TIKTOK_ACCOUNT_RECONNECT_REQUIRED',
+        message: 'TikTok account must be reconnected before querying publishing options',
+      });
+    }
+    if (!account.scopes.includes('video.publish')) {
+      throw new BadRequestException({
+        code: 'TIKTOK_PUBLISH_SCOPE_REQUIRED',
+        message: 'TikTok account does not have the required publishing scope',
+      });
+    }
+    if (!account.credential) {
+      throw new BadRequestException({
+        code: 'TIKTOK_PUBLISH_CREDENTIAL_REQUIRED',
+        message: 'TikTok publishing credential is unavailable',
+      });
+    }
+
+    this.assertEncryption();
+    const credential = this.cipher.decrypt(account.credential);
+    if (!credential.scopes?.includes('video.publish')) {
+      throw new BadRequestException({
+        code: 'TIKTOK_PUBLISH_CREDENTIAL_SCOPE_REQUIRED',
+        message: 'Stored TikTok credential does not have the required publishing scope',
+      });
+    }
+    if (credential.expiresAt && new Date(credential.expiresAt).getTime() <= now.getTime()) {
+      throw new BadRequestException({
+        code: 'TIKTOK_PUBLISH_CREDENTIAL_EXPIRED',
+        message: 'Stored TikTok publishing credential has expired',
+      });
+    }
+
+    try {
+      return await this.publishingClients.create().queryCreatorInfo(credential.accessToken);
+    } catch (error) {
+      if (error instanceof TikTokPublishingError) {
+        throw new BadGatewayException({
+          code: error.code,
+          message: 'TikTok publishing capability request failed',
+        });
+      }
+      throw error;
+    }
   }
 
   async start(userId: string) {

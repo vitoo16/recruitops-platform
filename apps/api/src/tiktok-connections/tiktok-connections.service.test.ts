@@ -1,13 +1,16 @@
 import { BadRequestException } from '@nestjs/common';
-import type { TikTokConnectionProvider } from '@recruitops/integrations';
+import type { TikTokConnectionProvider, TikTokPublishingProvider } from '@recruitops/integrations';
+import { TikTokPublishingError } from '@recruitops/integrations';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OAuthCredentialCipher } from '../social-credentials/oauth-credential-cipher.js';
 import type { TikTokConnectionClientFactory } from './tiktok-connection-client.factory.js';
 import type { TikTokConnectionsRepository } from './tiktok-connections.repository.js';
 import { TikTokConnectionsService } from './tiktok-connections.service.js';
 import type { TikTokOAuthStateStore } from './tiktok-oauth-state.store.js';
+import type { TikTokPublishingClientFactory } from './tiktok-publishing-client.factory.js';
 
 const userId = '2ca934f4-8e91-4c9f-a64b-04f7cf992f88';
+const accountId = '6aeb5a1e-ef8d-4e69-af51-7efbd8e2977c';
 const state = 'a'.repeat(43);
 const activeKey = process.env.OAUTH_CREDENTIAL_ACTIVE_KEY_ID;
 const keyring = process.env.OAUTH_CREDENTIAL_ENCRYPTION_KEYS;
@@ -26,6 +29,17 @@ function setup(scope = 'user.info.basic,video.publish') {
     }),
     getUserInfo: vi.fn().mockResolvedValue({ openId: 'open-id', displayName: 'TikTok Recruiter' }),
   } as unknown as TikTokConnectionProvider;
+  const publishingProvider = {
+    queryCreatorInfo: vi.fn().mockResolvedValue({
+      creatorUsername: 'recruiter',
+      creatorNickname: 'Recruiter',
+      privacyLevelOptions: ['SELF_ONLY'],
+      commentDisabled: false,
+      duetDisabled: false,
+      stitchDisabled: false,
+      maxVideoPostDurationSeconds: 300,
+    }),
+  } as unknown as TikTokPublishingProvider;
   const states = {
     create: vi.fn().mockResolvedValue({ expiresAt: '2026-09-30T05:00:00.000Z' }),
     consume: vi.fn().mockResolvedValue({ userId, createdAt: '2026-09-30T04:50:00.000Z' }),
@@ -39,20 +53,46 @@ function setup(scope = 'user.info.basic,video.publish') {
       authTag: new Uint8Array(16),
       ciphertext: new Uint8Array([1]),
     }),
+    decrypt: vi.fn().mockReturnValue({
+      accessToken: 'publishing-access-token',
+      refreshToken: 'refresh-token',
+      tokenType: 'Bearer',
+      scopes: ['user.info.basic', 'video.publish'],
+      expiresAt: '2026-10-01T00:00:00.000Z',
+      refreshExpiresAt: '2027-09-30T00:00:00.000Z',
+    }),
   } as unknown as OAuthCredentialCipher;
   const clients = {
     create: vi.fn().mockReturnValue(provider),
   } as unknown as TikTokConnectionClientFactory;
+  const publishingClients = {
+    create: vi.fn().mockReturnValue(publishingProvider),
+  } as unknown as TikTokPublishingClientFactory;
   const repository = {
     list: vi.fn().mockResolvedValue([]),
+    findPublishingCredential: vi.fn().mockResolvedValue({
+      id: accountId,
+      status: 'CONNECTED',
+      scopes: ['user.info.basic', 'video.publish'],
+      expiresAt: new Date('2026-10-01T00:00:00.000Z'),
+      credential: {
+        platform: 'TIKTOK',
+        keyId: 'test-key',
+        algorithm: 'aes-256-gcm',
+        iv: new Uint8Array(12),
+        authTag: new Uint8Array(16),
+        ciphertext: new Uint8Array([1]),
+      },
+    }),
     promote: vi
       .fn()
       .mockResolvedValue({ socialAccountId: 'account-id', destinationId: 'destination-id' }),
   } as unknown as TikTokConnectionsRepository;
   return {
-    service: new TikTokConnectionsService(states, cipher, clients, repository),
+    service: new TikTokConnectionsService(states, cipher, clients, repository, publishingClients),
     states,
     provider,
+    publishingProvider,
     cipher,
     repository,
   };
@@ -99,6 +139,70 @@ describe('TikTokConnectionsService', () => {
     expect(repository.promote).toHaveBeenCalledWith(
       expect.objectContaining({ externalAccountId: 'open-id', displayName: 'TikTok Recruiter' }),
     );
+  });
+
+  it('queries creator info with the decrypted server-side publishing token', async () => {
+    const { service, cipher, publishingProvider } = setup();
+    await expect(
+      service.creatorInfo(accountId, new Date('2026-09-30T12:00:00.000Z')),
+    ).resolves.toMatchObject({
+      privacyLevelOptions: ['SELF_ONLY'],
+      maxVideoPostDurationSeconds: 300,
+    });
+    expect(cipher.decrypt).toHaveBeenCalledOnce();
+    expect(publishingProvider.queryCreatorInfo).toHaveBeenCalledWith('publishing-access-token');
+  });
+
+  it('fails closed before provider access when the account is expired', async () => {
+    const { service, repository, publishingProvider } = setup();
+    vi.mocked(repository.findPublishingCredential).mockResolvedValueOnce({
+      id: accountId,
+      status: 'CONNECTED',
+      scopes: ['user.info.basic', 'video.publish'],
+      expiresAt: new Date('2026-09-30T11:59:59.000Z'),
+      credential: null,
+    });
+
+    await expect(
+      service.creatorInfo(accountId, new Date('2026-09-30T12:00:00.000Z')),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'TIKTOK_ACCOUNT_RECONNECT_REQUIRED' }),
+    });
+    expect(publishingProvider.queryCreatorInfo).not.toHaveBeenCalled();
+  });
+
+  it('fails closed before decryption when the stored account scope is missing', async () => {
+    const { service, repository, cipher } = setup();
+    vi.mocked(repository.findPublishingCredential).mockResolvedValueOnce({
+      id: accountId,
+      status: 'CONNECTED',
+      scopes: ['user.info.basic'],
+      expiresAt: new Date('2026-10-01T00:00:00.000Z'),
+      credential: null,
+    });
+
+    await expect(
+      service.creatorInfo(accountId, new Date('2026-09-30T12:00:00.000Z')),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'TIKTOK_PUBLISH_SCOPE_REQUIRED' }),
+    });
+    expect(cipher.decrypt).not.toHaveBeenCalled();
+  });
+
+  it('sanitizes creator-info provider failures', async () => {
+    const { service, publishingProvider } = setup();
+    vi.mocked(publishingProvider.queryCreatorInfo).mockRejectedValueOnce(
+      new TikTokPublishingError('TIKTOK_CREATOR_INFO_FAILED_PROVIDER_ACCESS_TOKEN_INVALID', 401),
+    );
+
+    await expect(
+      service.creatorInfo(accountId, new Date('2026-09-30T12:00:00.000Z')),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'TIKTOK_CREATOR_INFO_FAILED_PROVIDER_ACCESS_TOKEN_INVALID',
+        message: 'TikTok publishing capability request failed',
+      },
+    });
   });
 
   it('fails closed when required direct-post scope was not granted', async () => {
