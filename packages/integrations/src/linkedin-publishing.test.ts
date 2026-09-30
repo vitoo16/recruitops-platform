@@ -86,7 +86,10 @@ describe('LinkedInMemberPublisher', () => {
     await expect(
       publisher.publish({
         ...command,
-        payload: { ...command.payload, mediaIds: ['44444444-4444-4444-8444-444444444444'] },
+        payload: {
+          ...command.payload,
+          mediaIds: ['44444444-4444-4444-8444-444444444444'],
+        },
       }),
     ).rejects.toMatchObject<Partial<LinkedInPublishingValidationError>>({
       code: 'LINKEDIN_PUBLISH_VALIDATION_FAILED',
