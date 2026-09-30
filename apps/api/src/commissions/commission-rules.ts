@@ -1,7 +1,4 @@
-import type {
-  ApplicationStatus,
-  CommissionEventType,
-} from '@recruitops/contracts';
+import type { ApplicationStatus, CommissionEventType } from '@recruitops/contracts';
 
 const VIETNAM_OFFSET_MS = 7 * 60 * 60 * 1_000;
 
@@ -92,10 +89,7 @@ export function commissionAllocationKey(input: {
   return `${input.candidateId}:${input.jobId}:${input.eventType}`;
 }
 
-export function nextCommissionPayableAt(
-  eventType: CommissionEventType,
-  earnedAt: Date,
-): Date {
+export function nextCommissionPayableAt(eventType: CommissionEventType, earnedAt: Date): Date {
   const paymentDay = eventType === 'INTERVIEW_INVITED' ? 5 : 15;
   const local = new Date(earnedAt.getTime() + VIETNAM_OFFSET_MS);
   let year = local.getUTCFullYear();
