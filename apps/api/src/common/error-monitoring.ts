@@ -20,7 +20,16 @@ export function initializeApiErrorMonitoring(nodeEnv: string): boolean {
   Sentry.init({
     dsn,
     environment: nodeEnv,
-    sendDefaultPii: false,
+    beforeSend(event) {
+      delete event.user;
+      if (event.request) {
+        event.request = {
+          method: event.request.method,
+          url: event.request.url,
+        };
+      }
+      return event;
+    },
   });
   Sentry.setTag('service', 'recruitops-api');
   return true;
