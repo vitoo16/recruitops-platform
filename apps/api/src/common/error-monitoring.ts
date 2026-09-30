@@ -1,5 +1,10 @@
 import * as Sentry from '@sentry/node';
-import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
+import {
+  Injectable,
+  type CallHandler,
+  type ExecutionContext,
+  type NestInterceptor,
+} from '@nestjs/common';
 import type { Observable } from 'rxjs';
 import { catchError, throwError } from 'rxjs';
 import type { RequestWithContext } from './request-context.js';
@@ -45,7 +50,10 @@ export async function flushApiErrorMonitoring(timeoutMs = 2_000): Promise<void> 
 @Injectable()
 export class ApiErrorMonitoringInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.getType() === 'http' ? context.switchToHttp().getRequest<RequestWithContext>() : undefined;
+    const request =
+      context.getType() === 'http'
+        ? context.switchToHttp().getRequest<RequestWithContext>()
+        : undefined;
     return next.handle().pipe(
       catchError((error: unknown) => {
         captureApiException(error, request);

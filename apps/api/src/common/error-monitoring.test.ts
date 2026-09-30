@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { captureApiException, flushApiErrorMonitoring, initializeApiErrorMonitoring } from './error-monitoring.js';
+import {
+  captureApiException,
+  flushApiErrorMonitoring,
+  initializeApiErrorMonitoring,
+} from './error-monitoring.js';
 
 describe('API error monitoring', () => {
   afterEach(() => {
