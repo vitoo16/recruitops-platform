@@ -116,7 +116,9 @@ async function readPerformanceSnapshot(page: Page): Promise<PerformanceSnapshot>
   });
 }
 
-test('public shell stays inside synthetic production performance budgets', async ({ page }, testInfo) => {
+test('public shell stays inside synthetic production performance budgets', async ({
+  page,
+}, testInfo) => {
   await installLoggedOutBoundary(page);
   await installPerformanceObservers(page);
 
@@ -129,7 +131,9 @@ test('public shell stays inside synthetic production performance budgets', async
   const snapshot = await readPerformanceSnapshot(page);
 
   await testInfo.attach('performance-snapshot.json', {
-    body: Buffer.from(JSON.stringify({ project: testInfo.project.name, budgets: BUDGETS, snapshot }, null, 2)),
+    body: Buffer.from(
+      JSON.stringify({ project: testInfo.project.name, budgets: BUDGETS, snapshot }, null, 2),
+    ),
     contentType: 'application/json',
   });
 

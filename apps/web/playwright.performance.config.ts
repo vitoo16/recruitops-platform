@@ -16,10 +16,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: process.env.CI
-    ? [
-        ['line'],
-        ['html', { open: 'never', outputFolder: 'performance-report' }],
-      ]
+    ? [['line'], ['html', { open: 'never', outputFolder: 'performance-report' }]]
     : 'list',
   outputDir: 'performance-results',
   use: {
