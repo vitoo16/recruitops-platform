@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import type {
   CommissionMilestone,
   CommissionTransaction,
@@ -7,6 +12,7 @@ import type {
 } from '@recruitops/contracts';
 import type { CommissionTransaction as DatabaseCommissionTransaction } from '@recruitops/database';
 import { DatabaseService } from '../database/database.service.js';
+import type { CommissionSourceApplication } from './commission-allocation.js';
 
 function safeMinorAmount(value: bigint): number {
   const number = Number(value);
@@ -57,9 +63,57 @@ export interface AccrueCommissionTransactionInput {
   idempotencyKey: string;
 }
 
+export interface CommissionAllocationContext {
+  currency: string;
+  baseAmountMinor: number;
+  sources: readonly CommissionSourceApplication[];
+}
+
 @Injectable()
 export class CommissionsRepository {
   constructor(private readonly database: DatabaseService) {}
+
+  async getAllocationContext(
+    candidateId: string,
+    jobId: string,
+    milestone: CommissionMilestone,
+  ): Promise<CommissionAllocationContext> {
+    const [job, sources] = await Promise.all([
+      this.database.client.job.findUnique({
+        where: { id: jobId },
+        select: {
+          currency: true,
+          interviewCommissionMinor: true,
+          worked30DaysCommissionMinor: true,
+        },
+      }),
+      this.database.client.application.findMany({
+        where: { candidateId, jobId },
+        select: { id: true, sourceUserId: true, sourcedAt: true },
+        orderBy: [{ sourcedAt: 'asc' }, { id: 'asc' }],
+      }),
+    ]);
+
+    if (!job) {
+      throw new NotFoundException({ code: 'JOB_NOT_FOUND', message: 'Job was not found' });
+    }
+    const configuredAmount =
+      milestone === 'INTERVIEW_INVITED'
+        ? job.interviewCommissionMinor
+        : job.worked30DaysCommissionMinor;
+    if (configuredAmount === null) {
+      throw new BadRequestException({
+        code: 'COMMISSION_AMOUNT_NOT_CONFIGURED',
+        message: 'The job has no commission amount configured for this milestone',
+      });
+    }
+
+    return {
+      currency: job.currency,
+      baseAmountMinor: safeMinorAmount(configuredAmount),
+      sources,
+    };
+  }
 
   async accrue(input: AccrueCommissionTransactionInput): Promise<CommissionTransaction> {
     const transaction = await this.database.client.commissionTransaction.upsert({
