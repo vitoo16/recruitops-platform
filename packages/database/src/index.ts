@@ -3,11 +3,13 @@ export type {
   Application,
   Candidate,
   CandidateDocument,
+  CommissionTransaction,
   Destination,
   Job,
   MediaAsset,
   Post,
   PostVariant,
   Publication,
+  ReconciliationBatch,
   SocialAccount,
 } from './generated/prisma/client.js';
