@@ -4,6 +4,7 @@ let enabled = false;
 
 export function initializeWorkerErrorMonitoring(nodeEnv: string): boolean {
   const dsn = process.env.SENTRY_DSN?.trim();
+  enabled = Boolean(dsn);
   if (!dsn) return false;
 
   Sentry.init({
@@ -12,7 +13,6 @@ export function initializeWorkerErrorMonitoring(nodeEnv: string): boolean {
     sendDefaultPii: false,
   });
   Sentry.setTag('service', 'recruitops-worker');
-  enabled = true;
   return true;
 }
 
