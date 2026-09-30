@@ -45,6 +45,16 @@ function positiveInteger(value: string | undefined, fallback: number, name: stri
   return parsed;
 }
 
+function metricDetails(metrics: PublicationQueueMetrics): Readonly<Record<string, unknown>> {
+  return {
+    waiting: metrics.waiting,
+    active: metrics.active,
+    delayed: metrics.delayed,
+    failed: metrics.failed,
+    outstanding: metrics.outstanding,
+  };
+}
+
 export function readPublicationQueueMonitorConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): PublicationQueueMonitorConfig {
@@ -86,7 +96,7 @@ export async function samplePublicationQueue(
   };
   metrics.outstanding = metrics.waiting + metrics.active + metrics.delayed;
 
-  logger.info('publication_queue_metrics', metrics);
+  logger.info('publication_queue_metrics', metricDetails(metrics));
 
   const reasons: string[] = [];
   if (metrics.waiting >= config.waitingAlertThreshold) reasons.push('WAITING_BACKLOG_HIGH');
@@ -95,7 +105,7 @@ export async function samplePublicationQueue(
   if (reasons.length > 0) {
     logger.error('publication_queue_alert', {
       reasons,
-      ...metrics,
+      ...metricDetails(metrics),
       waitingAlertThreshold: config.waitingAlertThreshold,
       failedAlertThreshold: config.failedAlertThreshold,
     });
