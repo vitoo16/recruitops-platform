@@ -78,12 +78,7 @@ export function initializeBrowserErrorMonitoring(): Promise<BrowserSentryModule 
         environment: monitoring.environment,
         sampleRate: 1,
         defaultIntegrations: false,
-        tracesSampleRate: 0,
-        enableLogs: false,
         maxBreadcrumbs: 0,
-        beforeBreadcrumb() {
-          return null;
-        },
         beforeSend(event) {
           return sanitizeBrowserErrorEvent(event);
         },
