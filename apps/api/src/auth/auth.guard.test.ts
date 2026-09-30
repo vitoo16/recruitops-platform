@@ -20,7 +20,8 @@ function createContext(authorization?: string): {
   };
 } {
   const request = {
-    header: (name: string) => (name.toLowerCase() === 'authorization' ? authorization : undefined),
+    header: (name: string) =>
+      name.toLowerCase() === 'authorization' ? authorization : undefined,
     requestId: 'req-123',
     method: 'GET',
     originalUrl: '/api/auth/me',
@@ -50,7 +51,14 @@ function createAuditService() {
   return { record: vi.fn() } as unknown as AuditService;
 }
 
-function createRateLimitService(overrides: Partial<{ allowed: boolean; limit: number; remaining: number; retryAfterSeconds: number }> = {}) {
+function createRateLimitService(
+  overrides: Partial<{
+    allowed: boolean;
+    limit: number;
+    remaining: number;
+    retryAfterSeconds: number;
+  }> = {},
+) {
   const decision = {
     allowed: true,
     limit: 120,
