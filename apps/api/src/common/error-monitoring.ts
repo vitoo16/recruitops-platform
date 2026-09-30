@@ -22,12 +22,7 @@ export function initializeApiErrorMonitoring(nodeEnv: string): boolean {
     environment: nodeEnv,
     beforeSend(event) {
       delete event.user;
-      if (event.request) {
-        event.request = {
-          method: event.request.method,
-          url: event.request.url,
-        };
-      }
+      delete event.request;
       return event;
     },
   });
