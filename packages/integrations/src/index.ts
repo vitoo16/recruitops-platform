@@ -7,5 +7,4 @@ export * from './threads-connection.js';
 export * from './threads-publishing.js';
 export * from './tiktok-connection.js';
 export * from './tiktok-publishing.js';
-export * from './tiktok-social-publisher.js';
 export * from './oauth-credential-cipher.js';
