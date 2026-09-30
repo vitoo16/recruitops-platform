@@ -85,6 +85,7 @@ export const ApplicationSchema = z.object({
   sourcePlatform: SocialPlatformSchema.nullable(),
   sourceDestinationId: z.uuid().nullable(),
   sourceLabel: z.string().nullable(),
+  sourcedByActorId: z.uuid().nullable(),
   sourcedAt: z.iso.datetime({ offset: true }),
   submittedAt: z.iso.datetime({ offset: true }).nullable(),
   interviewAt: z.iso.datetime({ offset: true }).nullable(),
