@@ -1,7 +1,7 @@
 'use client';
 
-import { captureException } from '@sentry/browser';
 import { useEffect } from 'react';
+import { captureBrowserException } from '../lib/monitoring/browser-error-monitoring';
 
 export default function GlobalError({
   error,
@@ -11,7 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    captureException(error);
+    void captureBrowserException(error);
   }, [error]);
 
   return (
