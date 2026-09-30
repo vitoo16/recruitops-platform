@@ -138,8 +138,7 @@ async function requestEnvelope(
     throw new TikTokPublishingError(`TIKTOK_${operation}_RESPONSE_INVALID`, response.status);
   }
 
-  const providerCode =
-    typeof payload.error?.code === 'string' ? payload.error.code : undefined;
+  const providerCode = typeof payload.error?.code === 'string' ? payload.error.code : undefined;
   if (!response.ok || providerCode !== 'ok') {
     const suffix = providerCode ? `_PROVIDER_${providerCode.toUpperCase()}` : '';
     throw new TikTokPublishingError(`TIKTOK_${operation}_FAILED${suffix}`, response.status);
@@ -147,10 +146,7 @@ async function requestEnvelope(
   return payload;
 }
 
-function objectData(
-  payload: TikTokEnvelope,
-  operation: string,
-): Record<string, unknown> {
+function objectData(payload: TikTokEnvelope, operation: string): Record<string, unknown> {
   if (!payload.data || typeof payload.data !== 'object' || Array.isArray(payload.data)) {
     throw new TikTokPublishingError(`TIKTOK_${operation}_RESPONSE_INVALID`);
   }
@@ -291,9 +287,7 @@ export class TikTokPublishingProvider {
               ? { disable_comment: input.disableComment }
               : {}),
             ...(input.disableDuet !== undefined ? { disable_duet: input.disableDuet } : {}),
-            ...(input.disableStitch !== undefined
-              ? { disable_stitch: input.disableStitch }
-              : {}),
+            ...(input.disableStitch !== undefined ? { disable_stitch: input.disableStitch } : {}),
           },
           source_info: {
             source: 'FILE_UPLOAD',
@@ -348,10 +342,7 @@ export class TikTokPublishingProvider {
     }
   }
 
-  async getPostStatus(
-    accessToken: string,
-    publishId: string,
-  ): Promise<TikTokPostStatus> {
+  async getPostStatus(accessToken: string, publishId: string): Promise<TikTokPostStatus> {
     const payload = await requestEnvelope(
       this.fetchFn,
       new URL('https://open.tiktokapis.com/v2/post/publish/status/fetch/'),
