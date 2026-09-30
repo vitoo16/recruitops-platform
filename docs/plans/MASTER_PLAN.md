@@ -145,7 +145,7 @@
 
 ## Phase 9 — Observability, hardening and scale
 
-- [ ] Add frontend error monitoring.
+- [x] Add frontend error monitoring (optional static-export browser exception monitoring uses conditional `@sentry/browser` loading behind `NEXT_PUBLIC_SENTRY_DSN`, explicit global/React capture, PII-prone context scrubbing, no replay/tracing/log/breadcrumb integrations, accessible fallback and regression coverage while preserving the established public-shell performance budget; hosted DSN/source-map production configuration remains a production-readiness concern).
 - [x] Add API/worker error monitoring (optional `@sentry/node` monitoring captures API handler/bootstrap failures and worker startup/shutdown/process failures, strips SDK-native user/request context before transmission, keeps only bounded safe service/correlation/operation tags, flushes on bounded shutdown/startup-failure paths, and remains a no-op without `SENTRY_DSN` with regression coverage).
 - [x] Add tracing/correlation across API → queue → worker → provider (normalized bounded request IDs are persisted on Publication, propagated in BullMQ jobs, validated by the worker, forwarded through vendor-neutral `PublishCommand`, and reused for manual/automatic retry chains with regression coverage).
 - [x] Add queue metrics and alerts (read-only BullMQ job-count sampling emits waiting/active/delayed/failed/outstanding metrics; configurable waiting/failed thresholds emit structured alerts; observer Redis access is lazy, separately closable and does not mutate queue state or block worker startup).
