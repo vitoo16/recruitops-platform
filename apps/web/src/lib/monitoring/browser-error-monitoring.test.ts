@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  normalizeBrowserException,
   readBrowserErrorMonitoringConfig,
   sanitizeBrowserErrorEvent,
 } from './browser-error-monitoring';
@@ -57,5 +58,18 @@ describe('sanitizeBrowserErrorEvent', () => {
       exception: { values: [{ type: 'Error', value: 'render failed' }] },
       tags: { service: 'recruitops-web' },
     });
+  });
+});
+
+describe('normalizeBrowserException', () => {
+  it('preserves Error instances for useful stacks', () => {
+    const error = new Error('render failed');
+    expect(normalizeBrowserException(error)).toBe(error);
+  });
+
+  it('does not serialize arbitrary rejection values into telemetry', () => {
+    expect(normalizeBrowserException({ candidateEmail: 'private@example.test' })).toEqual(
+      new Error('Unhandled browser exception'),
+    );
   });
 });
