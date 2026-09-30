@@ -158,7 +158,7 @@
 - [x] Execute accessibility review (automated Playwright + axe WCAG A/AA gate passes for VI/EN public shell, keyboard skip-link behavior is covered, and review findings/limitations are documented; future UI changes remain subject to the same repository accessibility gates).
 - [x] Execute web performance review.
 - [x] Execute security review (OWASP/Supabase-aligned review verified implemented authentication/RBAC, OAuth state and credential-storage boundaries, private Storage RLS, monitoring privacy and scanning controls; hardened exact-origin non-credentialed CORS with regression coverage; production-readiness carryovers are documented for hosted Data API grants, authoritative private-upload limits, shared API rate limiting, CSP, and candidate retention/deletion policy).
-- [ ] Execute production readiness review.
+- [x] Execute production readiness review (review completed against repository release gates and current deployment/security evidence; release decision remains **NOT READY** until branch protection, hosted security findings, always-on worker/runtime readiness, live-provider verification, monitoring deployment, retention policy and release-scope blockers are resolved as documented in `docs/operations/production-readiness-review.md`).
 
 ## Completion rule
 
