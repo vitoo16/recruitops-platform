@@ -14,6 +14,8 @@ const databaseJob: DatabaseJob = {
   currency: 'VND',
   salaryMinMinor: 12_000_000n,
   salaryMaxMinor: 20_000_000n,
+  interviewCommissionMinor: 100_000n,
+  worked30DaysCommissionMinor: 1_500_000n,
   sourceRef: null,
   commissionNote: null,
   createdAt: new Date('2026-09-27T08:00:00.000Z'),
@@ -26,6 +28,8 @@ describe('mapDatabaseJob', () => {
       expect.objectContaining({
         salaryMinMinor: 12_000_000,
         salaryMaxMinor: 20_000_000,
+        interviewCommissionMinor: 100_000,
+        worked30DaysCommissionMinor: 1_500_000,
         createdAt: '2026-09-27T08:00:00.000Z',
       }),
     );
