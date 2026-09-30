@@ -6,11 +6,18 @@ import { NestFactory } from '@nestjs/core';
 import type { NextFunction, Response } from 'express';
 import { parseApiEnv } from '@recruitops/config';
 import { AppModule } from './app.module.js';
+import {
+  ApiErrorMonitoringInterceptor,
+  captureApiException,
+  flushApiErrorMonitoring,
+  initializeApiErrorMonitoring,
+} from './common/error-monitoring.js';
 import { normalizeIncomingRequestId, type RequestWithContext } from './common/request-context.js';
 import { getSafeRequestPath } from './common/request-path.js';
 
 async function bootstrap() {
   const env = parseApiEnv(process.env);
+  initializeApiErrorMonitoring(env.NODE_ENV);
   const logger = new ConsoleLogger({
     json: env.NODE_ENV === 'production',
     prefix: 'RecruitOps',
@@ -24,6 +31,7 @@ async function bootstrap() {
     origin: env.CORS_ORIGINS,
     credentials: true,
   });
+  app.useGlobalInterceptors(new ApiErrorMonitoringInterceptor());
 
   app.use((request: RequestWithContext, response: Response, next: NextFunction) => {
     const requestId = normalizeIncomingRequestId(request.header('x-request-id')) ?? randomUUID();
@@ -49,4 +57,8 @@ async function bootstrap() {
   await app.listen(env.PORT, '0.0.0.0');
 }
 
-void bootstrap();
+void bootstrap().catch(async (error: unknown) => {
+  captureApiException(error);
+  await flushApiErrorMonitoring();
+  process.exitCode = 1;
+});
