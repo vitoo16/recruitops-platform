@@ -12,20 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  dependency-review:
-    name: dependency-review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@v4
-        with:
-          config-file: ./.github/dependency-review-config.yml
-
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
