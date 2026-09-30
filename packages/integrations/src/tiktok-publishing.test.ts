@@ -51,8 +51,7 @@ describe('TikTokPublishingProvider', () => {
       jsonResponse({
         data: {
           publish_id: 'v_pub_file~v2-1.123',
-          upload_url:
-            'https://open-upload.tiktokapis.com/video/?upload_id=123&upload_token=abc',
+          upload_url: 'https://open-upload.tiktokapis.com/video/?upload_id=123&upload_token=abc',
         },
         error: okError,
       }),
@@ -78,9 +77,7 @@ describe('TikTokPublishingProvider', () => {
     const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
     expect(url.toString()).toBe('https://open.tiktokapis.com/v2/post/publish/video/init/');
     expect(url.toString()).not.toContain('secret-token');
-    expect(init.headers).toEqual(
-      expect.objectContaining({ authorization: 'Bearer secret-token' }),
-    );
+    expect(init.headers).toEqual(expect.objectContaining({ authorization: 'Bearer secret-token' }));
     expect(JSON.parse(String(init.body))).toEqual({
       post_info: {
         title: 'Hiring #frontend',
