@@ -8,7 +8,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "17 4 * * 1"
+    - cron: '17 4 * * 1'
 
 permissions:
   contents: read
@@ -38,4 +38,4 @@ jobs:
       - name: Analyze
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{ matrix.language }}"
+          category: '/language:${{ matrix.language }}'
