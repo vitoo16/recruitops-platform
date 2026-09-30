@@ -64,7 +64,9 @@ interface TikTokEnvelope {
 
 function requiredToken(value: string): string {
   const normalized = value.trim();
-  if (!normalized) throw new TikTokPublishingError('TIKTOK_PUBLISH_ACCESS_TOKEN_REQUIRED');
+  if (!normalized) {
+    throw new TikTokPublishingError('TIKTOK_PUBLISH_ACCESS_TOKEN_REQUIRED');
+  }
   return normalized;
 }
 
@@ -84,7 +86,9 @@ function requirePrivacyLevel(value: string): TikTokPrivacyLevel {
 }
 
 function requirePositiveInteger(value: number, code: string): number {
-  if (!Number.isSafeInteger(value) || value < 1) throw new TikTokPublishingError(code);
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new TikTokPublishingError(code);
+  }
   return value;
 }
 
@@ -134,7 +138,8 @@ async function requestEnvelope(
     throw new TikTokPublishingError(`TIKTOK_${operation}_RESPONSE_INVALID`, response.status);
   }
 
-  const providerCode = typeof payload.error?.code === 'string' ? payload.error.code : undefined;
+  const providerCode =
+    typeof payload.error?.code === 'string' ? payload.error.code : undefined;
   if (!response.ok || providerCode !== 'ok') {
     const suffix = providerCode ? `_PROVIDER_${providerCode.toUpperCase()}` : '';
     throw new TikTokPublishingError(`TIKTOK_${operation}_FAILED${suffix}`, response.status);
@@ -142,7 +147,10 @@ async function requestEnvelope(
   return payload;
 }
 
-function objectData(payload: TikTokEnvelope, operation: string): Record<string, unknown> {
+function objectData(
+  payload: TikTokEnvelope,
+  operation: string,
+): Record<string, unknown> {
   if (!payload.data || typeof payload.data !== 'object' || Array.isArray(payload.data)) {
     throw new TikTokPublishingError(`TIKTOK_${operation}_RESPONSE_INVALID`);
   }
@@ -309,11 +317,17 @@ export class TikTokPublishingProvider {
   }): Promise<void> {
     const uploadUrl = requireUploadUrl(input.uploadUrl);
     const totalSize = requirePositiveInteger(input.totalSize, 'TIKTOK_VIDEO_SIZE_INVALID');
-    if (!Number.isSafeInteger(input.firstByte) || input.firstByte < 0 || input.bytes.byteLength < 1) {
+    if (
+      !Number.isSafeInteger(input.firstByte) ||
+      input.firstByte < 0 ||
+      input.bytes.byteLength < 1
+    ) {
       throw new TikTokPublishingError('TIKTOK_UPLOAD_RANGE_INVALID');
     }
     const lastByte = input.firstByte + input.bytes.byteLength - 1;
-    if (lastByte >= totalSize) throw new TikTokPublishingError('TIKTOK_UPLOAD_RANGE_INVALID');
+    if (lastByte >= totalSize) {
+      throw new TikTokPublishingError('TIKTOK_UPLOAD_RANGE_INVALID');
+    }
 
     let response: Response;
     try {
@@ -334,7 +348,10 @@ export class TikTokPublishingProvider {
     }
   }
 
-  async getPostStatus(accessToken: string, publishId: string): Promise<TikTokPostStatus> {
+  async getPostStatus(
+    accessToken: string,
+    publishId: string,
+  ): Promise<TikTokPostStatus> {
     const payload = await requestEnvelope(
       this.fetchFn,
       new URL('https://open.tiktokapis.com/v2/post/publish/status/fetch/'),
