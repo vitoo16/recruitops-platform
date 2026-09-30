@@ -148,7 +148,7 @@
 - [ ] Add frontend error monitoring.
 - [ ] Add API/worker error monitoring.
 - [x] Add tracing/correlation across API → queue → worker → provider (normalized bounded request IDs are persisted on Publication, propagated in BullMQ jobs, validated by the worker, forwarded through vendor-neutral `PublishCommand`, and reused for manual/automatic retry chains with regression coverage).
-- [ ] Add queue metrics and alerts.
+- [x] Add queue metrics and alerts (read-only BullMQ job-count sampling emits waiting/active/delayed/failed/outstanding metrics; configurable waiting/failed thresholds emit structured alerts; observer Redis access is lazy, separately closable and does not mutate queue state or block worker startup).
 - [x] Add provider latency/error/rate-limit telemetry (vendor-neutral publisher registry wrapper emits structured operation latency/outcome telemetry, classifies HTTP 429 as rate-limited, carries publication correlation where available, excludes provider payload/secrets/PII, and isolates telemetry sink failures from publishing semantics with regression coverage).
 - [x] Add database performance review/indexes.
 - [x] Add dependency/security scanning.
