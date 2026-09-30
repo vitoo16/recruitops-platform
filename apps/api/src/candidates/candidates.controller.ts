@@ -63,7 +63,10 @@ export class CandidatesController {
 
   @Post('applications')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')
-  createApplication(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+  createApplication(
+    @Body() body: unknown,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.candidates.createApplication(body, request.user!.id);
   }
 
