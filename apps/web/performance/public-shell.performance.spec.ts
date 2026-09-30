@@ -7,18 +7,18 @@ const BUDGETS = {
   lcpMs: 2_500,
   cls: 0.1,
   blockingTimeMs: 300,
-  scriptBytes: 900_000,
-  stylesheetBytes: 200_000,
-  totalStaticBytes: 1_500_000,
+  scriptRawBytes: 1_450_000,
+  stylesheetRawBytes: 50_000,
+  totalStaticRawBytes: 1_500_000,
 } as const;
 
 type PerformanceSnapshot = {
   lcpMs: number;
   cls: number;
   blockingTimeMs: number;
-  scriptBytes: number;
-  stylesheetBytes: number;
-  totalStaticBytes: number;
+  scriptRawBytes: number;
+  stylesheetRawBytes: number;
+  totalStaticRawBytes: number;
 };
 
 async function installLoggedOutBoundary(page: Page): Promise<void> {
@@ -99,19 +99,22 @@ async function readPerformanceSnapshot(page: Page): Promise<PerformanceSnapshot>
       const url = new URL(entry.name);
       return url.origin === window.location.origin && url.pathname.startsWith('/_next/static/');
     });
-    const bytes = (entry: PerformanceResourceTiming) => entry.encodedBodySize || entry.transferSize;
+    const rawBytes = (entry: PerformanceResourceTiming) =>
+      entry.decodedBodySize || entry.encodedBodySize || entry.transferSize;
+    const hasExtension = (entry: PerformanceResourceTiming, extension: string) =>
+      new URL(entry.name).pathname.endsWith(extension);
 
     return {
       lcpMs: metrics.lcpMs,
       cls: metrics.cls,
       blockingTimeMs: metrics.blockingTimeMs,
-      scriptBytes: sameOriginStatic
-        .filter((entry) => entry.initiatorType === 'script' || entry.name.endsWith('.js'))
-        .reduce((total, entry) => total + bytes(entry), 0),
-      stylesheetBytes: sameOriginStatic
-        .filter((entry) => entry.initiatorType === 'link' || entry.name.endsWith('.css'))
-        .reduce((total, entry) => total + bytes(entry), 0),
-      totalStaticBytes: sameOriginStatic.reduce((total, entry) => total + bytes(entry), 0),
+      scriptRawBytes: sameOriginStatic
+        .filter((entry) => hasExtension(entry, '.js'))
+        .reduce((total, entry) => total + rawBytes(entry), 0),
+      stylesheetRawBytes: sameOriginStatic
+        .filter((entry) => hasExtension(entry, '.css'))
+        .reduce((total, entry) => total + rawBytes(entry), 0),
+      totalStaticRawBytes: sameOriginStatic.reduce((total, entry) => total + rawBytes(entry), 0),
     };
   });
 }
@@ -141,7 +144,7 @@ test('public shell stays inside synthetic production performance budgets', async
   expect(snapshot.lcpMs).toBeLessThanOrEqual(BUDGETS.lcpMs);
   expect(snapshot.cls).toBeLessThanOrEqual(BUDGETS.cls);
   expect(snapshot.blockingTimeMs).toBeLessThanOrEqual(BUDGETS.blockingTimeMs);
-  expect(snapshot.scriptBytes).toBeLessThanOrEqual(BUDGETS.scriptBytes);
-  expect(snapshot.stylesheetBytes).toBeLessThanOrEqual(BUDGETS.stylesheetBytes);
-  expect(snapshot.totalStaticBytes).toBeLessThanOrEqual(BUDGETS.totalStaticBytes);
+  expect(snapshot.scriptRawBytes).toBeLessThanOrEqual(BUDGETS.scriptRawBytes);
+  expect(snapshot.stylesheetRawBytes).toBeLessThanOrEqual(BUDGETS.stylesheetRawBytes);
+  expect(snapshot.totalStaticRawBytes).toBeLessThanOrEqual(BUDGETS.totalStaticRawBytes);
 });
