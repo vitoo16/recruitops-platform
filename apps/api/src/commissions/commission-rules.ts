@@ -97,7 +97,10 @@ export function nextCommissionPayableAt(
   let month = local.getUTCMonth();
   const day = local.getUTCDate();
 
-  if (day > paymentDay) {
+  // A commission earned on the payment date belongs to the next cycle because
+  // the stakeholder source defines the day, not an intra-day payout cutoff.
+  // This also guarantees payableAt never predates earnedAt.
+  if (day >= paymentDay) {
     month += 1;
     if (month > 11) {
       month = 0;
