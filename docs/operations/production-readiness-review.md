@@ -31,9 +31,11 @@ The security review intentionally left these production-readiness items open:
 
 1. Revoke unnecessary `anon` / `authenticated` grants on API-owned Supabase tables and rerun security/advisor checks.
 2. Add authoritative private-upload file-size and MIME enforcement at the hosted storage/server boundary.
-3. Add a shared HTTP/per-principal API rate limiter suitable for Render/proxy/multi-instance operation.
+3. Deploy and verify the repository's Redis-backed shared HTTP/per-principal API rate limiter on the intended multi-instance production topology.
 4. Deploy and verify a production Content Security Policy derived from the actual production origins.
 5. Finalize candidate retention/deletion policy, including CV/object cleanup and audit semantics.
+
+The code-side rate-limit control is implemented with an atomic Redis counter shared across API instances, principal identifiers are hashed before entering Redis keys, and authenticated over-limit requests receive `429` plus retry/quota metadata. The remaining rate-limit blocker is hosted deployment/configuration and production verification; this review does not authorize those infrastructure changes.
 
 These are release blockers for handling real candidate data at production scale.
 
@@ -56,6 +58,7 @@ The current free topology is suitable for MVP/hobby validation, not a production
 - No always-on production publication worker is currently provisioned.
 - Queue-safe Redis settings, worker hosting and provider activation must be verified before scheduled publishing is treated as reliable.
 - Production monitoring DSNs/alert routing, provider credentials, final CSP and live smoke tests require hosted-environment work.
+- Shared API rate limiting now has a repository implementation, but its production Redis/runtime behavior still requires hosted verification before the readiness blocker is closed.
 
 ## Governance blockers
 
