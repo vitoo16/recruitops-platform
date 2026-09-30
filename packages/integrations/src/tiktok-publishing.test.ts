@@ -85,6 +85,8 @@ describe('TikTokPublishingProvider', () => {
         disable_comment: false,
         disable_duet: true,
         disable_stitch: true,
+        brand_content_toggle: false,
+        brand_organic_toggle: false,
       },
       source_info: {
         source: 'FILE_UPLOAD',
@@ -93,6 +95,38 @@ describe('TikTokPublishingProvider', () => {
         total_chunk_count: 1,
       },
     });
+  });
+
+  it('forwards explicit commercial disclosure and AIGC flags', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        data: {
+          publish_id: 'publish-123',
+          upload_url: 'https://open-upload.tiktokapis.com/video/?upload_id=123&upload_token=abc',
+        },
+        error: okError,
+      }),
+    );
+    const provider = new TikTokPublishingProvider(fetchMock as typeof fetch);
+
+    await provider.initializeVideoDirectPost('token', {
+      privacyLevel: 'PUBLIC_TO_EVERYONE',
+      brandContentToggle: true,
+      brandOrganicToggle: true,
+      isAigc: true,
+      videoSize: 4,
+      chunkSize: 4,
+      totalChunkCount: 1,
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
+    expect(JSON.parse(String(init.body)).post_info).toEqual(
+      expect.objectContaining({
+        brand_content_toggle: true,
+        brand_organic_toggle: true,
+        is_aigc: true,
+      }),
+    );
   });
 
   it('uploads a bounded video chunk with the required content range headers', async () => {
