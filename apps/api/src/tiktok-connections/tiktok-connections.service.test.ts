@@ -40,10 +40,14 @@ function setup(scope = 'user.info.basic,video.publish') {
       ciphertext: new Uint8Array([1]),
     }),
   } as unknown as OAuthCredentialCipher;
-  const clients = { create: vi.fn().mockReturnValue(provider) } as unknown as TikTokConnectionClientFactory;
+  const clients = {
+    create: vi.fn().mockReturnValue(provider),
+  } as unknown as TikTokConnectionClientFactory;
   const repository = {
     list: vi.fn().mockResolvedValue([]),
-    promote: vi.fn().mockResolvedValue({ socialAccountId: 'account-id', destinationId: 'destination-id' }),
+    promote: vi
+      .fn()
+      .mockResolvedValue({ socialAccountId: 'account-id', destinationId: 'destination-id' }),
   } as unknown as TikTokConnectionsRepository;
   return {
     service: new TikTokConnectionsService(states, cipher, clients, repository),
@@ -107,7 +111,10 @@ describe('TikTokConnectionsService', () => {
 
   it('rejects token/profile identity mismatch', async () => {
     const { service, provider, repository } = setup();
-    vi.mocked(provider.getUserInfo).mockResolvedValueOnce({ openId: 'other-open-id', displayName: 'Other' });
+    vi.mocked(provider.getUserInfo).mockResolvedValueOnce({
+      openId: 'other-open-id',
+      displayName: 'Other',
+    });
     await expect(service.callback({ state, code: 'code' })).rejects.toMatchObject({
       response: expect.objectContaining({ code: 'TIKTOK_OAUTH_IDENTITY_MISMATCH' }),
     });

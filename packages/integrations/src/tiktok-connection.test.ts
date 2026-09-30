@@ -97,9 +97,9 @@ describe('TikTokConnectionProvider', () => {
   });
 
   it('fails closed on malformed successful token responses', async () => {
-    const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify({ access_token: 'token' }), { status: 200 }),
-    );
+    const fetchFn = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify({ access_token: 'token' }), { status: 200 }));
     const provider = new TikTokConnectionProvider(config, fetchFn);
     await expect(provider.exchangeAuthorizationCode('code')).rejects.toMatchObject({
       code: 'TIKTOK_TOKEN_RESPONSE_INVALID',

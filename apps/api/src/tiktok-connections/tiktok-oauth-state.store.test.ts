@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RedisService } from '../redis/redis.service.js';
-import { TIKTOK_OAUTH_STATE_TTL_SECONDS, TikTokOAuthStateStore } from './tiktok-oauth-state.store.js';
+import {
+  TIKTOK_OAUTH_STATE_TTL_SECONDS,
+  TikTokOAuthStateStore,
+} from './tiktok-oauth-state.store.js';
 
 const state = 'a'.repeat(43);
 const userId = '2ca934f4-8e91-4c9f-a64b-04f7cf992f88';

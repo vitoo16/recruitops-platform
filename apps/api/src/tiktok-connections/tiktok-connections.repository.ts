@@ -86,7 +86,10 @@ export class TikTokConnectionsRepository {
           },
         });
         if (existing.credentialRef) {
-          await tx.socialCredential.update({ where: { id: existing.credentialRef }, data: encrypted });
+          await tx.socialCredential.update({
+            where: { id: existing.credentialRef },
+            data: encrypted,
+          });
         } else {
           const credential = await tx.socialCredential.create({ data: encrypted });
           await tx.socialAccount.update({

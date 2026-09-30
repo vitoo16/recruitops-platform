@@ -25,7 +25,11 @@ const CallbackSchema = z
   .passthrough()
   .superRefine((value, ctx) => {
     if ((value.code === undefined) === (value.error === undefined)) {
-      ctx.addIssue({ code: 'custom', path: ['code'], message: 'Exactly one of code or error is required' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['code'],
+        message: 'Exactly one of code or error is required',
+      });
     }
   });
 
