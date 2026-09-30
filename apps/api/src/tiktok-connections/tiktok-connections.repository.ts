@@ -67,7 +67,9 @@ export class TikTokConnectionsRepository {
     }));
   }
 
-  async findPublishingCredential(accountId: string): Promise<TikTokPublishingCredentialRecord | null> {
+  async findPublishingCredential(
+    accountId: string,
+  ): Promise<TikTokPublishingCredentialRecord | null> {
     const account = await this.database.client.socialAccount.findFirst({
       where: { id: accountId, platform: 'TIKTOK' },
       select: {
