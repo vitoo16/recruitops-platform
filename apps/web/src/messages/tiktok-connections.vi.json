@@ -1,0 +1,28 @@
+{
+  "eyebrow": "Kết nối TikTok",
+  "title": "Kết nối nhà sáng tạo TikTok",
+  "description": "RecruitOps dùng TikTok Login Kit với quyền hồ sơ cơ bản và đăng trực tiếp. Access token và refresh token luôn ở phía server và được mã hóa trước khi lưu lâu dài.",
+  "connect": "Kết nối TikTok",
+  "reconnect": "Kết nối lại",
+  "redirecting": "Đang chuyển sang TikTok…",
+  "refresh": "Tải lại tài khoản",
+  "noAccounts": "Chưa có tài khoản TikTok nào được kết nối.",
+  "connectedNotice": "Đã hoàn tất cấp quyền TikTok và làm mới kết nối.",
+  "deniedNotice": "Bạn đã hủy cấp quyền TikTok. Không có tài khoản nào bị thay đổi.",
+  "dismiss": "Đóng",
+  "loadFailed": "RecruitOps không thể tải tài khoản TikTok. Hãy thử tải lại.",
+  "startFailed": "RecruitOps không thể bắt đầu cấp quyền TikTok. Hãy kiểm tra cấu hình server rồi thử lại.",
+  "missingApiConfig": "API chưa được cấu hình cho frontend này.",
+  "signInRequired": "Đăng nhập để kết nối TikTok.",
+  "ownerAdminRequired": "Chỉ tài khoản OWNER và ADMIN được quản lý kết nối TikTok.",
+  "accountId": "TikTok open ID: {id}",
+  "status": "Trạng thái: {value}",
+  "expires": "Access token hết hạn: {value}",
+  "scopes": "Quyền đã cấp: {value}",
+  "statusValues": {
+    "CONNECTED": "Đã kết nối",
+    "EXPIRED": "Đã hết hạn",
+    "REVOKED": "Đã thu hồi quyền",
+    "ERROR": "Có lỗi"
+  }
+}

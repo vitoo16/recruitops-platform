@@ -3,8 +3,11 @@ import type { PrismaClient } from '@recruitops/database';
 import {
   FacebookPagePublisher,
   InstagramProfessionalPublisher,
+  LinkedInMemberPublisher,
   OAuthCredentialCipherCore,
   ThreadsPublisher,
+  type LinkedInPublishingContext,
+  type LinkedInPublishingContextResolver,
   type MetaPublishingContext,
   type MetaPublishingContextResolver,
   type MetaPublishingMediaResolver,
@@ -27,6 +30,14 @@ function requireMetaDestinationId(value: string | null, platform: MetaPublishing
   const normalized = value?.trim();
   if (!normalized || !/^\d{1,32}$/.test(normalized)) {
     throw new WorkerPublishingContextError(`WORKER_${platform}_DESTINATION_ID_INVALID`);
+  }
+  return normalized;
+}
+
+function requireLinkedInPersonId(value: string | null): string {
+  const normalized = value?.trim();
+  if (!normalized || !/^[A-Za-z0-9_-]{1,255}$/.test(normalized)) {
+    throw new WorkerPublishingContextError('WORKER_LINKEDIN_DESTINATION_ID_INVALID');
   }
   return normalized;
 }
@@ -244,6 +255,102 @@ export class PrismaThreadsPublishingContextResolver implements ThreadsPublishing
   }
 }
 
+const LINKEDIN_REQUIRED_SCOPES = ['w_member_social'] as const;
+
+export class PrismaLinkedInPublishingContextResolver implements LinkedInPublishingContextResolver {
+  constructor(
+    private readonly database: PrismaClient,
+    private readonly cipher: OAuthCredentialCipherCore = new OAuthCredentialCipherCore(),
+    private readonly env: NodeJS.ProcessEnv = process.env,
+  ) {}
+
+  async resolve(command: PublishCommand): Promise<LinkedInPublishingContext> {
+    if (command.platform !== 'LINKEDIN') {
+      throw new WorkerPublishingContextError('WORKER_LINKEDIN_PLATFORM_MISMATCH');
+    }
+
+    const destination = await this.database.destination.findUnique({
+      where: { id: command.destinationId },
+      select: {
+        id: true,
+        platform: true,
+        externalId: true,
+        socialAccountId: true,
+        socialAccount: {
+          select: {
+            id: true,
+            platform: true,
+            status: true,
+            scopes: true,
+            credential: {
+              select: {
+                platform: true,
+                keyId: true,
+                algorithm: true,
+                iv: true,
+                authTag: true,
+                ciphertext: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!destination) {
+      throw new WorkerPublishingContextError('WORKER_DESTINATION_NOT_FOUND');
+    }
+    if (
+      destination.platform !== 'LINKEDIN' ||
+      destination.socialAccountId !== command.socialAccountId ||
+      !destination.socialAccount ||
+      destination.socialAccount.id !== command.socialAccountId ||
+      destination.socialAccount.platform !== 'LINKEDIN' ||
+      destination.socialAccount.status !== 'CONNECTED'
+    ) {
+      throw new WorkerPublishingContextError('WORKER_LINKEDIN_CONTEXT_MISMATCH');
+    }
+
+    for (const scope of LINKEDIN_REQUIRED_SCOPES) {
+      if (!destination.socialAccount.scopes.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_LINKEDIN_SCOPE_REQUIRED');
+      }
+    }
+
+    const credential = destination.socialAccount.credential;
+    if (!credential || credential.platform !== 'LINKEDIN') {
+      throw new WorkerPublishingContextError('WORKER_LINKEDIN_CREDENTIAL_REQUIRED');
+    }
+    if (credential.algorithm !== 'aes-256-gcm') {
+      throw new WorkerPublishingContextError('WORKER_CREDENTIAL_ALGORITHM_UNSUPPORTED');
+    }
+
+    const payload = this.cipher.decrypt(
+      {
+        platform: 'LINKEDIN',
+        keyId: credential.keyId,
+        algorithm: 'aes-256-gcm',
+        iv: credential.iv,
+        authTag: credential.authTag,
+        ciphertext: credential.ciphertext,
+      },
+      this.env,
+    );
+
+    for (const scope of LINKEDIN_REQUIRED_SCOPES) {
+      if (!payload.scopes?.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_LINKEDIN_CREDENTIAL_SCOPE_REQUIRED');
+      }
+    }
+
+    return {
+      platform: 'LINKEDIN',
+      authorUrn: `urn:li:person:${requireLinkedInPersonId(destination.externalId)}`,
+      accessToken: payload.accessToken,
+    };
+  }
+}
+
 class MapPublisherRegistry implements SocialPublisherRegistry {
   constructor(private readonly publishers: ReadonlyMap<SocialPlatform, SocialPublisher>) {}
 
@@ -258,6 +365,7 @@ export function createProductionPublisherRegistry(input: {
   env?: NodeJS.ProcessEnv;
   instagramMediaResolver?: MetaPublishingMediaResolver;
   threadsMediaResolver?: ThreadsPublishingMediaResolver;
+  linkedinApiVersion?: string;
 }): SocialPublisherRegistry {
   const facebookContextResolver = new PrismaFacebookPublishingContextResolver(
     input.database,
@@ -292,6 +400,19 @@ export function createProductionPublisherRegistry(input: {
     );
     const threads = new ThreadsPublisher(threadsContextResolver, input.threadsMediaResolver);
     publishers.set('THREADS', threads);
+  }
+
+  if (input.linkedinApiVersion) {
+    const linkedinContextResolver = new PrismaLinkedInPublishingContextResolver(
+      input.database,
+      new OAuthCredentialCipherCore(),
+      input.env,
+    );
+    const linkedin = new LinkedInMemberPublisher(
+      { apiVersion: input.linkedinApiVersion },
+      linkedinContextResolver,
+    );
+    publishers.set('LINKEDIN', linkedin);
   }
 
   return new MapPublisherRegistry(publishers);

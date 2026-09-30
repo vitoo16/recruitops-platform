@@ -1,0 +1,65 @@
+name: Web Performance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/contracts/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/web-performance.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/contracts/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/web-performance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Secret-management guardrail
+        run: node tooling/scripts/check-secrets.mjs
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm --filter @recruitops/web exec playwright install --with-deps chromium
+
+      - name: Run production performance budgets
+        run: pnpm --filter @recruitops/web test:performance
+
+      - name: Upload performance report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-performance-report
+          path: |
+            apps/web/performance-report
+            apps/web/performance-results
+          if-no-files-found: ignore
+          retention-days: 7

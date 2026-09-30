@@ -82,7 +82,7 @@
 - [x] Implement secure OAuth credential storage (encrypted storage code/tests, hosted `social_credentials` migration, RLS/browser-role revocation and production encryption keyring verified).
 - [ ] Verify current Meta official APIs/scopes and implement supported connection flow (provider boundary, one-time OAuth state, encrypted discovery session, fixed frontend callback handoff, localized explicit account picker, authenticated credential promotion, reconnect UX and regression tests implemented; hosted credential migration/keyring and frontend/API deploys are verified, while production `DATABASE_URL`, real `META_CLIENT_ID`/`META_CLIENT_SECRET`, Meta app access configuration and real-provider integration/E2E verification remain pending).
 - [ ] Verify current LinkedIn official APIs/scopes and implement supported connection flow (current 3-legged member OAuth code-side path implemented with `openid profile w_member_social`, one-time hashed state, encrypted member credential promotion, reconnect-safe account/destination upsert, OWNER/ADMIN connection UI and VI/EN copy; real LinkedIn app/product access, hosted credentials, live provider integration/E2E and organization capability remain pending).
-- [ ] Verify current TikTok official APIs/scopes and implement supported connection flow.
+- [ ] Verify current TikTok official APIs/scopes and implement supported connection flow (current Login Kit Web code-side path implemented with `user.info.basic,video.publish`, one-time hashed state, token/profile `open_id` verification, encrypted access+refresh credential promotion, reconnect-safe account/destination upsert, refresh-token provider primitive, OWNER/ADMIN connection UI and VI/EN copy; real TikTok app/product access, hosted credentials, `video.publish` approval, Content Posting API audit, durable refresh orchestration and live provider integration/E2E remain pending).
 - [ ] Verify current Zalo official APIs/scopes and implement supported connection flow.
 - [x] Implement reconnect/expired-token UX.
 - [x] Add integration health status.
@@ -98,7 +98,7 @@
 - [x] Implement Facebook Page adapter for currently supported official capabilities (verified text/link Page feed publishing slice; private-media publishing remains a later capability).
 - [x] Implement Instagram adapter for currently supported official capabilities (single-image and Reel container/publish flow with bounded Reel readiness polling, private-media resolver boundary, credential context resolver and opt-in worker registry wiring implemented; hosted activation and real-provider E2E remain pending).
 - [ ] Implement Threads adapter for currently supported official capabilities (official create-container → publish-container single-post adapter for text/image/video, private-media resolver boundary, credential context resolver, opt-in worker registry wiring, dedicated Authorization Code OAuth flow, one-time state, encrypted long-lived credential promotion, reconnect-safe account/destination upsert, manual long-lived credential refresh with optimistic concurrency, Threads integration-health reporting, reconnect-required lifecycle handling and VI/EN connection UI implemented; real Threads app credentials/access, hosted activation, real-provider refresh/publishing integration/E2E verification and the intended advanced capability set remain pending).
-- [ ] Implement LinkedIn adapter for currently supported official capabilities.
+- [ ] Implement LinkedIn adapter for currently supported official capabilities (member text/hashtag/link Posts API adapter, execution-time encrypted credential resolver, `w_member_social` scope enforcement, fail-closed worker activation, current versioned API configuration and regression coverage implemented; hosted activation, real LinkedIn app/product credentials, provider integration/E2E, media upload and organization-role capability remain pending).
 - [ ] Implement TikTok adapter for currently supported official capabilities.
 - [ ] Implement Zalo adapter for currently supported official capabilities.
 - [x] Implement Manual Assist provider for unsupported destinations such as arbitrary groups where official APIs do not allow posting.
@@ -145,8 +145,8 @@
 
 ## Phase 9 — Observability, hardening and scale
 
-- [ ] Add frontend error monitoring.
-- [ ] Add API/worker error monitoring.
+- [x] Add frontend error monitoring (optional static-export browser exception monitoring uses conditional `@sentry/browser` loading behind `NEXT_PUBLIC_SENTRY_DSN`, explicit global/React capture, PII-prone context scrubbing, no replay/tracing/log/breadcrumb integrations, accessible fallback and regression coverage while preserving the established public-shell performance budget; hosted DSN/source-map production configuration remains a production-readiness concern).
+- [x] Add API/worker error monitoring (optional `@sentry/node` monitoring captures API handler/bootstrap failures and worker startup/shutdown/process failures, strips SDK-native user/request context before transmission, keeps only bounded safe service/correlation/operation tags, flushes on bounded shutdown/startup-failure paths, and remains a no-op without `SENTRY_DSN` with regression coverage).
 - [x] Add tracing/correlation across API → queue → worker → provider (normalized bounded request IDs are persisted on Publication, propagated in BullMQ jobs, validated by the worker, forwarded through vendor-neutral `PublishCommand`, and reused for manual/automatic retry chains with regression coverage).
 - [x] Add queue metrics and alerts (read-only BullMQ job-count sampling emits waiting/active/delayed/failed/outstanding metrics; configurable waiting/failed thresholds emit structured alerts; observer Redis access is lazy, separately closable and does not mutate queue state or block worker startup).
 - [x] Add provider latency/error/rate-limit telemetry (vendor-neutral publisher registry wrapper emits structured operation latency/outcome telemetry, classifies HTTP 429 as rate-limited, carries publication correlation where available, excludes provider payload/secrets/PII, and isolates telemetry sink failures from publishing semantics with regression coverage).
@@ -155,10 +155,10 @@
 - [x] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
 - [x] Add platform-specific worker scaling strategy.
-- [ ] Execute accessibility review.
-- [ ] Execute web performance review.
-- [ ] Execute security review.
-- [ ] Execute production readiness review.
+- [x] Execute accessibility review (automated Playwright + axe WCAG A/AA gate passes for VI/EN public shell, keyboard skip-link behavior is covered, and review findings/limitations are documented; future UI changes remain subject to the same repository accessibility gates).
+- [x] Execute web performance review.
+- [x] Execute security review (OWASP/Supabase-aligned review verified implemented authentication/RBAC, OAuth state and credential-storage boundaries, private Storage RLS, monitoring privacy and scanning controls; hardened exact-origin non-credentialed CORS with regression coverage; production-readiness carryovers are documented for hosted Data API grants, authoritative private-upload limits, shared API rate limiting, CSP, and candidate retention/deletion policy).
+- [x] Execute production readiness review (review completed against repository release gates and current deployment/security evidence; release decision remains **NOT READY** until branch protection, hosted security findings, always-on worker/runtime readiness, live-provider verification, monitoring deployment, retention policy and release-scope blockers are resolved as documented in `docs/operations/production-readiness-review.md`).
 
 ## Completion rule
 

@@ -11,6 +11,7 @@ import { JobHub } from '@/components/jobs/job-hub';
 import { LinkedInConnectionPanel } from '@/components/linkedin-connections/linkedin-connection-panel';
 import { MetaConnectionPanel } from '@/components/meta-connections/meta-connection-panel';
 import { ThreadsConnectionPanel } from '@/components/threads-connections/threads-connection-panel';
+import { TikTokConnectionPanel } from '@/components/tiktok-connections/tiktok-connection-panel';
 import { Button } from '@/components/ui/button';
 import contentStudioEn from '@/messages/content-studio.en.json';
 import contentStudioVi from '@/messages/content-studio.vi.json';
@@ -21,6 +22,8 @@ import metaEn from '@/messages/meta-connections.en.json';
 import metaVi from '@/messages/meta-connections.vi.json';
 import threadsEn from '@/messages/threads-connections.en.json';
 import threadsVi from '@/messages/threads-connections.vi.json';
+import tiktokEn from '@/messages/tiktok-connections.en.json';
+import tiktokVi from '@/messages/tiktok-connections.vi.json';
 import vi from '@/messages/vi.json';
 
 type Locale = 'vi' | 'en';
@@ -39,7 +42,8 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
       </a>
       <main
         id="main-content"
-        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16"
+        tabIndex={-1}
+        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-16 outline-none"
       >
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm font-semibold tracking-[0.2em] text-neutral-500">RECRUITOPS</div>
@@ -86,6 +90,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         <MetaConnectionPanel />
         <ThreadsConnectionPanel />
         <LinkedInConnectionPanel />
+        <TikTokConnectionPanel />
         <JobHub />
         <ContentMediaWorkspace />
         <CandidateCrm />
@@ -103,6 +108,7 @@ export function Home() {
     linkedinConnections: locale === 'vi' ? linkedinVi : linkedinEn,
     metaConnections: locale === 'vi' ? metaVi : metaEn,
     threadsConnections: locale === 'vi' ? threadsVi : threadsEn,
+    tiktokConnections: locale === 'vi' ? tiktokVi : tiktokEn,
     contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
   };
 

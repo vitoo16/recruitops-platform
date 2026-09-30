@@ -7,13 +7,15 @@
     "prebuild": "pnpm --filter @recruitops/contracts build",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests --exclude \"e2e/**\"",
+    "test": "vitest run --passWithNoTests --exclude \"e2e/**\" --exclude \"performance/**\"",
     "pretest:e2e": "pnpm --filter @recruitops/contracts build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:performance": "playwright test -c playwright.performance.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@recruitops/contracts": "workspace:*",
+    "@sentry/browser": "^11.1.0",
     "@supabase/supabase-js": "^2.105.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -27,6 +29,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.10.0",
