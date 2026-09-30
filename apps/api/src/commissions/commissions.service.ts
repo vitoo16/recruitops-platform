@@ -18,10 +18,13 @@ import {
   type ReconciliationBatch,
   type ReconciliationBatchListResponse,
 } from '@recruitops/contracts';
-import { parseRequest } from '../common/zod-request.js';
 import type { AuthenticatedPrincipal } from '../auth/auth.types.js';
+import {
+  mapDatabaseApplication,
+  milestoneForStatus,
+} from '../candidates/candidates.repository.js';
+import { parseRequest } from '../common/zod-request.js';
 import { DatabaseService } from '../database/database.service.js';
-import { mapDatabaseApplication, milestoneForStatus } from '../candidates/candidates.repository.js';
 import {
   allocateCommissionMinor,
   commissionAllocationKey,
@@ -55,7 +58,9 @@ export class CommissionsService {
   }
 
   async listBatches(query: unknown): Promise<ReconciliationBatchListResponse> {
-    return this.commissions.listBatches(parseRequest(ReconciliationBatchListQuerySchema, query));
+    return this.commissions.listBatches(
+      parseRequest(ReconciliationBatchListQuerySchema, query),
+    );
   }
 
   async transitionApplicationStatus(id: unknown, input: unknown): Promise<Application> {
@@ -101,7 +106,10 @@ export class CommissionsService {
         });
 
         if (existingAllocation === 0) {
-          const grossAmountMinor = this.requireCommissionAmount(current.job, eventType);
+          const grossAmountMinor = this.requireCommissionAmount(
+            current.job,
+            eventType,
+          );
           const sources = await transaction.application.findMany({
             where: {
               candidateId: current.candidateId,
@@ -168,7 +176,9 @@ export class CommissionsService {
     return this.database.client.$transaction(async (transaction) => {
       const existing = await transaction.reconciliationBatch.findUnique({
         where: { payableOn },
-        include: { transactions: { select: { amountMinor: true, currency: true } } },
+        include: {
+          transactions: { select: { amountMinor: true, currency: true } },
+        },
       });
       if (existing) {
         throw new ConflictException({
@@ -212,7 +222,9 @@ export class CommissionsService {
 
       const hydrated = await transaction.reconciliationBatch.findUniqueOrThrow({
         where: { id: batch.id },
-        include: { transactions: { select: { amountMinor: true, currency: true } } },
+        include: {
+          transactions: { select: { amountMinor: true, currency: true } },
+        },
       });
       return mapDatabaseReconciliationBatch(hydrated);
     });
@@ -225,7 +237,9 @@ export class CommissionsService {
     return this.database.client.$transaction(async (transaction) => {
       const current = await transaction.reconciliationBatch.findUnique({
         where: { id: batchId },
-        include: { transactions: { select: { amountMinor: true, currency: true } } },
+        include: {
+          transactions: { select: { amountMinor: true, currency: true } },
+        },
       });
       if (!current) {
         throw new NotFoundException({
@@ -233,7 +247,9 @@ export class CommissionsService {
           message: 'Reconciliation batch was not found',
         });
       }
-      if (current.status === 'PAID') return mapDatabaseReconciliationBatch(current);
+      if (current.status === 'PAID') {
+        return mapDatabaseReconciliationBatch(current);
+      }
 
       await transaction.commissionTransaction.updateMany({
         where: {
@@ -248,7 +264,9 @@ export class CommissionsService {
       });
       const hydrated = await transaction.reconciliationBatch.findUniqueOrThrow({
         where: { id: batchId },
-        include: { transactions: { select: { amountMinor: true, currency: true } } },
+        include: {
+          transactions: { select: { amountMinor: true, currency: true } },
+        },
       });
       return mapDatabaseReconciliationBatch(hydrated);
     });
