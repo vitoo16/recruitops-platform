@@ -32,7 +32,6 @@ export interface WorkerRuntimeConfig {
   instagramPublishing: MediaPublishingRuntimeConfig;
   threadsPublishing: MediaPublishingRuntimeConfig;
   linkedinPublishing?: LinkedInPublishingRuntimeConfig | undefined;
-  tiktokPublishing?: Extract<MediaPublishingRuntimeConfig, { enabled: true }> | undefined;
   limits: PublicationWorkerLimits;
 }
 
@@ -150,28 +149,6 @@ function readMediaPublishingConfig(
   }
 }
 
-function readOptionalTikTokPublishingConfig(
-  env: Readonly<Record<string, string | undefined>>,
-): Extract<MediaPublishingRuntimeConfig, { enabled: true }> | undefined {
-  const enabled = booleanFlag(
-    env.PUBLISHING_TIKTOK_ENABLED,
-    'WORKER_TIKTOK_PUBLISHING_FLAG_INVALID',
-  );
-  if (!enabled) return undefined;
-
-  try {
-    return {
-      enabled: true,
-      mediaSigner: readSupabaseProviderMediaSignerConfig(env),
-    };
-  } catch (error) {
-    if (error instanceof WorkerProviderMediaResolutionError) {
-      throw new WorkerRuntimeConfigurationError('WORKER_TIKTOK_MEDIA_SIGNING_CONFIG_INVALID');
-    }
-    throw error;
-  }
-}
-
 function readLinkedInPublishingConfig(
   env: Readonly<Record<string, string | undefined>>,
 ): LinkedInPublishingRuntimeConfig | undefined {
@@ -193,7 +170,6 @@ export function readWorkerRuntimeConfig(
   }
 
   const linkedinPublishing = readLinkedInPublishingConfig(env);
-  const tiktokPublishing = readOptionalTikTokPublishingConfig(env);
   return {
     databaseUrl: requireUrl(env.DATABASE_URL, 'WORKER_DATABASE_URL_INVALID', [
       'postgresql:',
@@ -212,7 +188,6 @@ export function readWorkerRuntimeConfig(
       mediaErrorCode: 'WORKER_THREADS_MEDIA_SIGNING_CONFIG_INVALID',
     }),
     ...(linkedinPublishing ? { linkedinPublishing } : {}),
-    ...(tiktokPublishing ? { tiktokPublishing } : {}),
     limits: {
       concurrency: positiveInteger(
         env.PUBLICATION_WORKER_CONCURRENCY,
@@ -275,9 +250,7 @@ export function startPublicationWorkerRuntime(
     ? config.instagramPublishing.mediaSigner
     : config.threadsPublishing.enabled
       ? config.threadsPublishing.mediaSigner
-      : config.tiktokPublishing?.enabled
-        ? config.tiktokPublishing.mediaSigner
-        : undefined;
+      : undefined;
   const providerMediaResolver = mediaSigner
     ? createSupabaseProviderMediaResolver({
         database,
@@ -299,9 +272,6 @@ export function startPublicationWorkerRuntime(
       ...(config.linkedinPublishing
         ? { linkedinApiVersion: config.linkedinPublishing.apiVersion }
         : {}),
-      ...(config.tiktokPublishing?.enabled && providerMediaResolver
-        ? { tiktokMediaResolver: providerMediaResolver }
-        : {}),
     });
   const instrumentedPublishers = createProviderTelemetryRegistry(publishers, logger);
   const handler = createPublicationJobHandler(repository, instrumentedPublishers);
@@ -320,7 +290,6 @@ export function startPublicationWorkerRuntime(
   if (config.instagramPublishing.enabled) enabledPublishers.push('INSTAGRAM');
   if (config.threadsPublishing.enabled) enabledPublishers.push('THREADS');
   if (config.linkedinPublishing) enabledPublishers.push('LINKEDIN');
-  if (config.tiktokPublishing?.enabled) enabledPublishers.push('TIKTOK');
 
   logger.info('publication_worker_started', {
     concurrency: config.limits.concurrency,
