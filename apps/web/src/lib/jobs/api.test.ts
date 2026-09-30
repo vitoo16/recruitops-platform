@@ -12,6 +12,8 @@ const job = {
   currency: 'VND',
   salaryMinMinor: null,
   salaryMaxMinor: null,
+  interviewCommissionMinor: null,
+  worked30DaysCommissionMinor: null,
   sourceRef: null,
   commissionNote: null,
   createdAt: '2026-09-27T09:00:00.000Z',
