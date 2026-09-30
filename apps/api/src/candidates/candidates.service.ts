@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   ApplicationIdSchema,
   ApplicationListQuerySchema,
@@ -9,18 +9,21 @@ import {
   CreateCandidateSchema,
   UpdateApplicationStatusSchema,
   UpdateCandidateSchema,
-  canTransitionApplicationStatus,
   type Application,
   type ApplicationListResponse,
   type Candidate,
   type CandidateListResponse,
 } from '@recruitops/contracts';
 import { parseRequest } from '../common/zod-request.js';
+import { CommissionsService } from '../commissions/commissions.service.js';
 import { CandidatesRepository } from './candidates.repository.js';
 
 @Injectable()
 export class CandidatesService {
-  constructor(private readonly candidates: CandidatesRepository) {}
+  constructor(
+    private readonly candidates: CandidatesRepository,
+    private readonly commissions: CommissionsService,
+  ) {}
 
   async createCandidate(input: unknown): Promise<Candidate> {
     return this.candidates.createCandidate(parseRequest(CreateCandidateSchema, input));
@@ -47,8 +50,8 @@ export class CandidatesService {
     );
   }
 
-  async createApplication(input: unknown): Promise<Application> {
-    return this.candidates.createApplication(parseRequest(CreateApplicationSchema, input));
+  async createApplication(input: unknown, actorId: string): Promise<Application> {
+    return this.candidates.createApplication(parseRequest(CreateApplicationSchema, input), actorId);
   }
 
   async listApplications(query: unknown): Promise<ApplicationListResponse> {
@@ -60,21 +63,9 @@ export class CandidatesService {
   }
 
   async updateApplicationStatus(id: unknown, input: unknown): Promise<Application> {
-    const applicationId = parseRequest(ApplicationIdSchema, id);
-    const update = parseRequest(UpdateApplicationStatusSchema, input);
-    const current = await this.candidates.getApplicationById(applicationId);
-
-    if (!canTransitionApplicationStatus(current.status, update.status)) {
-      throw new BadRequestException({
-        code: 'INVALID_APPLICATION_STATUS_TRANSITION',
-        message: `Cannot transition application from ${current.status} to ${update.status}`,
-      });
-    }
-
-    return this.candidates.updateApplicationStatus(
-      applicationId,
-      update.status,
-      update.occurredAt ? new Date(update.occurredAt) : new Date(),
+    return this.commissions.transitionApplicationStatus(
+      parseRequest(ApplicationIdSchema, id),
+      parseRequest(UpdateApplicationStatusSchema, input),
     );
   }
 }
