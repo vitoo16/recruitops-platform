@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -63,10 +53,7 @@ export class CandidatesController {
 
   @Post('applications')
   @Roles('OWNER', 'ADMIN', 'RECRUITER')
-  createApplication(
-    @Body() body: unknown,
-    @Req() request: AuthenticatedRequest,
-  ) {
+  createApplication(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
     return this.candidates.createApplication(body, request.user!.id);
   }
 
