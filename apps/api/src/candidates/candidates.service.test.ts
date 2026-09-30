@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
+import type { CommissionsService } from '../commissions/commissions.service.js';
 import { CandidatesService } from './candidates.service.js';
 import type { CandidatesRepository } from './candidates.repository.js';
 
@@ -11,6 +11,7 @@ const application = {
   sourcePlatform: null,
   sourceDestinationId: null,
   sourceLabel: null,
+  sourcedByActorId: '550e8400-e29b-41d4-a716-446655440013',
   sourcedAt: '2026-09-27T08:00:00.000Z',
   submittedAt: '2026-09-27T08:05:00.000Z',
   interviewAt: null,
@@ -22,26 +23,32 @@ const application = {
 };
 
 describe('CandidatesService', () => {
-  it('rejects invalid application status transitions', async () => {
+  it('attributes a new application to the authenticated actor', async () => {
     const repository = {
-      getApplicationById: vi.fn().mockResolvedValue(application),
-      updateApplicationStatus: vi.fn(),
+      createApplication: vi.fn().mockResolvedValue(application),
     } as unknown as CandidatesRepository;
-    const service = new CandidatesService(repository);
+    const commissions = {} as CommissionsService;
+    const service = new CandidatesService(repository, commissions);
+    const actorId = '550e8400-e29b-41d4-a716-446655440013';
+    const input = {
+      candidateId: application.candidateId,
+      jobId: application.jobId,
+    };
 
-    await expect(
-      service.updateApplicationStatus(application.id, { status: 'WORKING' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
-    expect(repository.updateApplicationStatus).not.toHaveBeenCalled();
+    await expect(service.createApplication(input, actorId)).resolves.toEqual(application);
+    expect(repository.createApplication).toHaveBeenCalledWith(
+      expect.objectContaining(input),
+      actorId,
+    );
   });
 
-  it('persists a valid transition with the supplied occurrence time', async () => {
+  it('delegates lifecycle transitions to the transactional commission boundary', async () => {
     const updated = { ...application, status: 'INTERVIEW_INVITED' as const };
-    const repository = {
-      getApplicationById: vi.fn().mockResolvedValue(application),
-      updateApplicationStatus: vi.fn().mockResolvedValue(updated),
-    } as unknown as CandidatesRepository;
-    const service = new CandidatesService(repository);
+    const repository = {} as CandidatesRepository;
+    const commissions = {
+      transitionApplicationStatus: vi.fn().mockResolvedValue(updated),
+    } as unknown as CommissionsService;
+    const service = new CandidatesService(repository, commissions);
     const occurredAt = '2026-09-28T02:00:00.000Z';
 
     await expect(
@@ -50,10 +57,9 @@ describe('CandidatesService', () => {
         occurredAt,
       }),
     ).resolves.toEqual(updated);
-    expect(repository.updateApplicationStatus).toHaveBeenCalledWith(
-      application.id,
-      'INTERVIEW_INVITED',
-      new Date(occurredAt),
-    );
+    expect(commissions.transitionApplicationStatus).toHaveBeenCalledWith(application.id, {
+      status: 'INTERVIEW_INVITED',
+      occurredAt,
+    });
   });
 });
