@@ -6,6 +6,7 @@ import {
   LinkedInMemberPublisher,
   OAuthCredentialCipherCore,
   ThreadsPublisher,
+  TikTokDirectPostPublisher,
   type LinkedInPublishingContext,
   type LinkedInPublishingContextResolver,
   type MetaPublishingContext,
@@ -14,6 +15,9 @@ import {
   type ThreadsPublishingContext,
   type ThreadsPublishingContextResolver,
   type ThreadsPublishingMediaResolver,
+  type TikTokPublishingContext,
+  type TikTokPublishingContextResolver,
+  type TikTokPublishingMediaResolver,
 } from '@recruitops/integrations';
 import type { SocialPublisherRegistry } from '@recruitops/queue';
 
@@ -351,6 +355,100 @@ export class PrismaLinkedInPublishingContextResolver implements LinkedInPublishi
   }
 }
 
+const TIKTOK_REQUIRED_SCOPES = ['video.publish'] as const;
+
+export class PrismaTikTokPublishingContextResolver implements TikTokPublishingContextResolver {
+  constructor(
+    private readonly database: PrismaClient,
+    private readonly cipher: OAuthCredentialCipherCore = new OAuthCredentialCipherCore(),
+    private readonly env: NodeJS.ProcessEnv = process.env,
+  ) {}
+
+  async resolve(command: PublishCommand): Promise<TikTokPublishingContext> {
+    if (command.platform !== 'TIKTOK') {
+      throw new WorkerPublishingContextError('WORKER_TIKTOK_PLATFORM_MISMATCH');
+    }
+
+    const destination = await this.database.destination.findUnique({
+      where: { id: command.destinationId },
+      select: {
+        id: true,
+        platform: true,
+        socialAccountId: true,
+        socialAccount: {
+          select: {
+            id: true,
+            platform: true,
+            status: true,
+            scopes: true,
+            credential: {
+              select: {
+                platform: true,
+                keyId: true,
+                algorithm: true,
+                iv: true,
+                authTag: true,
+                ciphertext: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!destination) {
+      throw new WorkerPublishingContextError('WORKER_DESTINATION_NOT_FOUND');
+    }
+    if (
+      destination.platform !== 'TIKTOK' ||
+      destination.socialAccountId !== command.socialAccountId ||
+      !destination.socialAccount ||
+      destination.socialAccount.id !== command.socialAccountId ||
+      destination.socialAccount.platform !== 'TIKTOK' ||
+      destination.socialAccount.status !== 'CONNECTED'
+    ) {
+      throw new WorkerPublishingContextError('WORKER_TIKTOK_CONTEXT_MISMATCH');
+    }
+
+    for (const scope of TIKTOK_REQUIRED_SCOPES) {
+      if (!destination.socialAccount.scopes.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_TIKTOK_SCOPE_REQUIRED');
+      }
+    }
+
+    const credential = destination.socialAccount.credential;
+    if (!credential || credential.platform !== 'TIKTOK') {
+      throw new WorkerPublishingContextError('WORKER_TIKTOK_CREDENTIAL_REQUIRED');
+    }
+    if (credential.algorithm !== 'aes-256-gcm') {
+      throw new WorkerPublishingContextError('WORKER_CREDENTIAL_ALGORITHM_UNSUPPORTED');
+    }
+
+    const payload = this.cipher.decrypt(
+      {
+        platform: 'TIKTOK',
+        keyId: credential.keyId,
+        algorithm: 'aes-256-gcm',
+        iv: credential.iv,
+        authTag: credential.authTag,
+        ciphertext: credential.ciphertext,
+      },
+      this.env,
+    );
+
+    for (const scope of TIKTOK_REQUIRED_SCOPES) {
+      if (!payload.scopes?.includes(scope)) {
+        throw new WorkerPublishingContextError('WORKER_TIKTOK_CREDENTIAL_SCOPE_REQUIRED');
+      }
+    }
+
+    return {
+      platform: 'TIKTOK',
+      accessToken: payload.accessToken,
+    };
+  }
+}
+
 class MapPublisherRegistry implements SocialPublisherRegistry {
   constructor(private readonly publishers: ReadonlyMap<SocialPlatform, SocialPublisher>) {}
 
@@ -366,6 +464,7 @@ export function createProductionPublisherRegistry(input: {
   instagramMediaResolver?: MetaPublishingMediaResolver;
   threadsMediaResolver?: ThreadsPublishingMediaResolver;
   linkedinApiVersion?: string;
+  tiktokMediaResolver?: TikTokPublishingMediaResolver;
 }): SocialPublisherRegistry {
   const facebookContextResolver = new PrismaFacebookPublishingContextResolver(
     input.database,
@@ -413,6 +512,16 @@ export function createProductionPublisherRegistry(input: {
       linkedinContextResolver,
     );
     publishers.set('LINKEDIN', linkedin);
+  }
+
+  if (input.tiktokMediaResolver) {
+    const tiktokContextResolver = new PrismaTikTokPublishingContextResolver(
+      input.database,
+      new OAuthCredentialCipherCore(),
+      input.env,
+    );
+    const tiktok = new TikTokDirectPostPublisher(tiktokContextResolver, input.tiktokMediaResolver);
+    publishers.set('TIKTOK', tiktok);
   }
 
   return new MapPublisherRegistry(publishers);
