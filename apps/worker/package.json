@@ -17,6 +17,7 @@
     "@recruitops/database": "workspace:*",
     "@recruitops/integrations": "workspace:*",
     "@recruitops/queue": "workspace:*",
+    "@sentry/node": "^11.1.0",
     "@supabase/supabase-js": "2.117.2"
   },
   "devDependencies": {
