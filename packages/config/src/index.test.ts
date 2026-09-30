@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseApiEnv } from './index';
+import { parseApiEnv } from './index.js';
 
 describe('parseApiEnv CORS security', () => {
   it('keeps localhost http available for development', () => {
