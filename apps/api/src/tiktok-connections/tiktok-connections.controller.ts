@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Header,
+  Param,
   Post,
   Query,
   Res,
@@ -41,6 +42,14 @@ export class TikTokConnectionsController {
   @Header('Cache-Control', 'no-store')
   list() {
     return this.connections.list();
+  }
+
+  @Post('accounts/:accountId/creator-info')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  @Header('Cache-Control', 'no-store')
+  creatorInfo(@Param('accountId') accountId: string) {
+    return this.connections.creatorInfo(accountId);
   }
 
   @Post('start')
