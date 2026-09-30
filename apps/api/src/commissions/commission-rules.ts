@@ -1,4 +1,7 @@
-import type { ApplicationStatus, CommissionEventType } from '@recruitops/contracts';
+import type {
+  ApplicationStatus,
+  CommissionEventType,
+} from '@recruitops/contracts';
 
 const VIETNAM_OFFSET_MS = 7 * 60 * 60 * 1_000;
 
@@ -66,7 +69,9 @@ export function allocateCommissionMinor(
   grossAmountMinor: bigint,
   beneficiaries: readonly CommissionBeneficiary[],
 ): CommissionAllocation[] {
-  if (grossAmountMinor < 0n) throw new Error('COMMISSION_GROSS_AMOUNT_NEGATIVE');
+  if (grossAmountMinor < 0n) {
+    throw new Error('COMMISSION_GROSS_AMOUNT_NEGATIVE');
+  }
   if (beneficiaries.length === 0) return [];
 
   const count = BigInt(beneficiaries.length);
