@@ -1,0 +1,32 @@
+name: Temporary TikTok Format
+
+on:
+  pull_request:
+    paths:
+      - 'packages/integrations/src/tiktok-publishing.ts'
+      - 'packages/integrations/src/tiktok-publishing.test.ts'
+      - '.github/workflows/tmp-format-tiktok.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  format-diff:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Print canonical Prettier diff
+        run: |
+          pnpm exec prettier --write packages/integrations/src/tiktok-publishing.ts packages/integrations/src/tiktok-publishing.test.ts
+          git diff -- packages/integrations/src/tiktok-publishing.ts packages/integrations/src/tiktok-publishing.test.ts
