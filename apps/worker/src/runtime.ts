@@ -23,12 +23,15 @@ import {
 export type MediaPublishingRuntimeConfig =
   { enabled: false } | { enabled: true; mediaSigner: SupabaseProviderMediaSignerConfig };
 
+export type LinkedInPublishingRuntimeConfig = { enabled: true; apiVersion: string };
+
 export interface WorkerRuntimeConfig {
   databaseUrl: string;
   redisUrl: string;
   metaGraphApiVersion: string;
   instagramPublishing: MediaPublishingRuntimeConfig;
   threadsPublishing: MediaPublishingRuntimeConfig;
+  linkedinPublishing?: LinkedInPublishingRuntimeConfig | undefined;
   limits: PublicationWorkerLimits;
 }
 
@@ -107,6 +110,14 @@ function requireGraphApiVersion(value: string | undefined): string {
   return normalized;
 }
 
+function requireLinkedInApiVersion(value: string | undefined): string {
+  const normalized = value?.trim();
+  if (!normalized || !/^\d{6}$/.test(normalized)) {
+    throw new WorkerRuntimeConfigurationError('WORKER_LINKEDIN_API_VERSION_INVALID');
+  }
+  return normalized;
+}
+
 function booleanFlag(value: string | undefined, code: string): boolean {
   const normalized = value?.trim().toLowerCase();
   if (!normalized || normalized === 'false' || normalized === '0') return false;
@@ -138,6 +149,17 @@ function readMediaPublishingConfig(
   }
 }
 
+function readLinkedInPublishingConfig(
+  env: Readonly<Record<string, string | undefined>>,
+): LinkedInPublishingRuntimeConfig | undefined {
+  const enabled = booleanFlag(
+    env.PUBLISHING_LINKEDIN_ENABLED,
+    'WORKER_LINKEDIN_PUBLISHING_FLAG_INVALID',
+  );
+  if (!enabled) return undefined;
+  return { enabled: true, apiVersion: requireLinkedInApiVersion(env.LINKEDIN_API_VERSION) };
+}
+
 export function readWorkerRuntimeConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): WorkerRuntimeConfig {
@@ -147,6 +169,7 @@ export function readWorkerRuntimeConfig(
     throw new WorkerRuntimeConfigurationError('WORKER_OAUTH_CREDENTIAL_KEYRING_INVALID');
   }
 
+  const linkedinPublishing = readLinkedInPublishingConfig(env);
   return {
     databaseUrl: requireUrl(env.DATABASE_URL, 'WORKER_DATABASE_URL_INVALID', [
       'postgresql:',
@@ -164,6 +187,7 @@ export function readWorkerRuntimeConfig(
       flagErrorCode: 'WORKER_THREADS_PUBLISHING_FLAG_INVALID',
       mediaErrorCode: 'WORKER_THREADS_MEDIA_SIGNING_CONFIG_INVALID',
     }),
+    ...(linkedinPublishing ? { linkedinPublishing } : {}),
     limits: {
       concurrency: positiveInteger(
         env.PUBLICATION_WORKER_CONCURRENCY,
@@ -245,6 +269,9 @@ export function startPublicationWorkerRuntime(
       ...(config.threadsPublishing.enabled && providerMediaResolver
         ? { threadsMediaResolver: providerMediaResolver }
         : {}),
+      ...(config.linkedinPublishing
+        ? { linkedinApiVersion: config.linkedinPublishing.apiVersion }
+        : {}),
     });
   const instrumentedPublishers = createProviderTelemetryRegistry(publishers, logger);
   const handler = createPublicationJobHandler(repository, instrumentedPublishers);
@@ -262,6 +289,7 @@ export function startPublicationWorkerRuntime(
   const enabledPublishers = ['FACEBOOK'];
   if (config.instagramPublishing.enabled) enabledPublishers.push('INSTAGRAM');
   if (config.threadsPublishing.enabled) enabledPublishers.push('THREADS');
+  if (config.linkedinPublishing) enabledPublishers.push('LINKEDIN');
 
   logger.info('publication_worker_started', {
     concurrency: config.limits.concurrency,

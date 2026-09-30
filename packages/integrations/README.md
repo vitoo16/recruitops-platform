@@ -47,6 +47,21 @@ It:
 
 The media resolver is intentionally outside the provider adapter. A future execution layer can issue a short-lived signed URL for a private object without exposing storage credentials or changing bucket visibility.
 
+### LinkedIn member publishing
+
+`LinkedInMemberPublisher` implements the shared `SocialPublisher` boundary for the currently supported member text/hashtag/link slice.
+
+It:
+- requires a server-side member context with `w_member_social` and an encrypted access token;
+- derives the member Person URN from the connected member identifier only at execution time;
+- calls the current LinkedIn Posts API at `POST /rest/posts` with `X-Restli-Protocol-Version: 2.0.0` and an explicit `Linkedin-Version` in `YYYYMM` format;
+- publishes public member commentary composed from RecruitOps text, hashtags and an optional link;
+- reads the created post URN only from LinkedIn's `x-restli-id` response header;
+- rejects media IDs rather than silently dropping content or pretending upload support exists;
+- remains disabled in the worker unless `PUBLISHING_LINKEDIN_ENABLED=true` and `LINKEDIN_API_VERSION` is valid.
+
+Organization posting and LinkedIn media upload are intentionally not claimed by this slice. They require separately verified product permissions, organization-role checks and provider upload flows.
+
 The current adapters return normalized `UNKNOWN` for generic post-status reconciliation because provider reconciliation has not yet been wired to a persisted credential context. They do not fabricate status certainty.
 
 ## Provider adapter boundary
