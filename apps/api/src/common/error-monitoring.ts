@@ -9,6 +9,7 @@ let enabled = false;
 
 export function initializeApiErrorMonitoring(nodeEnv: string): boolean {
   const dsn = process.env.SENTRY_DSN?.trim();
+  enabled = Boolean(dsn);
   if (!dsn) return false;
 
   Sentry.init({
@@ -17,7 +18,6 @@ export function initializeApiErrorMonitoring(nodeEnv: string): boolean {
     sendDefaultPii: false,
   });
   Sentry.setTag('service', 'recruitops-api');
-  enabled = true;
   return true;
 }
 
