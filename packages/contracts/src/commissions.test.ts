@@ -30,8 +30,8 @@ describe('CommissionTransactionSchema', () => {
     ['negative', -1],
     ['unsafe', Number.MAX_SAFE_INTEGER + 1],
   ])('rejects %s money values', (_label, amountMinor) => {
-    expect(
-      CommissionTransactionSchema.safeParse({ ...baseTransaction, amountMinor }).success,
-    ).toBe(false);
+    expect(CommissionTransactionSchema.safeParse({ ...baseTransaction, amountMinor }).success).toBe(
+      false,
+    );
   });
 });
