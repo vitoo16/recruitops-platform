@@ -1,9 +1,8 @@
 import type { PrismaClient } from '@recruitops/database';
 import type {
   MetaPublishingMediaResolver,
+  MetaPublishingMediaSource,
   ThreadsPublishingMediaResolver,
-  TikTokPublishingMediaResolver,
-  TikTokPublishingMediaSource,
 } from '@recruitops/integrations';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -112,14 +111,6 @@ function requireSignedUrl(value: string, supabaseOrigin: string): string {
   return parsed.toString();
 }
 
-function requireSafeMediaSize(value: bigint): number {
-  const size = Number(value);
-  if (!Number.isSafeInteger(size) || size < 1) {
-    throw new WorkerProviderMediaResolutionError('WORKER_PROVIDER_MEDIA_SIZE_INVALID');
-  }
-  return size;
-}
-
 export function readSupabaseProviderMediaSignerConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): SupabaseProviderMediaSignerConfig {
@@ -177,14 +168,14 @@ export class SupabaseProviderMediaUrlSigner implements ProviderMediaUrlSigner {
 }
 
 export class PrismaProviderMediaResolver
-  implements MetaPublishingMediaResolver, ThreadsPublishingMediaResolver, TikTokPublishingMediaResolver
+  implements MetaPublishingMediaResolver, ThreadsPublishingMediaResolver
 {
   constructor(
     private readonly database: PrismaClient,
     private readonly signer: ProviderMediaUrlSigner,
   ) {}
 
-  async resolve(mediaIds: readonly string[]): Promise<readonly TikTokPublishingMediaSource[]> {
+  async resolve(mediaIds: readonly string[]): Promise<readonly MetaPublishingMediaSource[]> {
     if (mediaIds.length === 0) return [];
     if (mediaIds.length > MAX_MEDIA_IDS) {
       throw new WorkerProviderMediaResolutionError('WORKER_PROVIDER_MEDIA_LIMIT_EXCEEDED');
@@ -199,8 +190,6 @@ export class PrismaProviderMediaResolver
         id: true,
         kind: true,
         storageKey: true,
-        mimeType: true,
-        sizeBytes: true,
       },
     });
     const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
@@ -219,8 +208,6 @@ export class PrismaProviderMediaResolver
           mediaId,
           kind: asset.kind,
           publicUrl: await this.signer.sign(asset.storageKey),
-          mimeType: asset.mimeType,
-          sizeBytes: requireSafeMediaSize(asset.sizeBytes),
         };
       }),
     );
