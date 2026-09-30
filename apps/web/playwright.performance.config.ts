@@ -26,7 +26,7 @@ export default defineConfig({
     video: 'off',
   },
   webServer: {
-    command: 'pnpm build && pnpm exec next start --hostname 127.0.0.1 --port 3200',
+    command: 'pnpm build && python3 -m http.server 3200 --bind 127.0.0.1 --directory out',
     url: 'http://127.0.0.1:3200',
     timeout: 180_000,
     reuseExistingServer: false,
