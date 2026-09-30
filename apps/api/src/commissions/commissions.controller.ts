@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -26,7 +35,10 @@ export class CommissionsController {
 
   @Post('reconciliation-batches')
   @Roles('OWNER', 'ADMIN')
-  createBatch(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
+  createBatch(
+    @Body() body: unknown,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.commissions.createReconciliationBatch(body, request.user!.id);
   }
 
