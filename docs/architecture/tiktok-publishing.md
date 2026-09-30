@@ -2,16 +2,15 @@
 
 ## Current provider contract
 
-RecruitOps uses TikTok's official Content Posting API Direct Post flow for the code-side publishing foundation:
+RecruitOps keeps a code-side TikTok Content Posting API foundation behind a fail-closed activation boundary:
 
 1. `POST /v2/post/publish/creator_info/query/` with the connected user's `video.publish` token.
-2. Render/use only the current privacy and interaction options returned for that creator.
-3. After explicit user consent, initialize video Direct Post with `POST /v2/post/publish/video/init/`.
-4. Use `FILE_UPLOAD` for RecruitOps private media rather than handing a private Supabase signed URL to TikTok's `PULL_FROM_URL` boundary.
-5. Upload the binary media to the provider-issued `upload_url` with the required content range headers.
-6. Track asynchronous completion with `POST /v2/post/publish/status/fetch/`.
+2. Render/use only the latest privacy and interaction options returned for that creator.
+3. Collect the required metadata, commercial-content disclosure, and explicit user consent before initialization.
+4. Initialize video Direct Post with `POST /v2/post/publish/video/init/` only after those conditions are satisfied.
+5. Track asynchronous completion with `POST /v2/post/publish/status/fetch/`.
 
-The provider foundation lives in `packages/integrations/src/tiktok-publishing.ts`. It validates provider envelopes, keeps access tokens in bearer headers, validates provider upload URLs, restricts video MIME types to the official upload types, and normalizes async status without copying provider error messages into application errors.
+The provider foundation lives in `packages/integrations/src/tiktok-publishing.ts`. It validates provider envelopes, keeps access tokens in bearer headers, normalizes async status without copying provider error messages into application errors, and includes the current commercial disclosure fields (`brand_content_toggle`, `brand_organic_toggle`) plus optional AIGC disclosure.
 
 ## Authenticated creator-info boundary
 
@@ -19,18 +18,46 @@ The API exposes `POST /integrations/tiktok/oauth/accounts/:accountId/creator-inf
 
 The response contains only the current creator capability values required for the posting UI: creator identity labels, provider-returned privacy options, interaction restrictions and maximum post duration. Provider failures are mapped to bounded application error codes without returning provider message bodies.
 
-## Why runtime activation is still fail-closed
+## Compliance blocker: current RecruitOps product use
 
-The provider is deliberately **not** registered in the production worker yet. TikTok's current Direct Post rules require the app to query the creator's latest info, display the returned privacy/interaction options, and collect explicit user consent before initializing a post. RecruitOps now has the authenticated creator-info API boundary, but the Content Studio/publish-now/scheduling UI does not yet collect and durably snapshot the TikTok-specific posting settings and explicit consent.
+The production TikTok Direct Post adapter remains intentionally disabled. TikTok's current developer guidelines state that Direct Post clients should support authentic creators and a broad audience and explicitly list an internal utility used to upload content to accounts managed by the developer or their team as an unacceptable intended use.
 
-Registering the adapter before that UI/API publication boundary exists would allow the worker to publish with guessed or stale privacy settings, which would violate the provider flow. The next code-side slice must therefore collect the current creator options in the UI, validate the chosen TikTok settings against them, capture explicit user confirmation at the publish/schedule action, and propagate a durable snapshot to the worker.
+RecruitOps is currently designed as an internal recruiting/marketing operations tool for accounts managed by the operator team. Unless TikTok approves a product shape/use case that satisfies its current Content Posting API requirements, RecruitOps must not represent Direct Post as a production-supported capability.
+
+This is an external product/compliance blocker, not a code defect. The existing foundation is retained for future compliant product scope or provider approval, but worker registration stays fail-closed.
+
+## Required UX before any future activation
+
+Even if the intended-use blocker is resolved, TikTok requires the application to query the latest creator info when rendering the posting UI and give users direct control over what is sent. A future compliant UI must at minimum:
+
+- display the target creator nickname/account;
+- present only the returned privacy options, with no preselected privacy default;
+- disable interaction controls that creator info reports as unavailable and leave allowed interactions unchecked by default;
+- validate the selected video's duration against `max_video_post_duration_sec`;
+- provide editable title/caption fields;
+- implement Commercial Content disclosure, including Your Brand / Branded Content rules and their privacy restrictions;
+- show the required Music Usage Confirmation / Branded Content Policy declaration as applicable;
+- collect express upload consent before sending media to TikTok;
+- present a preview and asynchronous processing status.
+
+RecruitOps does not yet implement that complete UX/snapshot boundary, so activation stays blocked independently of provider credentials.
 
 ## Media-transfer boundary
 
-RecruitOps private media is stored behind Supabase authorization. TikTok's `PULL_FROM_URL` mode requires a publicly reachable URL from a domain or URL prefix verified for the application, so the current short-lived private Supabase signed URL is not treated as a valid Direct Post pull source.
+RecruitOps media already resides on server-side Supabase storage. TikTok's current technical guidance says server-side media should use `PULL_FROM_URL`, while `FILE_UPLOAD` is intended for media located on the user's device. `PULL_FROM_URL` requires the supplied media URL to be under a domain or URL prefix verified for the TikTok application.
 
-The intended runtime path is server-side `FILE_UPLOAD`. Before production wiring, the worker needs a bounded media-byte streaming/downloading boundary with MIME/size validation and chunking that follows TikTok's current transfer limits. The provider foundation exposes upload-chunk primitives but does not buffer arbitrary private videos into worker memory by itself.
+The existing `FILE_UPLOAD` primitive is therefore not wired into the RecruitOps worker. Production Direct Post would first require a TikTok-approved product use case plus a provider-verified media delivery domain/prefix (or another provider-approved media architecture). A short-lived private Supabase signed URL is not assumed to satisfy that ownership-verification requirement.
 
 ## Live-provider boundary
 
-Even after repository wiring is complete, production activation remains gated on TikTok app/product access, `video.publish` approval, Content Posting API audit, hosted credentials, durable token refresh, and a real-provider integration/E2E pass. Unaudited Direct Post clients remain subject to TikTok's private-viewing restriction.
+Production activation remains gated on all of the following, even if repository implementation is otherwise complete:
+
+- an intended product use accepted under TikTok's current Content Posting API guidelines;
+- TikTok app/product access and `video.publish` approval;
+- successful Content Posting API audit where required;
+- provider-verified media delivery ownership suitable for server-side media;
+- hosted credentials and durable refresh orchestration;
+- the required posting UX/consent/disclosure workflow;
+- real-provider integration/E2E verification.
+
+Until those conditions are met, `Implement TikTok adapter for currently supported official capabilities` remains incomplete in `MASTER_PLAN.md`.
