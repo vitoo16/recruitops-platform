@@ -155,7 +155,7 @@
 - [x] Add backup/restore procedure.
 - [x] Add initial free-tier deployment topology and upgrade path.
 - [x] Add platform-specific worker scaling strategy.
-- [ ] Execute accessibility review.
+- [x] Execute accessibility review (automated Playwright + axe WCAG A/AA gate passes for VI/EN public shell, keyboard skip-link behavior is covered, and review findings/limitations are documented; future UI changes remain subject to the same repository accessibility gates).
 - [ ] Execute web performance review.
 - [ ] Execute security review.
 - [ ] Execute production readiness review.
