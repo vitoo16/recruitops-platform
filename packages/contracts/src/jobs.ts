@@ -36,6 +36,8 @@ const JobFieldsSchema = z.object({
     .transform((value) => value.toUpperCase()),
   salaryMinMinor: optionalMoneyMinor,
   salaryMaxMinor: optionalMoneyMinor,
+  interviewCommissionMinor: optionalMoneyMinor,
+  worked30DaysCommissionMinor: optionalMoneyMinor,
   sourceRef: z.string().trim().max(500).optional(),
   commissionNote: z.string().trim().max(2_000).optional(),
 });
@@ -86,6 +88,8 @@ export const JobListQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
 
+const nullableMoneyMinor = z.number().int().nonnegative().safe().nullable();
+
 export const JobSchema = z.object({
   id: JobIdSchema,
   title: z.string(),
@@ -95,8 +99,10 @@ export const JobSchema = z.object({
   employmentType: EmploymentTypeSchema,
   status: JobStatusSchema,
   currency: z.string().length(3),
-  salaryMinMinor: z.number().int().nonnegative().safe().nullable(),
-  salaryMaxMinor: z.number().int().nonnegative().safe().nullable(),
+  salaryMinMinor: nullableMoneyMinor,
+  salaryMaxMinor: nullableMoneyMinor,
+  interviewCommissionMinor: nullableMoneyMinor.default(null),
+  worked30DaysCommissionMinor: nullableMoneyMinor.default(null),
   sourceRef: z.string().nullable(),
   commissionNote: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),

@@ -9,6 +9,7 @@ export * from './content.js';
 export * from './social.js';
 export * from './publication.js';
 export * from './candidates.js';
+export * from './commissions.js';
 export * from './files.js';
 export * from './integrations.js';
 export * from './oauth-credential.js';

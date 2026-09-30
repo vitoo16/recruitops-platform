@@ -15,8 +15,11 @@ import {
   type Candidate,
   type CandidateListResponse,
 } from '@recruitops/contracts';
+import { z } from 'zod';
 import { parseRequest } from '../common/zod-request.js';
 import { CandidatesRepository } from './candidates.repository.js';
+
+const SourceUserIdSchema = z.uuid();
 
 @Injectable()
 export class CandidatesService {
@@ -47,8 +50,11 @@ export class CandidatesService {
     );
   }
 
-  async createApplication(input: unknown): Promise<Application> {
-    return this.candidates.createApplication(parseRequest(CreateApplicationSchema, input));
+  async createApplication(sourceUserId: unknown, input: unknown): Promise<Application> {
+    return this.candidates.createApplication(
+      parseRequest(CreateApplicationSchema, input),
+      parseRequest(SourceUserIdSchema, sourceUserId),
+    );
   }
 
   async listApplications(query: unknown): Promise<ApplicationListResponse> {

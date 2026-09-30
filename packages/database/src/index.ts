@@ -3,6 +3,7 @@ export type {
   Application,
   Candidate,
   CandidateDocument,
+  CommissionTransaction,
   Destination,
   Job,
   MediaAsset,

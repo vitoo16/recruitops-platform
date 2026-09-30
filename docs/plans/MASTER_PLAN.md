@@ -123,8 +123,8 @@
 
 ## Phase 7 — Commission ledger and reconciliation
 
-- [ ] Confirm final stakeholder commission/payment rules before implementation.
-- [ ] Implement CommissionTransaction ledger.
+- [x] Confirm final stakeholder commission/payment rules before implementation (locked to the stakeholder-provided CTV recruitment document in `docs/product/commission-rules.md`; exact per-job amounts remain operational master-sheet data rather than invented defaults).
+- [x] Implement CommissionTransaction ledger (job-level interview/30-day commission configuration, authenticated application source attribution, dedicated interview-invited milestone timestamp, integer-minor-unit/idempotent ledger persistence, hosted migration/RLS, OWNER/ADMIN read API, precision checks and docs implemented; automatic accrual intentionally waits for duplicate-CV allocation logic).
 - [ ] Implement duplicate-CV commission handling.
 - [ ] Implement ReconciliationBatch.
 - [ ] Implement commission dashboard.

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CandidatesModule } from './candidates/candidates.module.js';
+import { CommissionsModule } from './commissions/commissions.module.js';
 import { ContentModule } from './content/content.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { FilesModule } from './files/files.module.js';
@@ -20,6 +21,7 @@ import { TikTokConnectionsModule } from './tiktok-connections/tiktok-connections
     AuditModule,
     AuthModule,
     CandidatesModule,
+    CommissionsModule,
     ContentModule,
     DatabaseModule,
     FilesModule,

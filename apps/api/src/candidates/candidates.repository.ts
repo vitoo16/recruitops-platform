@@ -38,9 +38,11 @@ export function mapDatabaseApplication(application: DatabaseApplication): Applic
     status: application.status,
     sourcePlatform: application.sourcePlatform,
     sourceDestinationId: application.sourceDestinationId,
+    sourceUserId: application.sourceUserId,
     sourceLabel: application.sourceLabel,
     sourcedAt: application.sourcedAt.toISOString(),
     submittedAt: application.submittedAt?.toISOString() ?? null,
+    interviewInvitedAt: application.interviewInvitedAt?.toISOString() ?? null,
     interviewAt: application.interviewAt?.toISOString() ?? null,
     hiredAt: application.hiredAt?.toISOString() ?? null,
     startedAt: application.startedAt?.toISOString() ?? null,
@@ -54,6 +56,8 @@ function milestoneForStatus(status: ApplicationStatus, occurredAt: Date): Record
   switch (status) {
     case 'SUBMITTED':
       return { submittedAt: occurredAt };
+    case 'INTERVIEW_INVITED':
+      return { interviewInvitedAt: occurredAt };
     case 'INTERVIEWED':
       return { interviewAt: occurredAt };
     case 'HIRED':
@@ -176,7 +180,10 @@ export class CandidatesRepository {
     return candidates.map(mapDatabaseCandidate);
   }
 
-  async createApplication(input: CreateApplicationInput): Promise<Application> {
+  async createApplication(
+    input: CreateApplicationInput,
+    sourceUserId: string,
+  ): Promise<Application> {
     const [candidate, job, destination] = await Promise.all([
       this.database.client.candidate.findUnique({
         where: { id: input.candidateId },
@@ -215,6 +222,7 @@ export class CandidatesRepository {
         candidateId: input.candidateId,
         jobId: input.jobId,
         status: input.status,
+        sourceUserId,
         ...(input.sourcePlatform !== undefined ? { sourcePlatform: input.sourcePlatform } : {}),
         ...(input.sourceDestinationId !== undefined
           ? { sourceDestinationId: input.sourceDestinationId }
