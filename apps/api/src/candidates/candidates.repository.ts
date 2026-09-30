@@ -39,6 +39,7 @@ export function mapDatabaseApplication(application: DatabaseApplication): Applic
     sourcePlatform: application.sourcePlatform,
     sourceDestinationId: application.sourceDestinationId,
     sourceLabel: application.sourceLabel,
+    sourcedByActorId: application.sourcedByActorId,
     sourcedAt: application.sourcedAt.toISOString(),
     submittedAt: application.submittedAt?.toISOString() ?? null,
     interviewAt: application.interviewAt?.toISOString() ?? null,
@@ -50,7 +51,10 @@ export function mapDatabaseApplication(application: DatabaseApplication): Applic
   };
 }
 
-function milestoneForStatus(status: ApplicationStatus, occurredAt: Date): Record<string, Date> {
+export function milestoneForStatus(
+  status: ApplicationStatus,
+  occurredAt: Date,
+): Record<string, Date> {
   switch (status) {
     case 'SUBMITTED':
       return { submittedAt: occurredAt };
@@ -176,7 +180,7 @@ export class CandidatesRepository {
     return candidates.map(mapDatabaseCandidate);
   }
 
-  async createApplication(input: CreateApplicationInput): Promise<Application> {
+  async createApplication(input: CreateApplicationInput, actorId: string): Promise<Application> {
     const [candidate, job, destination] = await Promise.all([
       this.database.client.candidate.findUnique({
         where: { id: input.candidateId },
@@ -215,6 +219,7 @@ export class CandidatesRepository {
         candidateId: input.candidateId,
         jobId: input.jobId,
         status: input.status,
+        sourcedByActorId: actorId,
         ...(input.sourcePlatform !== undefined ? { sourcePlatform: input.sourcePlatform } : {}),
         ...(input.sourceDestinationId !== undefined
           ? { sourceDestinationId: input.sourceDestinationId }
