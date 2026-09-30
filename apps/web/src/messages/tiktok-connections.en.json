@@ -1,0 +1,28 @@
+{
+  "eyebrow": "TikTok connection",
+  "title": "Connect a TikTok creator",
+  "description": "RecruitOps uses TikTok Login Kit with basic profile and direct-post permissions. Access and refresh tokens stay server-side and are encrypted before durable storage.",
+  "connect": "Connect TikTok",
+  "reconnect": "Reconnect",
+  "redirecting": "Redirecting to TikTok…",
+  "refresh": "Refresh accounts",
+  "noAccounts": "No TikTok creator is connected yet.",
+  "connectedNotice": "TikTok authorization completed and the creator connection was refreshed.",
+  "deniedNotice": "TikTok authorization was cancelled. No account was changed.",
+  "dismiss": "Dismiss",
+  "loadFailed": "RecruitOps could not load TikTok accounts. Try refreshing.",
+  "startFailed": "RecruitOps could not start TikTok authorization. Check server configuration and try again.",
+  "missingApiConfig": "The frontend API connection is not configured.",
+  "signInRequired": "Sign in to connect TikTok.",
+  "ownerAdminRequired": "Only OWNER and ADMIN accounts can manage TikTok connections.",
+  "accountId": "TikTok open ID: {id}",
+  "status": "Status: {value}",
+  "expires": "Access token expiry: {value}",
+  "scopes": "Granted scopes: {value}",
+  "statusValues": {
+    "CONNECTED": "Connected",
+    "EXPIRED": "Expired",
+    "REVOKED": "Revoked",
+    "ERROR": "Error"
+  }
+}

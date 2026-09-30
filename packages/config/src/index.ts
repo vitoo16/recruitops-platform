@@ -45,11 +45,19 @@ const LinkedInOAuthEnvSchema = z.object({
   LINKEDIN_FRONTEND_REDIRECT_URI: z.url(),
 });
 
+const TikTokOAuthEnvSchema = z.object({
+  TIKTOK_CLIENT_KEY: z.string().trim().min(1),
+  TIKTOK_CLIENT_SECRET: z.string().trim().min(1),
+  TIKTOK_REDIRECT_URI: z.url(),
+  TIKTOK_FRONTEND_REDIRECT_URI: z.url(),
+});
+
 export type ApiEnv = z.infer<typeof ApiEnvSchema>;
 export type SupabaseAuthEnv = z.infer<typeof SupabaseAuthEnvSchema>;
 export type MetaOAuthEnv = z.infer<typeof MetaOAuthEnvSchema>;
 export type ThreadsOAuthEnv = z.infer<typeof ThreadsOAuthEnvSchema>;
 export type LinkedInOAuthEnv = z.infer<typeof LinkedInOAuthEnvSchema>;
+export type TikTokOAuthEnv = z.infer<typeof TikTokOAuthEnvSchema>;
 
 export function parseApiEnv(input: Record<string, string | undefined>): ApiEnv {
   return ApiEnvSchema.parse(input);
@@ -69,4 +77,8 @@ export function parseThreadsOAuthEnv(input: Record<string, string | undefined>):
 
 export function parseLinkedInOAuthEnv(input: Record<string, string | undefined>): LinkedInOAuthEnv {
   return LinkedInOAuthEnvSchema.parse(input);
+}
+
+export function parseTikTokOAuthEnv(input: Record<string, string | undefined>): TikTokOAuthEnv {
+  return TikTokOAuthEnvSchema.parse(input);
 }
