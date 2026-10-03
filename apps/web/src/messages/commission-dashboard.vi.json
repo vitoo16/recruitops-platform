@@ -60,7 +60,28 @@
     "empty": "Chưa có reconciliation batch nào.",
     "actions": "Thao tác",
     "export": "Xuất CSV",
-    "exporting": "Đang xuất..."
+    "exporting": "Đang xuất...",
+    "markPaid": "Đánh dấu đã trả",
+    "markingPaid": "Đang xác nhận..."
   },
-  "exportFailed": "Không thể tải file đối soát."
+  "exportFailed": "Không thể tải file đối soát.",
+  "workflow": {
+    "title": "Quy trình đối soát",
+    "description": "Chọn ngày chi trả theo quy tắc stakeholder, chọn các giao dịch ACCRUED đủ điều kiện, tạo batch bất biến, sau đó export hoặc xác nhận đã chi trả.",
+    "payableOn": "Ngày chi trả",
+    "payoutDateHint": "Ngày 5 đối soát hoa hồng mời phỏng vấn; ngày 15 đối soát hoa hồng làm đủ 30 ngày.",
+    "eligibleTitle": "Giao dịch ACCRUED đủ điều kiện",
+    "eligibleHint": "Có {count} giao dịch đã tải khớp mốc {milestone}. Chỉ chọn các dòng cùng một loại tiền.",
+    "choosePayoutDate": "Chọn ngày chi trả hợp lệ là ngày 5 hoặc ngày 15.",
+    "noEligible": "Không có giao dịch ACCRUED đã tải nào khớp nhóm chi trả này.",
+    "currencyMismatch": "Các giao dịch được chọn phải cùng một loại tiền. Bỏ chọn các dòng thuộc loại tiền khác trước khi tạo batch.",
+    "selectedCount": "Đã chọn {count}",
+    "create": "Tạo batch đối soát",
+    "creating": "Đang tạo batch...",
+    "created": "Đã tạo batch đối soát.",
+    "createFailed": "Không thể tạo batch đối soát. Kiểm tra ngày chi trả, trạng thái giao dịch, mốc hoa hồng và loại tiền.",
+    "confirmPaid": "Xác nhận batch đối soát này đã được chi trả? Tất cả ledger row BATCHED liên kết sẽ chuyển sang PAID.",
+    "paid": "Đã đánh dấu batch đối soát là đã chi trả.",
+    "payFailed": "Không thể đánh dấu đã chi trả vì snapshot ledger không còn khớp hoặc có thay đổi đồng thời."
+  }
 }
