@@ -286,7 +286,9 @@ export function CommissionDashboard() {
   const selectedTransactions = eligibleTransactions.filter((transaction) =>
     selectedTransactionIds.includes(transaction.id),
   );
-  const selectedCurrencies = new Set(selectedTransactions.map((transaction) => transaction.currency));
+  const selectedCurrencies = new Set(
+    selectedTransactions.map((transaction) => transaction.currency),
+  );
   const canCreateBatch =
     selectedMilestone !== null &&
     selectedTransactionIds.length > 0 &&
@@ -507,7 +509,8 @@ export function CommissionDashboard() {
                       />
                       <span className="min-w-0">
                         <span className="block font-medium">
-                          {amountSummary([transaction], locale)} · {shortId(transaction.beneficiaryUserId)}
+                          {amountSummary([transaction], locale)} ·{' '}
+                          {shortId(transaction.beneficiaryUserId)}
                         </span>
                         <span className="mt-1 block font-mono text-xs text-neutral-500">
                           {transaction.id}
@@ -528,7 +531,10 @@ export function CommissionDashboard() {
             ) : null}
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={() => void createBatch()} disabled={!canCreateBatch || creatingBatch}>
+              <Button
+                onClick={() => void createBatch()}
+                disabled={!canCreateBatch || creatingBatch}
+              >
                 <WalletCards className="mr-2 size-4" aria-hidden="true" />
                 {creatingBatch ? t('workflow.creating') : t('workflow.create')}
               </Button>
