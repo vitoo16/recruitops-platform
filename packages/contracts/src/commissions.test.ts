@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CommissionTransactionSchema } from './commissions.js';
+import {
+  CommissionTransactionSchema,
+  CreateReconciliationBatchSchema,
+} from './commissions.js';
 
 const baseTransaction = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -33,5 +36,39 @@ describe('CommissionTransactionSchema', () => {
     expect(CommissionTransactionSchema.safeParse({ ...baseTransaction, amountMinor }).success).toBe(
       false,
     );
+  });
+});
+
+describe('CreateReconciliationBatchSchema', () => {
+  const transactionId = '66666666-6666-4666-8666-666666666666';
+
+  it.each(['2026-10-05', '2026-10-15'])('accepts stakeholder payout date %s', (payableOn) => {
+    expect(
+      CreateReconciliationBatchSchema.safeParse({
+        id: '77777777-7777-4777-8777-777777777777',
+        payableOn,
+        transactionIds: [transactionId],
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects non-payout calendar days', () => {
+    expect(
+      CreateReconciliationBatchSchema.safeParse({
+        id: '77777777-7777-4777-8777-777777777777',
+        payableOn: '2026-10-06',
+        transactionIds: [transactionId],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects duplicate transaction IDs', () => {
+    expect(
+      CreateReconciliationBatchSchema.safeParse({
+        id: '77777777-7777-4777-8777-777777777777',
+        payableOn: '2026-10-15',
+        transactionIds: [transactionId, transactionId],
+      }).success,
+    ).toBe(false);
   });
 });
