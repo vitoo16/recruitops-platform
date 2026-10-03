@@ -4,6 +4,7 @@ export type {
   Candidate,
   CandidateDocument,
   CommissionTransaction,
+  ReconciliationBatch,
   Destination,
   Job,
   MediaAsset,
