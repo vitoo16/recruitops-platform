@@ -106,6 +106,11 @@ enum CommissionTransactionStatus {
   VOIDED
 }
 
+enum ReconciliationBatchStatus {
+  OPEN
+  PAID
+}
+
 model Job {
   id                          String                  @id @default(uuid()) @db.Uuid
   title                       String
@@ -374,29 +379,52 @@ model CandidateDocument {
 }
 
 model CommissionTransaction {
-  id                String                      @id @default(uuid()) @db.Uuid
-  candidateId       String                      @db.Uuid
-  jobId             String                      @db.Uuid
-  applicationId     String                      @db.Uuid
-  beneficiaryUserId String                      @db.Uuid
-  milestone         CommissionMilestone
-  currency          String
-  baseAmountMinor   BigInt
-  amountMinor       BigInt
-  shareNumerator    Int                         @default(1)
-  shareDenominator  Int                         @default(1)
-  earnedAt          DateTime                    @db.Timestamptz(6)
-  status            CommissionTransactionStatus @default(ACCRUED)
-  idempotencyKey    String                      @unique
-  createdAt         DateTime                    @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime                    @updatedAt @db.Timestamptz(6)
-  candidate         Candidate                   @relation(fields: [candidateId], references: [id], onDelete: Restrict)
-  job               Job                         @relation(fields: [jobId], references: [id], onDelete: Restrict)
-  application       Application                 @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  id                    String                      @id @default(uuid()) @db.Uuid
+  candidateId           String                      @db.Uuid
+  jobId                 String                      @db.Uuid
+  applicationId         String                      @db.Uuid
+  beneficiaryUserId     String                      @db.Uuid
+  milestone             CommissionMilestone
+  currency              String
+  baseAmountMinor       BigInt
+  amountMinor           BigInt
+  shareNumerator        Int                         @default(1)
+  shareDenominator      Int                         @default(1)
+  earnedAt              DateTime                    @db.Timestamptz(6)
+  status                CommissionTransactionStatus @default(ACCRUED)
+  idempotencyKey        String                      @unique
+  reconciliationBatchId String?                     @db.Uuid
+  createdAt             DateTime                    @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime                    @updatedAt @db.Timestamptz(6)
+  candidate             Candidate                   @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  job                   Job                         @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  application           Application                 @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  reconciliationBatch   ReconciliationBatch?        @relation(fields: [reconciliationBatchId], references: [id], onDelete: Restrict)
 
   @@index([candidateId, jobId, milestone])
   @@index([applicationId])
   @@index([beneficiaryUserId, status, earnedAt])
   @@index([status, earnedAt])
+  @@index([reconciliationBatchId])
   @@map("commission_transactions")
+}
+
+model ReconciliationBatch {
+  id               String                    @id @default(uuid()) @db.Uuid
+  payableOn        DateTime                  @db.Date
+  milestone        CommissionMilestone
+  currency         String
+  transactionCount Int
+  totalAmountMinor BigInt
+  status           ReconciliationBatchStatus @default(OPEN)
+  createdByUserId  String                    @db.Uuid
+  paidByUserId     String?                   @db.Uuid
+  paidAt           DateTime?                 @db.Timestamptz(6)
+  createdAt        DateTime                  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime                  @updatedAt @db.Timestamptz(6)
+  transactions     CommissionTransaction[]
+
+  @@index([status, payableOn])
+  @@index([milestone, payableOn])
+  @@map("reconciliation_batches")
 }

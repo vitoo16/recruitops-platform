@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../auth/auth.guard.js';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { CommissionsService } from './commissions.service.js';
@@ -13,6 +13,26 @@ export class CommissionsController {
   @Get()
   list(@Query() query: Record<string, unknown>) {
     return this.commissions.list(query);
+  }
+
+  @Get('reconciliation-batches')
+  listReconciliationBatches(@Query() query: Record<string, unknown>) {
+    return this.commissions.listReconciliationBatches(query);
+  }
+
+  @Get('reconciliation-batches/:id')
+  getReconciliationBatchById(@Param('id') id: string) {
+    return this.commissions.getReconciliationBatchById(id);
+  }
+
+  @Post('reconciliation-batches')
+  createReconciliationBatch(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.commissions.createReconciliationBatch(request.user?.id, body);
+  }
+
+  @Post('reconciliation-batches/:id/mark-paid')
+  markReconciliationBatchPaid(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.commissions.markReconciliationBatchPaid(request.user?.id, id);
   }
 
   @Get(':id')
