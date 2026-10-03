@@ -1,14 +1,14 @@
 {
   "eyebrow": "Commission Operations",
   "title": "Bảng điều khiển hoa hồng",
-  "description": "Theo dõi ledger hoa hồng và trạng thái các đợt đối soát. Dashboard này chỉ đọc; thao tác chi trả và export được xử lý ở workflow đối soát riêng.",
+  "description": "Theo dõi ledger hoa hồng và trạng thái các đợt đối soát. Mỗi batch có thể xuất thành CSV đầy đủ qua API đã xác thực để phục vụ đối soát chi trả.",
   "refresh": "Tải lại",
   "missingApiConfig": "API chưa được cấu hình cho frontend này.",
   "signInRequired": "Đăng nhập để xem dữ liệu hoa hồng.",
   "checkingAccess": "Đang xác minh quyền truy cập tài chính...",
   "restricted": "Chỉ OWNER hoặc ADMIN được xem toàn bộ ledger hoa hồng và dữ liệu đối soát.",
   "loadFailed": "Không thể tải dữ liệu hoa hồng từ API.",
-  "firstPageNote": "Dashboard đang hiển thị tối đa 100 ledger rows và 100 reconciliation batches đầu tiên. Số tổng được lấy từ API; tổng tiền trên các thẻ chỉ phản ánh dữ liệu đã tải.",
+  "firstPageNote": "Dashboard hiển thị tối đa 100 ledger rows và 100 reconciliation batches đầu tiên. Số tổng từ API vẫn là nguồn chuẩn; CSV của từng batch được tạo từ toàn bộ snapshot đối soát phía server.",
   "minorUnitNote": "Các số tiền được hiển thị theo integer minor units cùng mã tiền tệ để tránh làm tròn ngầm.",
   "summary": {
     "accrued": "Chờ đối soát",
@@ -57,6 +57,31 @@
     "transactions": "Số giao dịch",
     "total": "Tổng tiền",
     "status": "Trạng thái",
-    "empty": "Chưa có reconciliation batch nào."
+    "empty": "Chưa có reconciliation batch nào.",
+    "actions": "Thao tác",
+    "export": "Xuất CSV",
+    "exporting": "Đang xuất...",
+    "markPaid": "Đánh dấu đã trả",
+    "markingPaid": "Đang xác nhận..."
+  },
+  "exportFailed": "Không thể tải file đối soát.",
+  "workflow": {
+    "title": "Quy trình đối soát",
+    "description": "Chọn ngày chi trả theo quy tắc stakeholder, chọn các giao dịch ACCRUED đủ điều kiện, tạo batch bất biến, sau đó export hoặc xác nhận đã chi trả.",
+    "payableOn": "Ngày chi trả",
+    "payoutDateHint": "Ngày 5 đối soát hoa hồng mời phỏng vấn; ngày 15 đối soát hoa hồng làm đủ 30 ngày.",
+    "eligibleTitle": "Giao dịch ACCRUED đủ điều kiện",
+    "eligibleHint": "Có {count} giao dịch đã tải khớp mốc {milestone}. Chỉ chọn các dòng cùng một loại tiền.",
+    "choosePayoutDate": "Chọn ngày chi trả hợp lệ là ngày 5 hoặc ngày 15.",
+    "noEligible": "Không có giao dịch ACCRUED đã tải nào khớp nhóm chi trả này.",
+    "currencyMismatch": "Các giao dịch được chọn phải cùng một loại tiền. Bỏ chọn các dòng thuộc loại tiền khác trước khi tạo batch.",
+    "selectedCount": "Đã chọn {count}",
+    "create": "Tạo batch đối soát",
+    "creating": "Đang tạo batch...",
+    "created": "Đã tạo batch đối soát.",
+    "createFailed": "Không thể tạo batch đối soát. Kiểm tra ngày chi trả, trạng thái giao dịch, mốc hoa hồng và loại tiền.",
+    "confirmPaid": "Xác nhận batch đối soát này đã được chi trả? Tất cả ledger row BATCHED liên kết sẽ chuyển sang PAID.",
+    "paid": "Đã đánh dấu batch đối soát là đã chi trả.",
+    "payFailed": "Không thể đánh dấu đã chi trả vì snapshot ledger không còn khớp hoặc có thay đổi đồng thời."
   }
 }

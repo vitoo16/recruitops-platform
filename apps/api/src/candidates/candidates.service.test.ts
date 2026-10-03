@@ -1,7 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CandidatesService } from './candidates.service.js';
 import type { CandidatesRepository } from './candidates.repository.js';
+import type { CommissionsService } from '../commissions/commissions.service.js';
 
 const application = {
   id: '550e8400-e29b-41d4-a716-446655440010',
@@ -23,11 +24,21 @@ const application = {
   updatedAt: '2026-09-27T08:05:00.000Z',
 };
 
+function commissionsMock(): CommissionsService {
+  return {
+    transitionApplicationStatus: vi.fn(),
+  } as unknown as CommissionsService;
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe('CandidatesService', () => {
   it('passes the authenticated principal into application source attribution', async () => {
     const createApplication = vi.fn().mockResolvedValue(application);
     const repository = { createApplication } as unknown as CandidatesRepository;
-    const service = new CandidatesService(repository);
+    const service = new CandidatesService(repository, commissionsMock());
     const input = {
       candidateId: application.candidateId,
       jobId: application.jobId,
@@ -43,30 +54,31 @@ describe('CandidatesService', () => {
     );
   });
 
-  it('rejects invalid application status transitions', async () => {
-    const repository = {
-      getApplicationById: vi.fn().mockResolvedValue(application),
-      updateApplicationStatus: vi.fn(),
-    } as unknown as CandidatesRepository;
-    const service = new CandidatesService(repository);
+  it('propagates fail-closed application transition errors from the atomic commission flow', async () => {
+    const commissions = commissionsMock();
+    vi.mocked(commissions.transitionApplicationStatus).mockRejectedValue(
+      new BadRequestException({
+        code: 'INVALID_APPLICATION_STATUS_TRANSITION',
+        message: 'Cannot transition application',
+      }),
+    );
+    const service = new CandidatesService({} as CandidatesRepository, commissions);
 
     await expect(
       service.updateApplicationStatus(application.id, { status: 'WORKING' }),
     ).rejects.toBeInstanceOf(BadRequestException);
-    expect(repository.updateApplicationStatus).not.toHaveBeenCalled();
   });
 
-  it('persists a valid transition with the supplied occurrence time', async () => {
+  it('delegates a milestone transition with the configured business timezone', async () => {
+    vi.stubEnv('COMMISSION_BUSINESS_TIME_ZONE', 'Asia/Ho_Chi_Minh');
     const updated = {
       ...application,
       status: 'INTERVIEW_INVITED' as const,
       interviewInvitedAt: '2026-09-28T02:00:00.000Z',
     };
-    const repository = {
-      getApplicationById: vi.fn().mockResolvedValue(application),
-      updateApplicationStatus: vi.fn().mockResolvedValue(updated),
-    } as unknown as CandidatesRepository;
-    const service = new CandidatesService(repository);
+    const commissions = commissionsMock();
+    vi.mocked(commissions.transitionApplicationStatus).mockResolvedValue(updated);
+    const service = new CandidatesService({} as CandidatesRepository, commissions);
     const occurredAt = '2026-09-28T02:00:00.000Z';
 
     await expect(
@@ -75,10 +87,11 @@ describe('CandidatesService', () => {
         occurredAt,
       }),
     ).resolves.toEqual(updated);
-    expect(repository.updateApplicationStatus).toHaveBeenCalledWith(
+    expect(commissions.transitionApplicationStatus).toHaveBeenCalledWith(
       application.id,
       'INTERVIEW_INVITED',
       new Date(occurredAt),
+      'Asia/Ho_Chi_Minh',
     );
   });
 });

@@ -128,8 +128,8 @@
 - [x] Implement duplicate-CV commission handling (earliest business-calendar day ownership, distinct-source equal split, fail-closed unattributed earliest-day handling, deterministic integer remainder allocation, explicit business timezone and idempotent accrual boundary implemented with regression coverage).
 - [x] Implement ReconciliationBatch (immutable payout snapshots, day-5 interview/day-15 worked-30-days class enforcement, single-currency validation, atomic ACCRUED → BATCHED transition, explicit audited OPEN → PAID transition, OWNER/ADMIN API, RLS-backed migration and regression coverage implemented).
 - [x] Implement commission dashboard (OWNER/ADMIN read-only ledger and reconciliation overview, loaded-view amount/count summaries, milestone/status filtering, first-page limitation disclosure, mixed-currency-safe BigInt aggregation, VI/EN copy, accessible tables and API-client regression coverage implemented).
-- [ ] Implement export/reconciliation workflow.
-- [ ] Add financial precision/audit tests.
+- [x] Implement export/reconciliation workflow (OWNER/ADMIN payout-date selection, eligible ACCRUED transaction selection, immutable batch creation, authenticated complete-snapshot CSV export and explicit mark-paid operation implemented with server-side validation and snapshot integrity checks).
+- [x] Add financial precision/audit tests (integer-minor-unit allocation/reconciliation coverage, deterministic duplicate-source splitting, fail-closed timezone/amount/snapshot validation, authenticated actor attribution and controlled payout-state regression tests implemented).
 
 ## Phase 8 — n8n automation
 

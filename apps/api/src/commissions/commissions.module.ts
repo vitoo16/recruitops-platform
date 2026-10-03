@@ -10,6 +10,6 @@ import { CommissionsService } from './commissions.service.js';
   imports: [AuthModule, DatabaseModule],
   controllers: [CommissionsController],
   providers: [CommissionAllocationService, CommissionsRepository, CommissionsService],
-  exports: [CommissionAllocationService, CommissionsRepository],
+  exports: [CommissionAllocationService, CommissionsRepository, CommissionsService],
 })
 export class CommissionsModule {}

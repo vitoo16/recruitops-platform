@@ -47,6 +47,21 @@ const CorsOriginsSchema = z
     }
   });
 
+const BusinessTimeZoneSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .superRefine((value, context) => {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date(0));
+    } catch {
+      context.addIssue({
+        code: 'custom',
+        message: 'Commission business time zone must be a valid IANA time zone',
+      });
+    }
+  });
+
 const ApiEnvSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -56,6 +71,7 @@ const ApiEnvSchema = z
     SUPABASE_URL: z.url().optional(),
     SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
     CORS_ORIGINS: CorsOriginsSchema,
+    COMMISSION_BUSINESS_TIME_ZONE: BusinessTimeZoneSchema.optional(),
   })
   .superRefine((value, context) => {
     if (

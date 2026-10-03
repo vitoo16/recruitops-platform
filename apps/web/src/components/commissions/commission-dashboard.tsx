@@ -7,15 +7,18 @@ import type {
   CommissionTransactionStatus,
   ReconciliationBatch,
 } from '@recruitops/contracts';
-import { RefreshCw, WalletCards } from 'lucide-react';
+import { CheckCircle2, Download, RefreshCw, WalletCards } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   CommissionsApiError,
+  createReconciliationBatch,
+  downloadReconciliationBatchCsv,
   listCommissionTransactions,
   listReconciliationBatches,
+  markReconciliationBatchPaid,
 } from '@/lib/commissions/api';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
@@ -63,6 +66,14 @@ function formatDateTime(value: string, locale: string): string {
   }).format(new Date(value));
 }
 
+function payoutMilestone(payableOn: string): CommissionMilestone | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(payableOn)) return null;
+  const day = Number(payableOn.slice(8, 10));
+  if (day === 5) return 'INTERVIEW_INVITED';
+  if (day === 15) return 'WORKED_30_DAYS';
+  return null;
+}
+
 export function CommissionDashboard() {
   const t = useTranslations('commissionDashboard');
   const locale = useLocale();
@@ -78,6 +89,12 @@ export function CommissionDashboard() {
   const [loading, setLoading] = useState(false);
   const [accessLoading, setAccessLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
+  const [payingBatchId, setPayingBatchId] = useState<string | null>(null);
+  const [creatingBatch, setCreatingBatch] = useState(false);
+  const [payableOn, setPayableOn] = useState('');
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
 
   const canView = role === 'OWNER' || role === 'ADMIN';
 
@@ -167,6 +184,91 @@ export function CommissionDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canView, configuredApiUrl, session?.access_token]);
 
+  async function exportBatch(batchId: string) {
+    if (!session?.access_token || !configuredApiUrl || !canView) return;
+    setExportingBatchId(batchId);
+    setError(null);
+    try {
+      const exported = await downloadReconciliationBatchCsv(
+        configuredApiUrl,
+        session.access_token,
+        batchId,
+      );
+      const href = URL.createObjectURL(exported.blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = exported.filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(href);
+    } catch (caught) {
+      setError(
+        caught instanceof CommissionsApiError && caught.status === 403
+          ? t('restricted')
+          : t('exportFailed'),
+      );
+    } finally {
+      setExportingBatchId(null);
+    }
+  }
+
+  async function createBatch() {
+    if (
+      !session?.access_token ||
+      !configuredApiUrl ||
+      !canView ||
+      !payoutMilestone(payableOn) ||
+      selectedTransactionIds.length === 0
+    ) {
+      return;
+    }
+
+    setCreatingBatch(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await createReconciliationBatch(configuredApiUrl, session.access_token, {
+        id: crypto.randomUUID(),
+        payableOn,
+        transactionIds: selectedTransactionIds,
+      });
+      setSelectedTransactionIds([]);
+      setNotice(t('workflow.created'));
+      await loadDashboard();
+    } catch (caught) {
+      setError(
+        caught instanceof CommissionsApiError && caught.status === 403
+          ? t('restricted')
+          : t('workflow.createFailed'),
+      );
+    } finally {
+      setCreatingBatch(false);
+    }
+  }
+
+  async function markBatchPaid(batchId: string) {
+    if (!session?.access_token || !configuredApiUrl || !canView) return;
+    if (!window.confirm(t('workflow.confirmPaid'))) return;
+
+    setPayingBatchId(batchId);
+    setError(null);
+    setNotice(null);
+    try {
+      await markReconciliationBatchPaid(configuredApiUrl, session.access_token, batchId);
+      setNotice(t('workflow.paid'));
+      await loadDashboard();
+    } catch (caught) {
+      setError(
+        caught instanceof CommissionsApiError && caught.status === 403
+          ? t('restricted')
+          : t('workflow.payFailed'),
+      );
+    } finally {
+      setPayingBatchId(null);
+    }
+  }
+
   const visibleTransactions = transactions.filter(
     (transaction) =>
       (milestoneFilter === 'ALL' || transaction.milestone === milestoneFilter) &&
@@ -177,6 +279,21 @@ export function CommissionDashboard() {
   const batched = transactions.filter((transaction) => transaction.status === 'BATCHED');
   const paid = transactions.filter((transaction) => transaction.status === 'PAID');
   const openBatches = batches.filter((batch) => batch.status === 'OPEN');
+  const selectedMilestone = payoutMilestone(payableOn);
+  const eligibleTransactions = accrued.filter(
+    (transaction) => selectedMilestone !== null && transaction.milestone === selectedMilestone,
+  );
+  const selectedTransactions = eligibleTransactions.filter((transaction) =>
+    selectedTransactionIds.includes(transaction.id),
+  );
+  const selectedCurrencies = new Set(
+    selectedTransactions.map((transaction) => transaction.currency),
+  );
+  const canCreateBatch =
+    selectedMilestone !== null &&
+    selectedTransactionIds.length > 0 &&
+    selectedTransactionIds.length === selectedTransactions.length &&
+    selectedCurrencies.size === 1;
   const truncated = transactionTotal > transactions.length || batchTotal > batches.length;
 
   if (!configuredApiUrl) {
@@ -222,6 +339,14 @@ export function CommissionDashboard() {
           role="alert"
         >
           {error}
+        </p>
+      ) : null}
+      {notice ? (
+        <p
+          className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+          role="status"
+        >
+          {notice}
         </p>
       ) : null}
 
@@ -324,6 +449,103 @@ export function CommissionDashboard() {
         </div>
       </div>
 
+      <div className="space-y-5 rounded-2xl border bg-white p-6">
+        <div>
+          <h3 className="font-semibold">{t('workflow.title')}</h3>
+          <p className="mt-1 text-sm leading-6 text-neutral-500">{t('workflow.description')}</p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+          <div className="space-y-2">
+            <label htmlFor="reconciliation-payable-on" className="text-sm font-medium">
+              {t('workflow.payableOn')}
+            </label>
+            <input
+              id="reconciliation-payable-on"
+              type="date"
+              className="h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm"
+              value={payableOn}
+              onChange={(event) => {
+                setPayableOn(event.target.value);
+                setSelectedTransactionIds([]);
+              }}
+            />
+            <p className="text-xs leading-5 text-neutral-500">{t('workflow.payoutDateHint')}</p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium">{t('workflow.eligibleTitle')}</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                {selectedMilestone
+                  ? t('workflow.eligibleHint', {
+                      milestone: t(`milestone.${selectedMilestone}`),
+                      count: eligibleTransactions.length,
+                    })
+                  : t('workflow.choosePayoutDate')}
+              </p>
+            </div>
+
+            {selectedMilestone && eligibleTransactions.length > 0 ? (
+              <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border p-3">
+                {eligibleTransactions.map((transaction) => {
+                  const checked = selectedTransactionIds.includes(transaction.id);
+                  return (
+                    <label
+                      key={transaction.id}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-3 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1 size-4"
+                        checked={checked}
+                        onChange={(event) =>
+                          setSelectedTransactionIds((current) =>
+                            event.target.checked
+                              ? [...current, transaction.id]
+                              : current.filter((id) => id !== transaction.id),
+                          )
+                        }
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-medium">
+                          {amountSummary([transaction], locale)} ·{' '}
+                          {shortId(transaction.beneficiaryUserId)}
+                        </span>
+                        <span className="mt-1 block font-mono text-xs text-neutral-500">
+                          {transaction.id}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed px-4 py-6 text-sm text-neutral-500">
+                {selectedMilestone ? t('workflow.noEligible') : t('workflow.choosePayoutDate')}
+              </p>
+            )}
+
+            {selectedCurrencies.size > 1 ? (
+              <p className="text-xs text-red-700">{t('workflow.currencyMismatch')}</p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                onClick={() => void createBatch()}
+                disabled={!canCreateBatch || creatingBatch}
+              >
+                <WalletCards className="mr-2 size-4" aria-hidden="true" />
+                {creatingBatch ? t('workflow.creating') : t('workflow.create')}
+              </Button>
+              <span className="text-xs text-neutral-500">
+                {t('workflow.selectedCount', { count: selectedTransactionIds.length })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-4 rounded-2xl border bg-white p-6">
         <div className="flex items-center gap-2">
           <WalletCards className="size-4" aria-hidden="true" />
@@ -345,6 +567,7 @@ export function CommissionDashboard() {
                 <th className="px-3 py-3 font-medium">{t('batches.transactions')}</th>
                 <th className="px-3 py-3 font-medium">{t('batches.total')}</th>
                 <th className="px-3 py-3 font-medium">{t('batches.status')}</th>
+                <th className="px-3 py-3 font-medium">{t('batches.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -360,6 +583,33 @@ export function CommissionDashboard() {
                     )}
                   </td>
                   <td className="px-3 py-3">{t(`batchStatus.${batch.status}`)}</td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        className="h-9 px-3"
+                        onClick={() => void exportBatch(batch.id)}
+                        disabled={exportingBatchId === batch.id}
+                      >
+                        <Download className="mr-2 size-4" aria-hidden="true" />
+                        {exportingBatchId === batch.id
+                          ? t('batches.exporting')
+                          : t('batches.export')}
+                      </Button>
+                      {batch.status === 'OPEN' ? (
+                        <Button
+                          className="h-9 px-3"
+                          onClick={() => void markBatchPaid(batch.id)}
+                          disabled={payingBatchId === batch.id}
+                        >
+                          <CheckCircle2 className="mr-2 size-4" aria-hidden="true" />
+                          {payingBatchId === batch.id
+                            ? t('batches.markingPaid')
+                            : t('batches.markPaid')}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

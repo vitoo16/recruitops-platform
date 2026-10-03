@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   ApplicationIdSchema,
   ApplicationListQuerySchema,
@@ -9,7 +9,6 @@ import {
   CreateCandidateSchema,
   UpdateApplicationStatusSchema,
   UpdateCandidateSchema,
-  canTransitionApplicationStatus,
   type Application,
   type ApplicationListResponse,
   type Candidate,
@@ -17,13 +16,17 @@ import {
 } from '@recruitops/contracts';
 import { z } from 'zod';
 import { parseRequest } from '../common/zod-request.js';
+import { CommissionsService } from '../commissions/commissions.service.js';
 import { CandidatesRepository } from './candidates.repository.js';
 
 const SourceUserIdSchema = z.uuid();
 
 @Injectable()
 export class CandidatesService {
-  constructor(private readonly candidates: CandidatesRepository) {}
+  constructor(
+    private readonly candidates: CandidatesRepository,
+    private readonly commissions: CommissionsService,
+  ) {}
 
   async createCandidate(input: unknown): Promise<Candidate> {
     return this.candidates.createCandidate(parseRequest(CreateCandidateSchema, input));
@@ -68,19 +71,11 @@ export class CandidatesService {
   async updateApplicationStatus(id: unknown, input: unknown): Promise<Application> {
     const applicationId = parseRequest(ApplicationIdSchema, id);
     const update = parseRequest(UpdateApplicationStatusSchema, input);
-    const current = await this.candidates.getApplicationById(applicationId);
-
-    if (!canTransitionApplicationStatus(current.status, update.status)) {
-      throw new BadRequestException({
-        code: 'INVALID_APPLICATION_STATUS_TRANSITION',
-        message: `Cannot transition application from ${current.status} to ${update.status}`,
-      });
-    }
-
-    return this.candidates.updateApplicationStatus(
+    return this.commissions.transitionApplicationStatus(
       applicationId,
       update.status,
       update.occurredAt ? new Date(update.occurredAt) : new Date(),
+      process.env.COMMISSION_BUSINESS_TIME_ZONE ?? '',
     );
   }
 }

@@ -53,4 +53,24 @@ describe('parseApiEnv CORS security', () => {
       }),
     ).toThrow();
   });
+
+  it('accepts a valid commission business timezone when configured', () => {
+    expect(
+      parseApiEnv({
+        NODE_ENV: 'development',
+        CORS_ORIGINS: 'http://localhost:3000',
+        COMMISSION_BUSINESS_TIME_ZONE: 'Asia/Ho_Chi_Minh',
+      }).COMMISSION_BUSINESS_TIME_ZONE,
+    ).toBe('Asia/Ho_Chi_Minh');
+  });
+
+  it('rejects an invalid commission business timezone', () => {
+    expect(() =>
+      parseApiEnv({
+        NODE_ENV: 'development',
+        CORS_ORIGINS: 'http://localhost:3000',
+        COMMISSION_BUSINESS_TIME_ZONE: 'Not/A_Timezone',
+      }),
+    ).toThrow();
+  });
 });

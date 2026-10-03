@@ -35,6 +35,12 @@ Returns paginated batch summaries. Optional filters are `status`, `milestone`, `
 
 Returns one immutable batch snapshot including its transaction IDs.
 
+### `GET /commissions/reconciliation-batches/:id/export.csv`
+
+Returns the complete immutable batch snapshot as UTF-8 CSV for an authenticated `OWNER` or `ADMIN`. The service reads all batch ledger pages server-side and verifies transaction IDs, count, milestone, currency and exact integer-minor-unit total against the batch snapshot before emitting the file. Any mismatch fails closed with `RECONCILIATION_EXPORT_LEDGER_MISMATCH`.
+
+The response uses `Cache-Control: private, no-store` and an attachment filename containing the payout date and batch UUID. The export contains ledger identifiers and beneficiary user IDs; it does not add candidate contact details or CV/PII fields.
+
 ### `POST /commissions/reconciliation-batches`
 
 Creates an immutable payout snapshot from explicit ledger rows. The request contains a client-generated batch UUID, `payableOn` and one or more `transactionIds`.
@@ -66,8 +72,23 @@ There is intentionally no public `POST`, `PATCH` or `DELETE` route for `Commissi
 
 Later-day submissions never receive a share. The engine does not use the host/server timezone and does not provide a hidden timezone default.
 
-The allocation service remains internal and is not invoked immediately on an application status transition. The reconciliation/export workflow slice will orchestrate accrual only when the source set for the payout period is stable and will pass the configured business timezone explicitly. ReconciliationBatch itself groups already-accrued ledger rows; it does not silently trigger allocation.
+`INTERVIEW_INVITED` and `WORKED_30_DAYS` application status transitions now orchestrate duplicate-aware accrual and the status change inside one database transaction. The server passes the configured `COMMISSION_BUSINESS_TIME_ZONE`; clients cannot choose the calendar boundary. If the timezone or the job's milestone commission amount is missing/invalid, the financial milestone fails closed before the application status changes. Repeating an already-applied status is a no-op, and ledger upserts use the stable candidate + job + milestone + beneficiary idempotency key.
+
+`ReconciliationBatch` groups already-accrued ledger rows; it never recalculates allocation.
 
 ## Source attribution
 
 New applications persist `sourceUserId` from the authenticated principal supplied by `AuthGuard`; the browser cannot choose another beneficiary ID. `interviewInvitedAt` is persisted separately from `interviewAt` because the stakeholder rule earns the first commission when the candidate is invited/called to interview.
+
+
+## Operator reconciliation workflow
+
+The OWNER/ADMIN dashboard supports the controlled payout sequence without granting direct ledger mutation:
+
+1. choose a payout date (day 5 = `INTERVIEW_INVITED`, day 15 = `WORKED_30_DAYS`);
+2. select loaded `ACCRUED` transactions from one currency;
+3. create an immutable reconciliation batch through the server-validated API;
+4. export the full server-side snapshot as CSV;
+5. after external payment is completed, explicitly mark the OPEN batch paid.
+
+The dashboard may display only its first 100 loaded ledger rows, so its card totals are not used as export authority. CSV generation always reads and validates the complete batch snapshot on the server.
