@@ -1,14 +1,14 @@
 {
   "eyebrow": "Commission Operations",
   "title": "Commission dashboard",
-  "description": "Review commission ledger activity and reconciliation batch status. This dashboard is read-only; payout actions and exports belong to the dedicated reconciliation workflow.",
+  "description": "Review commission ledger activity and reconciliation batch status. Export each batch as a complete authenticated CSV snapshot for payout reconciliation.",
   "refresh": "Refresh",
   "missingApiConfig": "The frontend API connection is not configured.",
   "signInRequired": "Sign in to view commission data.",
   "checkingAccess": "Checking financial access...",
   "restricted": "Only OWNER or ADMIN accounts can view the full commission ledger and reconciliation data.",
   "loadFailed": "Commission data could not be loaded from the API.",
-  "firstPageNote": "The dashboard loads up to the first 100 ledger rows and 100 reconciliation batches. API totals remain authoritative; card amounts reflect only loaded data.",
+  "firstPageNote": "The dashboard loads up to the first 100 ledger rows and 100 reconciliation batches. API totals remain authoritative; batch CSV exports are generated from the complete server-side reconciliation snapshot.",
   "minorUnitNote": "Amounts are displayed as integer minor units with their currency code to avoid implicit rounding.",
   "summary": {
     "accrued": "Awaiting reconciliation",
@@ -57,6 +57,10 @@
     "transactions": "Transactions",
     "total": "Total",
     "status": "Status",
-    "empty": "No reconciliation batches exist yet."
-  }
+    "empty": "No reconciliation batches exist yet.",
+    "actions": "Actions",
+    "export": "Export CSV",
+    "exporting": "Exporting..."
+  },
+  "exportFailed": "The reconciliation export could not be downloaded."
 }
