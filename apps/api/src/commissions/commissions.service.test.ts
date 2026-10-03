@@ -1,9 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  CommissionsService,
-  reconciliationMilestoneForPayableOn,
-} from './commissions.service.js';
+import { CommissionsService, reconciliationMilestoneForPayableOn } from './commissions.service.js';
 import type { CommissionsRepository } from './commissions.repository.js';
 
 function repositoryMock(): CommissionsRepository {
@@ -51,10 +48,7 @@ describe('CommissionsService reconciliation batches', () => {
       transactionIds: ['22222222-2222-4222-8222-222222222222'],
     };
 
-    await service.createReconciliationBatch(
-      '33333333-3333-4333-8333-333333333333',
-      input,
-    );
+    await service.createReconciliationBatch('33333333-3333-4333-8333-333333333333', input);
 
     expect(repository.createReconciliationBatch).toHaveBeenCalledWith({
       ...input,
