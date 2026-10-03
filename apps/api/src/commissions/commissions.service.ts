@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import {
   CommissionTransactionIdSchema,
   CommissionTransactionListQuerySchema,
@@ -14,6 +14,7 @@ import {
 import { z } from 'zod';
 import { parseRequest } from '../common/zod-request.js';
 import { CommissionsRepository } from './commissions.repository.js';
+import { buildReconciliationBatchCsv } from './reconciliation-export.js';
 
 const ActorIdSchema = z.uuid();
 
@@ -49,6 +50,54 @@ export class CommissionsService {
     return this.commissions.getReconciliationBatchById(
       parseRequest(ReconciliationBatchIdSchema, id),
     );
+  }
+
+  async exportReconciliationBatchCsv(
+    id: unknown,
+  ): Promise<{ filename: string; csv: string }> {
+    const batchId = parseRequest(ReconciliationBatchIdSchema, id);
+    const batch = await this.commissions.getReconciliationBatchById(batchId);
+    const transactions: CommissionTransaction[] = [];
+
+    for (let page = 1; transactions.length < batch.transactionCount; page += 1) {
+      const response = await this.commissions.list({
+        reconciliationBatchId: batchId,
+        page,
+        pageSize: 100,
+      });
+      transactions.push(...response.items);
+      if (response.items.length === 0 || transactions.length >= response.total) break;
+    }
+
+    const ids = transactions.map((transaction) => transaction.id).sort();
+    const expectedIds = [...batch.transactionIds].sort();
+    const totalAmountMinor = transactions.reduce(
+      (total, transaction) => total + BigInt(transaction.amountMinor),
+      0n,
+    );
+    const matchesSnapshot =
+      transactions.length === batch.transactionCount &&
+      ids.length === expectedIds.length &&
+      ids.every((value, index) => value === expectedIds[index]) &&
+      transactions.every(
+        (transaction) =>
+          transaction.reconciliationBatchId === batch.id &&
+          transaction.milestone === batch.milestone &&
+          transaction.currency === batch.currency,
+      ) &&
+      totalAmountMinor === BigInt(batch.totalAmountMinor);
+
+    if (!matchesSnapshot) {
+      throw new ConflictException({
+        code: 'RECONCILIATION_EXPORT_LEDGER_MISMATCH',
+        message: 'Batch ledger rows no longer match the immutable reconciliation snapshot',
+      });
+    }
+
+    return {
+      filename: `commission-reconciliation-${batch.payableOn}-${batch.id}.csv`,
+      csv: buildReconciliationBatchCsv(batch, transactions),
+    };
   }
 
   createReconciliationBatch(actorId: unknown, input: unknown): Promise<ReconciliationBatchDetail> {
