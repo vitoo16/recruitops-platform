@@ -1,0 +1,62 @@
+{
+  "eyebrow": "Commission Operations",
+  "title": "Bảng điều khiển hoa hồng",
+  "description": "Theo dõi ledger hoa hồng và trạng thái các đợt đối soát. Dashboard này chỉ đọc; thao tác chi trả và export được xử lý ở workflow đối soát riêng.",
+  "refresh": "Tải lại",
+  "missingApiConfig": "API chưa được cấu hình cho frontend này.",
+  "signInRequired": "Đăng nhập để xem dữ liệu hoa hồng.",
+  "checkingAccess": "Đang xác minh quyền truy cập tài chính...",
+  "restricted": "Chỉ OWNER hoặc ADMIN được xem toàn bộ ledger hoa hồng và dữ liệu đối soát.",
+  "loadFailed": "Không thể tải dữ liệu hoa hồng từ API.",
+  "firstPageNote": "Dashboard đang hiển thị tối đa 100 ledger rows và 100 reconciliation batches đầu tiên. Số tổng được lấy từ API; tổng tiền trên các thẻ chỉ phản ánh dữ liệu đã tải.",
+  "minorUnitNote": "Các số tiền được hiển thị theo integer minor units cùng mã tiền tệ để tránh làm tròn ngầm.",
+  "summary": {
+    "accrued": "Chờ đối soát",
+    "batched": "Đã vào batch",
+    "paid": "Đã chi trả",
+    "openBatches": "Batch đang mở",
+    "batchCount": "{count} batch"
+  },
+  "filters": {
+    "milestone": "Mốc hoa hồng",
+    "status": "Trạng thái",
+    "allMilestones": "Tất cả mốc",
+    "allStatuses": "Tất cả trạng thái"
+  },
+  "milestone": {
+    "INTERVIEW_INVITED": "Mời phỏng vấn",
+    "WORKED_30_DAYS": "Làm đủ 30 ngày"
+  },
+  "status": {
+    "ACCRUED": "Chờ đối soát",
+    "BATCHED": "Đã vào batch",
+    "PAID": "Đã chi trả",
+    "VOIDED": "Đã vô hiệu"
+  },
+  "batchStatus": {
+    "OPEN": "Đang mở",
+    "PAID": "Đã chi trả"
+  },
+  "ledger": {
+    "title": "Commission ledger",
+    "count": "Đang hiển thị {visible} / {total} giao dịch",
+    "caption": "Danh sách giao dịch hoa hồng",
+    "milestone": "Mốc",
+    "beneficiary": "CTV",
+    "amount": "Số tiền",
+    "earnedAt": "Thời điểm phát sinh",
+    "status": "Trạng thái",
+    "empty": "Không có giao dịch phù hợp với bộ lọc hiện tại."
+  },
+  "batches": {
+    "title": "Reconciliation batches",
+    "count": "{total} batch trong hệ thống",
+    "caption": "Danh sách các đợt đối soát hoa hồng",
+    "payableOn": "Ngày chi trả",
+    "milestone": "Mốc",
+    "transactions": "Số giao dịch",
+    "total": "Tổng tiền",
+    "status": "Trạng thái",
+    "empty": "Chưa có reconciliation batch nào."
+  }
+}

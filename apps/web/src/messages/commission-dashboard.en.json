@@ -1,0 +1,62 @@
+{
+  "eyebrow": "Commission Operations",
+  "title": "Commission dashboard",
+  "description": "Review commission ledger activity and reconciliation batch status. This dashboard is read-only; payout actions and exports belong to the dedicated reconciliation workflow.",
+  "refresh": "Refresh",
+  "missingApiConfig": "The frontend API connection is not configured.",
+  "signInRequired": "Sign in to view commission data.",
+  "checkingAccess": "Checking financial access...",
+  "restricted": "Only OWNER or ADMIN accounts can view the full commission ledger and reconciliation data.",
+  "loadFailed": "Commission data could not be loaded from the API.",
+  "firstPageNote": "The dashboard loads up to the first 100 ledger rows and 100 reconciliation batches. API totals remain authoritative; card amounts reflect only loaded data.",
+  "minorUnitNote": "Amounts are displayed as integer minor units with their currency code to avoid implicit rounding.",
+  "summary": {
+    "accrued": "Awaiting reconciliation",
+    "batched": "Batched",
+    "paid": "Paid",
+    "openBatches": "Open batches",
+    "batchCount": "{count} batches"
+  },
+  "filters": {
+    "milestone": "Commission milestone",
+    "status": "Status",
+    "allMilestones": "All milestones",
+    "allStatuses": "All statuses"
+  },
+  "milestone": {
+    "INTERVIEW_INVITED": "Interview invited",
+    "WORKED_30_DAYS": "Worked 30 days"
+  },
+  "status": {
+    "ACCRUED": "Awaiting reconciliation",
+    "BATCHED": "Batched",
+    "PAID": "Paid",
+    "VOIDED": "Voided"
+  },
+  "batchStatus": {
+    "OPEN": "Open",
+    "PAID": "Paid"
+  },
+  "ledger": {
+    "title": "Commission ledger",
+    "count": "Showing {visible} / {total} transactions",
+    "caption": "Commission transaction list",
+    "milestone": "Milestone",
+    "beneficiary": "Contributor",
+    "amount": "Amount",
+    "earnedAt": "Earned at",
+    "status": "Status",
+    "empty": "No transactions match the current filters."
+  },
+  "batches": {
+    "title": "Reconciliation batches",
+    "count": "{total} batches in the system",
+    "caption": "Commission reconciliation batch list",
+    "payableOn": "Payable on",
+    "milestone": "Milestone",
+    "transactions": "Transactions",
+    "total": "Total",
+    "status": "Status",
+    "empty": "No reconciliation batches exist yet."
+  }
+}
