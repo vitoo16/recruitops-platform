@@ -7,13 +7,14 @@ import type {
   CommissionTransactionStatus,
   ReconciliationBatch,
 } from '@recruitops/contracts';
-import { RefreshCw, WalletCards } from 'lucide-react';
+import { Download, RefreshCw, WalletCards } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   CommissionsApiError,
+  downloadReconciliationBatchCsv,
   listCommissionTransactions,
   listReconciliationBatches,
 } from '@/lib/commissions/api';
@@ -78,6 +79,7 @@ export function CommissionDashboard() {
   const [loading, setLoading] = useState(false);
   const [accessLoading, setAccessLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
 
   const canView = role === 'OWNER' || role === 'ADMIN';
 
@@ -166,6 +168,35 @@ export function CommissionDashboard() {
     // Loading is intentionally tied to the verified financial role.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canView, configuredApiUrl, session?.access_token]);
+
+  async function exportBatch(batchId: string) {
+    if (!session?.access_token || !configuredApiUrl || !canView) return;
+    setExportingBatchId(batchId);
+    setError(null);
+    try {
+      const exported = await downloadReconciliationBatchCsv(
+        configuredApiUrl,
+        session.access_token,
+        batchId,
+      );
+      const href = URL.createObjectURL(exported.blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = exported.filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(href);
+    } catch (caught) {
+      setError(
+        caught instanceof CommissionsApiError && caught.status === 403
+          ? t('restricted')
+          : t('exportFailed'),
+      );
+    } finally {
+      setExportingBatchId(null);
+    }
+  }
 
   const visibleTransactions = transactions.filter(
     (transaction) =>
@@ -345,6 +376,7 @@ export function CommissionDashboard() {
                 <th className="px-3 py-3 font-medium">{t('batches.transactions')}</th>
                 <th className="px-3 py-3 font-medium">{t('batches.total')}</th>
                 <th className="px-3 py-3 font-medium">{t('batches.status')}</th>
+                <th className="px-3 py-3 font-medium">{t('batches.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -360,6 +392,17 @@ export function CommissionDashboard() {
                     )}
                   </td>
                   <td className="px-3 py-3">{t(`batchStatus.${batch.status}`)}</td>
+                  <td className="px-3 py-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void exportBatch(batch.id)}
+                      disabled={exportingBatchId === batch.id}
+                    >
+                      <Download className="mr-2 size-4" aria-hidden="true" />
+                      {exportingBatchId === batch.id ? t('batches.exporting') : t('batches.export')}
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
