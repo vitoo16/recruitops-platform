@@ -27,6 +27,7 @@ export const CommissionTransactionSchema = z.object({
   earnedAt: z.iso.datetime({ offset: true }),
   status: CommissionTransactionStatusSchema,
   idempotencyKey: z.string().min(1).max(255),
+  reconciliationBatchId: ReconciliationBatchIdSchema.nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -37,6 +38,7 @@ export const CommissionTransactionListQuerySchema = z.object({
   beneficiaryUserId: z.uuid().optional(),
   milestone: CommissionMilestoneSchema.optional(),
   status: CommissionTransactionStatusSchema.optional(),
+  reconciliationBatchId: ReconciliationBatchIdSchema.optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
