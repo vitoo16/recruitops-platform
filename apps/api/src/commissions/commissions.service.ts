@@ -32,9 +32,7 @@ import { buildReconciliationBatchCsv } from './reconciliation-export.js';
 
 const ActorIdSchema = z.uuid();
 
-function commissionMilestoneForStatus(
-  status: ApplicationStatus,
-): CommissionMilestone | null {
+function commissionMilestoneForStatus(status: ApplicationStatus): CommissionMilestone | null {
   if (status === 'INTERVIEW_INVITED') return 'INTERVIEW_INVITED';
   if (status === 'WORKED_30_DAYS') return 'WORKED_30_DAYS';
   return null;
@@ -51,9 +49,7 @@ function safeConfiguredCommissionAmount(value: bigint): number {
   return amount;
 }
 
-export function reconciliationMilestoneForPayableOn(
-  payableOn: string,
-): CommissionMilestone {
+export function reconciliationMilestoneForPayableOn(payableOn: string): CommissionMilestone {
   const day = Number(payableOn.slice(8, 10));
   if (day === 5) return 'INTERVIEW_INVITED';
   if (day === 15) return 'WORKED_30_DAYS';
@@ -187,9 +183,7 @@ export class CommissionsService {
     });
   }
 
-  listReconciliationBatches(
-    query: unknown,
-  ): Promise<ReconciliationBatchListResponse> {
+  listReconciliationBatches(query: unknown): Promise<ReconciliationBatchListResponse> {
     return this.commissions.listReconciliationBatches(
       parseRequest(ReconciliationBatchListQuerySchema, query),
     );
@@ -201,9 +195,7 @@ export class CommissionsService {
     );
   }
 
-  async exportReconciliationBatchCsv(
-    id: unknown,
-  ): Promise<{ filename: string; csv: string }> {
+  async exportReconciliationBatchCsv(id: unknown): Promise<{ filename: string; csv: string }> {
     const batchId = parseRequest(ReconciliationBatchIdSchema, id);
     const batch = await this.commissions.getReconciliationBatchById(batchId);
     const transactions: CommissionTransaction[] = [];
