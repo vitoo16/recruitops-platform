@@ -83,11 +83,21 @@ describe('allocateDuplicateCommission', () => {
         baseAmountMinor: 100_000,
         businessTimeZone: 'Asia/Ho_Chi_Minh',
       }),
-    ).toThrowError(
-      expect.objectContaining<Partial<BadRequestException>>({
-        response: expect.objectContaining({ code: 'COMMISSION_SOURCE_USER_REQUIRED' }),
-      }),
-    );
+    ).toThrow(BadRequestException);
+
+    try {
+      allocateDuplicateCommission({
+        sources: [{ ...sources[0]!, sourceUserId: null }, sources[1]!],
+        baseAmountMinor: 100_000,
+        businessTimeZone: 'Asia/Ho_Chi_Minh',
+      });
+      throw new Error('expected allocation to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect((error as BadRequestException).getResponse()).toEqual(
+        expect.objectContaining({ code: 'COMMISSION_SOURCE_USER_REQUIRED' }),
+      );
+    }
   });
 
   it('rejects an invalid business timezone instead of silently using the host timezone', () => {
