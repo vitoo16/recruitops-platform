@@ -60,7 +60,28 @@
     "empty": "No reconciliation batches exist yet.",
     "actions": "Actions",
     "export": "Export CSV",
-    "exporting": "Exporting..."
+    "exporting": "Exporting...",
+    "markPaid": "Mark paid",
+    "markingPaid": "Marking paid..."
   },
-  "exportFailed": "The reconciliation export could not be downloaded."
+  "exportFailed": "The reconciliation export could not be downloaded.",
+  "workflow": {
+    "title": "Reconciliation workflow",
+    "description": "Choose a stakeholder payout date, select eligible accrued transactions, create an immutable payout batch, then export or mark it paid.",
+    "payableOn": "Payout date",
+    "payoutDateHint": "Day 5 reconciles interview-invited commission; day 15 reconciles worked-30-days commission.",
+    "eligibleTitle": "Eligible accrued transactions",
+    "eligibleHint": "{count} loaded transactions match {milestone}. Select rows from one currency only.",
+    "choosePayoutDate": "Choose a valid payout date on day 5 or 15.",
+    "noEligible": "No loaded accrued transactions match this payout class.",
+    "currencyMismatch": "Selected transactions must use one currency. Remove rows from other currencies before creating the batch.",
+    "selectedCount": "{count} selected",
+    "create": "Create reconciliation batch",
+    "creating": "Creating batch...",
+    "created": "Reconciliation batch created.",
+    "createFailed": "The reconciliation batch could not be created. Check payout date, transaction state, milestone and currency.",
+    "confirmPaid": "Mark this reconciliation batch as paid? This changes all linked BATCHED ledger rows to PAID.",
+    "paid": "Reconciliation batch marked paid.",
+    "payFailed": "The batch could not be marked paid because its ledger snapshot no longer matches or another change won the race."
+  }
 }
