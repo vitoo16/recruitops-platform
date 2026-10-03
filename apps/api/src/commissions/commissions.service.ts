@@ -241,10 +241,7 @@ export class CommissionsService {
     };
   }
 
-  createReconciliationBatch(
-    actorId: unknown,
-    input: unknown,
-  ): Promise<ReconciliationBatchDetail> {
+  createReconciliationBatch(actorId: unknown, input: unknown): Promise<ReconciliationBatchDetail> {
     const actor = parseRequest(ActorIdSchema, actorId);
     const parsed = parseRequest(CreateReconciliationBatchSchema, input);
     return this.commissions.createReconciliationBatch({
@@ -254,10 +251,7 @@ export class CommissionsService {
     });
   }
 
-  markReconciliationBatchPaid(
-    actorId: unknown,
-    id: unknown,
-  ): Promise<ReconciliationBatchDetail> {
+  markReconciliationBatchPaid(actorId: unknown, id: unknown): Promise<ReconciliationBatchDetail> {
     return this.commissions.markReconciliationBatchPaid(
       parseRequest(ReconciliationBatchIdSchema, id),
       parseRequest(ActorIdSchema, actorId),
