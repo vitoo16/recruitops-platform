@@ -50,7 +50,7 @@ afterEach(() => {
 describe('commission API client', () => {
   it('loads the first 100 ledger rows with bearer authentication', async () => {
     const fetchMock = vi.fn(
-      async () =>
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
         new Response(JSON.stringify({ items: [transaction], page: 1, pageSize: 100, total: 1 }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
@@ -63,10 +63,10 @@ describe('commission API client', () => {
     expect(response.items).toHaveLength(1);
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/commissions?page=1&pageSize=100',
-      expect.objectContaining({
-        headers: expect.objectContaining({ authorization: 'Bearer token-123' }),
-      }),
+      expect.objectContaining({ headers: expect.any(Headers) }),
     );
+    const request = vi.mocked(fetchMock).mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get('authorization')).toBe('Bearer token-123');
   });
 
   it('loads reconciliation batches through their dedicated collection route', async () => {
@@ -153,7 +153,7 @@ describe('commission API client', () => {
 
   it('downloads a reconciliation CSV with the server-provided filename', async () => {
     const fetchMock = vi.fn(
-      async () =>
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
         new Response('\uFEFFreconciliation_batch_id\r\n', {
           status: 200,
           headers: {
@@ -174,10 +174,10 @@ describe('commission API client', () => {
     expect(await response.blob.text()).toContain('reconciliation_batch_id');
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.example.test/commissions/reconciliation-batches/${batch.id}/export.csv`,
-      expect.objectContaining({
-        headers: expect.objectContaining({ authorization: 'Bearer token-123' }),
-      }),
+      expect.objectContaining({ headers: expect.any(Headers) }),
     );
+    const request = vi.mocked(fetchMock).mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get('authorization')).toBe('Bearer token-123');
   });
 
   it('surfaces stable API error codes for authorization failures', async () => {
