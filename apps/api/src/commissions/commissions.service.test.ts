@@ -94,7 +94,7 @@ describe('CommissionsService milestone accrual', () => {
     const sourceB = {
       id: '99999999-9999-4999-8999-999999999999',
       sourceUserId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      sourcedAt: new Date('2026-10-02T17:30:00.000Z'),
+      sourcedAt: new Date('2026-10-02T16:45:00.000Z'),
     };
     const storedApplication = {
       id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
