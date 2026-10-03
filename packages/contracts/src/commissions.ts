@@ -122,6 +122,4 @@ export type ReconciliationBatchStatus = z.infer<typeof ReconciliationBatchStatus
 export type ReconciliationBatch = z.infer<typeof ReconciliationBatchSchema>;
 export type ReconciliationBatchDetail = z.infer<typeof ReconciliationBatchDetailSchema>;
 export type ReconciliationBatchListQuery = z.infer<typeof ReconciliationBatchListQuerySchema>;
-export type ReconciliationBatchListResponse = z.infer<
-  typeof ReconciliationBatchListResponseSchema
->;
+export type ReconciliationBatchListResponse = z.infer<typeof ReconciliationBatchListResponseSchema>;
