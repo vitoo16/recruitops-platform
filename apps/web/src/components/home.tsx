@@ -5,6 +5,7 @@ import { NextIntlClientProvider, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AuthPanel } from '@/components/auth/auth-panel';
 import { CandidateCrm } from '@/components/candidates/candidate-crm';
+import { CommissionDashboard } from '@/components/commissions/commission-dashboard';
 import { CandidateCvWorkspace } from '@/components/candidates/candidate-cv-workspace';
 import { ContentMediaWorkspace } from '@/components/content/content-media-workspace';
 import { JobHub } from '@/components/jobs/job-hub';
@@ -13,6 +14,8 @@ import { MetaConnectionPanel } from '@/components/meta-connections/meta-connecti
 import { ThreadsConnectionPanel } from '@/components/threads-connections/threads-connection-panel';
 import { TikTokConnectionPanel } from '@/components/tiktok-connections/tiktok-connection-panel';
 import { Button } from '@/components/ui/button';
+import commissionDashboardEn from '@/messages/commission-dashboard.en.json';
+import commissionDashboardVi from '@/messages/commission-dashboard.vi.json';
 import contentStudioEn from '@/messages/content-studio.en.json';
 import contentStudioVi from '@/messages/content-studio.vi.json';
 import en from '@/messages/en.json';
@@ -95,6 +98,7 @@ function HomeContent({ locale, onLocaleChange }: { locale: Locale; onLocaleChang
         <ContentMediaWorkspace />
         <CandidateCrm />
         <CandidateCvWorkspace />
+        <CommissionDashboard />
       </main>
     </>
   );
@@ -109,6 +113,7 @@ export function Home() {
     metaConnections: locale === 'vi' ? metaVi : metaEn,
     threadsConnections: locale === 'vi' ? threadsVi : threadsEn,
     tiktokConnections: locale === 'vi' ? tiktokVi : tiktokEn,
+    commissionDashboard: locale === 'vi' ? commissionDashboardVi : commissionDashboardEn,
     contentStudio: locale === 'vi' ? contentStudioVi : contentStudioEn,
   };
 
