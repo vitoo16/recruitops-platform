@@ -17,30 +17,29 @@ The canonical Prisma schema currently defines:
 - `Candidate`
 - `Application`
 - `CandidateDocument`
-
-Planned domains that are not yet represented as persisted models include:
-
 - `CommissionTransaction`
 - `ReconciliationBatch`
-- additional audit persistence extensions as required by later phases.
+
+Additional audit persistence extensions may be introduced in later phases when required by a concrete workflow.
 
 ## Design rules
 
 - Public/domain identifiers use UUIDs where API-facing opaque identifiers are required.
 - Foreign-key access paths are indexed explicitly.
-- Event timestamps use PostgreSQL `TIMESTAMPTZ` through Prisma native types.
-- Salary bounds use integer minor units (`BigInt`) rather than floating point.
+- Event timestamps use PostgreSQL `TIMESTAMPTZ` through Prisma native types; reconciliation payout days use PostgreSQL `DATE` because the stakeholder rule is calendar-day based.
+- Salary and commission amounts use integer minor units (`BigInt`) rather than floating point.
 - `PostVariant` enforces one variant per `(postId, platform)`.
 - Semi-structured platform metadata uses PostgreSQL JSONB through Prisma `Json`.
 - Job deletion cascades to canonical posts; post deletion cascades to variants. Application services must still apply authorization and lifecycle rules before destructive actions are exposed.
 - OAuth provider token payloads are never modeled as plaintext columns. `SocialCredential` stores an AES-256-GCM envelope (`keyId`, algorithm, IV, authentication tag and ciphertext), while `SocialAccount.credentialRef` is a unique optional relation to that envelope.
-- The `social_credentials` hosted table is API-owned with RLS enabled and no browser-facing policy; the migration additionally revokes `anon` and `authenticated` table privileges.
+- Financial tables are API-owned. Hosted migrations enable RLS and revoke browser-facing `anon`/`authenticated` access; financial state changes go through authenticated OWNER/ADMIN API operations.
+- Reconciliation membership is immutable after batch creation. Commission rows can belong to at most one batch and payout state changes are transactionally coupled to the batch lifecycle.
 
 ## Performance and indexes
 
-The current Prisma schema indexes implemented Job/Content, publication/scheduling/retry, social-account lifecycle, candidate deduplication and application-pipeline access paths.
+The current Prisma schema indexes implemented Job/Content, publication/scheduling/retry, social-account lifecycle, candidate deduplication, application-pipeline, commission-ledger and reconciliation access paths.
 
-The 2026-09-30 hosted performance review found no evidence-based index migration to apply: business tables still have no representative production rows, and Supabase Performance Advisor reports only informational unused-index findings. Existing intentional indexes are therefore preserved until realistic workload/query statistics justify a change.
+The 2026-09-30 hosted performance review found no evidence-based index migration to apply: business tables still had no representative production rows, and Supabase Performance Advisor reported only informational unused-index findings. Existing intentional indexes are therefore preserved until realistic workload/query statistics justify a change.
 
 See [`database-performance.md`](./database-performance.md) for the hosted evidence, index rationale, revisit thresholds, and production-readiness review method.
 
@@ -48,7 +47,7 @@ See [`database-performance.md`](./database-performance.md) for the hosted eviden
 
 `packages/database/prisma/schema.prisma` remains the canonical application data model. Hosted production DDL is committed under `infra/supabase/migrations/` and tracked/executed by Supabase according to ADR 0006. RecruitOps does not introduce a parallel hosted `prisma migrate deploy` history.
 
-The OAuth credential-storage schema change is represented by `infra/supabase/migrations/20260928_secure_social_credentials.sql`. Committing the migration does not imply it has been applied to the hosted production project.
+The credential, commission-ledger and reconciliation changes are represented by version-controlled Supabase migrations, including `20260928_secure_social_credentials.sql`, `20261001_commission_ledger.sql` and `20261003_reconciliation_batches.sql`. Committing a migration does not by itself imply that it has been applied to the hosted production project.
 
 ## Persistent-source rule
 
