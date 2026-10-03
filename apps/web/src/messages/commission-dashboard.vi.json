@@ -1,14 +1,14 @@
 {
   "eyebrow": "Commission Operations",
   "title": "Bảng điều khiển hoa hồng",
-  "description": "Theo dõi ledger hoa hồng và trạng thái các đợt đối soát. Dashboard này chỉ đọc; thao tác chi trả và export được xử lý ở workflow đối soát riêng.",
+  "description": "Theo dõi ledger hoa hồng và trạng thái các đợt đối soát. Mỗi batch có thể xuất thành CSV đầy đủ qua API đã xác thực để phục vụ đối soát chi trả.",
   "refresh": "Tải lại",
   "missingApiConfig": "API chưa được cấu hình cho frontend này.",
   "signInRequired": "Đăng nhập để xem dữ liệu hoa hồng.",
   "checkingAccess": "Đang xác minh quyền truy cập tài chính...",
   "restricted": "Chỉ OWNER hoặc ADMIN được xem toàn bộ ledger hoa hồng và dữ liệu đối soát.",
   "loadFailed": "Không thể tải dữ liệu hoa hồng từ API.",
-  "firstPageNote": "Dashboard đang hiển thị tối đa 100 ledger rows và 100 reconciliation batches đầu tiên. Số tổng được lấy từ API; tổng tiền trên các thẻ chỉ phản ánh dữ liệu đã tải.",
+  "firstPageNote": "Dashboard hiển thị tối đa 100 ledger rows và 100 reconciliation batches đầu tiên. Số tổng từ API vẫn là nguồn chuẩn; CSV của từng batch được tạo từ toàn bộ snapshot đối soát phía server.",
   "minorUnitNote": "Các số tiền được hiển thị theo integer minor units cùng mã tiền tệ để tránh làm tròn ngầm.",
   "summary": {
     "accrued": "Chờ đối soát",
@@ -57,6 +57,10 @@
     "transactions": "Số giao dịch",
     "total": "Tổng tiền",
     "status": "Trạng thái",
-    "empty": "Chưa có reconciliation batch nào."
-  }
+    "empty": "Chưa có reconciliation batch nào.",
+    "actions": "Thao tác",
+    "export": "Xuất CSV",
+    "exporting": "Đang xuất..."
+  },
+  "exportFailed": "Không thể tải file đối soát."
 }
