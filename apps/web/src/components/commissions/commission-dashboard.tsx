@@ -40,9 +40,9 @@ function amountSummary(
   items: readonly { currency: string; amountMinor: number }[],
   locale: string,
 ): string {
-  const totals = new Map<string, number>();
+  const totals = new Map<string, bigint>();
   for (const item of items) {
-    totals.set(item.currency, (totals.get(item.currency) ?? 0) + item.amountMinor);
+    totals.set(item.currency, (totals.get(item.currency) ?? 0n) + BigInt(item.amountMinor));
   }
   if (totals.size === 0) return '—';
 
