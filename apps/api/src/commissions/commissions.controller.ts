@@ -38,10 +38,7 @@ export class CommissionsController {
   ) {
     const exported = await this.commissions.exportReconciliationBatchCsv(id);
     response.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    response.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${exported.filename}"`,
-    );
+    response.setHeader('Content-Disposition', `attachment; filename="${exported.filename}"`);
     response.setHeader('Cache-Control', 'private, no-store');
     return exported.csv;
   }
