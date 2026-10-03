@@ -52,7 +52,7 @@ export function mapDatabaseApplication(application: DatabaseApplication): Applic
   };
 }
 
-function milestoneForStatus(status: ApplicationStatus, occurredAt: Date): Record<string, Date> {
+export function milestoneForStatus(status: ApplicationStatus, occurredAt: Date): Record<string, Date> {
   switch (status) {
     case 'SUBMITTED':
       return { submittedAt: occurredAt };
