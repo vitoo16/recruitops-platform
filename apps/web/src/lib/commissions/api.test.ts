@@ -89,7 +89,7 @@ describe('commission API client', () => {
   it('creates an immutable reconciliation batch with JSON and bearer auth', async () => {
     const detail = { ...batch, transactionIds: [transaction.id] };
     const fetchMock = vi.fn(
-      async () =>
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
         new Response(JSON.stringify(detail), {
           status: 201,
           headers: { 'content-type': 'application/json' },
