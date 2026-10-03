@@ -32,7 +32,9 @@ import { buildReconciliationBatchCsv } from './reconciliation-export.js';
 
 const ActorIdSchema = z.uuid();
 
-function commissionMilestoneForStatus(status: ApplicationStatus): CommissionMilestone | null {
+function commissionMilestoneForStatus(
+  status: ApplicationStatus,
+): CommissionMilestone | null {
   if (status === 'INTERVIEW_INVITED') return 'INTERVIEW_INVITED';
   if (status === 'WORKED_30_DAYS') return 'WORKED_30_DAYS';
   return null;
@@ -49,7 +51,9 @@ function safeConfiguredCommissionAmount(value: bigint): number {
   return amount;
 }
 
-export function reconciliationMilestoneForPayableOn(payableOn: string): CommissionMilestone {
+export function reconciliationMilestoneForPayableOn(
+  payableOn: string,
+): CommissionMilestone {
   const day = Number(payableOn.slice(8, 10));
   if (day === 5) return 'INTERVIEW_INVITED';
   if (day === 15) return 'WORKED_30_DAYS';
@@ -183,7 +187,9 @@ export class CommissionsService {
     });
   }
 
-  listReconciliationBatches(query: unknown): Promise<ReconciliationBatchListResponse> {
+  listReconciliationBatches(
+    query: unknown,
+  ): Promise<ReconciliationBatchListResponse> {
     return this.commissions.listReconciliationBatches(
       parseRequest(ReconciliationBatchListQuerySchema, query),
     );
@@ -243,7 +249,10 @@ export class CommissionsService {
     };
   }
 
-  createReconciliationBatch(actorId: unknown, input: unknown): Promise<ReconciliationBatchDetail> {
+  createReconciliationBatch(
+    actorId: unknown,
+    input: unknown,
+  ): Promise<ReconciliationBatchDetail> {
     const actor = parseRequest(ActorIdSchema, actorId);
     const parsed = parseRequest(CreateReconciliationBatchSchema, input);
     return this.commissions.createReconciliationBatch({
@@ -253,7 +262,10 @@ export class CommissionsService {
     });
   }
 
-  markReconciliationBatchPaid(actorId: unknown, id: unknown): Promise<ReconciliationBatchDetail> {
+  markReconciliationBatchPaid(
+    actorId: unknown,
+    id: unknown,
+  ): Promise<ReconciliationBatchDetail> {
     return this.commissions.markReconciliationBatchPaid(
       parseRequest(ReconciliationBatchIdSchema, id),
       parseRequest(ActorIdSchema, actorId),
