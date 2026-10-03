@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CommissionTransactionSchema,
-  CreateReconciliationBatchSchema,
-} from './commissions.js';
+import { CommissionTransactionSchema, CreateReconciliationBatchSchema } from './commissions.js';
 
 const baseTransaction = {
   id: '11111111-1111-4111-8111-111111111111',
