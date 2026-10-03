@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { CommissionsService, reconciliationMilestoneForPayableOn } from './commissions.service.js';
+import type { DatabaseService } from '../database/database.service.js';
 import type { CommissionsRepository } from './commissions.repository.js';
 
 const transaction = {
@@ -22,6 +23,10 @@ const transaction = {
   createdAt: '2026-10-03T08:00:00.000Z',
   updatedAt: '2026-10-03T08:00:00.000Z',
 };
+
+function databaseMock(): DatabaseService {
+  return { client: {} } as unknown as DatabaseService;
+}
 
 function repositoryMock(): CommissionsRepository {
   return {
@@ -79,10 +84,151 @@ describe('reconciliationMilestoneForPayableOn', () => {
   });
 });
 
+describe('CommissionsService milestone accrual', () => {
+  it('accrues duplicate-aware shares in the same database transaction as the status update', async () => {
+    const sourceA = {
+      id: '88888888-8888-4888-8888-888888888888',
+      sourceUserId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      sourcedAt: new Date('2026-10-02T16:30:00.000Z'),
+    };
+    const sourceB = {
+      id: '99999999-9999-4999-8999-999999999999',
+      sourceUserId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      sourcedAt: new Date('2026-10-02T17:30:00.000Z'),
+    };
+    const storedApplication = {
+      id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      candidateId: transaction.candidateId,
+      jobId: transaction.jobId,
+      status: 'SUBMITTED' as const,
+      sourcePlatform: null,
+      sourceDestinationId: null,
+      sourceUserId: sourceA.sourceUserId,
+      sourceLabel: null,
+      sourcedAt: sourceA.sourcedAt,
+      submittedAt: new Date('2026-10-02T16:35:00.000Z'),
+      interviewInvitedAt: null,
+      interviewAt: null,
+      hiredAt: null,
+      startedAt: null,
+      worked30DaysAt: null,
+      createdAt: sourceA.sourcedAt,
+      updatedAt: sourceA.sourcedAt,
+      job: {
+        currency: 'VND',
+        interviewCommissionMinor: 100_001n,
+        worked30DaysCommissionMinor: 200_000n,
+      },
+    };
+    const updatedApplication = {
+      ...storedApplication,
+      status: 'INTERVIEW_INVITED' as const,
+      interviewInvitedAt: new Date('2026-10-03T08:00:00.000Z'),
+    };
+    const upsert = vi.fn(async () => ({}));
+    const update = vi.fn(async () => updatedApplication);
+    const tx = {
+      application: {
+        findUnique: vi.fn(async () => storedApplication),
+        findMany: vi.fn(async () => [sourceA, sourceB]),
+        update,
+      },
+      commissionTransaction: { upsert },
+    };
+    const database = {
+      client: {
+        $transaction: vi.fn(async (callback: (transactionClient: typeof tx) => unknown) =>
+          callback(tx),
+        ),
+      },
+    } as unknown as DatabaseService;
+    const service = new CommissionsService(repositoryMock(), database);
+    const occurredAt = new Date('2026-10-03T08:00:00.000Z');
+
+    const result = await service.transitionApplicationStatus(
+      storedApplication.id,
+      'INTERVIEW_INVITED',
+      occurredAt,
+      'Asia/Ho_Chi_Minh',
+    );
+
+    expect(result.status).toBe('INTERVIEW_INVITED');
+    expect(upsert).toHaveBeenCalledTimes(2);
+    expect(upsert.mock.calls.map(([call]) => call.create.amountMinor)).toEqual([50_001n, 50_000n]);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'INTERVIEW_INVITED',
+          interviewInvitedAt: occurredAt,
+        }),
+      }),
+    );
+  });
+
+  it('fails before changing application status when business timezone is missing', async () => {
+    const source = {
+      id: '88888888-8888-4888-8888-888888888888',
+      sourceUserId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      sourcedAt: new Date('2026-10-02T16:30:00.000Z'),
+    };
+    const storedApplication = {
+      id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      candidateId: transaction.candidateId,
+      jobId: transaction.jobId,
+      status: 'SUBMITTED' as const,
+      sourcePlatform: null,
+      sourceDestinationId: null,
+      sourceUserId: source.sourceUserId,
+      sourceLabel: null,
+      sourcedAt: source.sourcedAt,
+      submittedAt: new Date('2026-10-02T16:35:00.000Z'),
+      interviewInvitedAt: null,
+      interviewAt: null,
+      hiredAt: null,
+      startedAt: null,
+      worked30DaysAt: null,
+      createdAt: source.sourcedAt,
+      updatedAt: source.sourcedAt,
+      job: {
+        currency: 'VND',
+        interviewCommissionMinor: 100_000n,
+        worked30DaysCommissionMinor: 200_000n,
+      },
+    };
+    const update = vi.fn();
+    const tx = {
+      application: {
+        findUnique: vi.fn(async () => storedApplication),
+        findMany: vi.fn(async () => [source]),
+        update,
+      },
+      commissionTransaction: { upsert: vi.fn() },
+    };
+    const database = {
+      client: {
+        $transaction: vi.fn(async (callback: (transactionClient: typeof tx) => unknown) =>
+          callback(tx),
+        ),
+      },
+    } as unknown as DatabaseService;
+    const service = new CommissionsService(repositoryMock(), database);
+
+    await expect(
+      service.transitionApplicationStatus(
+        storedApplication.id,
+        'INTERVIEW_INVITED',
+        new Date('2026-10-03T08:00:00.000Z'),
+        '',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
 describe('CommissionsService reconciliation batches', () => {
   it('derives the payout class server-side and preserves authenticated actor attribution', async () => {
     const repository = repositoryMock();
-    const service = new CommissionsService(repository);
+    const service = new CommissionsService(repository, databaseMock());
     const input = {
       id: '11111111-1111-4111-8111-111111111111',
       payableOn: '2026-10-05',
@@ -100,7 +246,7 @@ describe('CommissionsService reconciliation batches', () => {
 
   it('exports the immutable full batch snapshot instead of a dashboard page', async () => {
     const repository = repositoryMock();
-    const service = new CommissionsService(repository);
+    const service = new CommissionsService(repository, databaseMock());
 
     const exported = await service.exportReconciliationBatchCsv(
       '11111111-1111-4111-8111-111111111111',
@@ -125,7 +271,7 @@ describe('CommissionsService reconciliation batches', () => {
       pageSize: 100,
       total: 1,
     });
-    const service = new CommissionsService(repository);
+    const service = new CommissionsService(repository, databaseMock());
 
     await expect(
       service.exportReconciliationBatchCsv('11111111-1111-4111-8111-111111111111'),
