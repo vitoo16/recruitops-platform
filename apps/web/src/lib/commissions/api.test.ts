@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CommissionsApiError,
+  downloadReconciliationBatchCsv,
   listCommissionTransactions,
   listReconciliationBatches,
 } from './api.js';
@@ -81,6 +82,35 @@ describe('commission API client', () => {
     const response = await listReconciliationBatches('https://api.example.test', 'token-123');
 
     expect(response.items[0]?.status).toBe('OPEN');
+  });
+
+  it('downloads a reconciliation CSV with the server-provided filename', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response('\uFEFFreconciliation_batch_id\r\n', {
+          status: 200,
+          headers: {
+            'content-type': 'text/csv; charset=utf-8',
+            'content-disposition': 'attachment; filename="batch-2026-10-05.csv"',
+          },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await downloadReconciliationBatchCsv(
+      'https://api.example.test',
+      'token-123',
+      batch.id,
+    );
+
+    expect(response.filename).toBe('batch-2026-10-05.csv');
+    expect(await response.blob.text()).toContain('reconciliation_batch_id');
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/commissions/reconciliation-batches/${batch.id}/export.csv`,
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: 'Bearer token-123' }),
+      }),
+    );
   });
 
   it('surfaces stable API error codes for authorization failures', async () => {
