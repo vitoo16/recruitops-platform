@@ -1,12 +1,7 @@
 import { z } from 'zod';
 
 export const commissionMilestoneValues = ['INTERVIEW_INVITED', 'WORKED_30_DAYS'] as const;
-export const commissionTransactionStatusValues = [
-  'ACCRUED',
-  'BATCHED',
-  'PAID',
-  'VOIDED',
-] as const;
+export const commissionTransactionStatusValues = ['ACCRUED', 'BATCHED', 'PAID', 'VOIDED'] as const;
 export const reconciliationBatchStatusValues = ['OPEN', 'PAID'] as const;
 
 export const CommissionMilestoneSchema = z.enum(commissionMilestoneValues);
