@@ -386,9 +386,7 @@ export class CommissionsRepository {
     const where = {
       ...(query.status ? { status: query.status } : {}),
       ...(query.milestone ? { milestone: query.milestone } : {}),
-      ...(query.payableOn
-        ? { payableOn: new Date(`${query.payableOn}T00:00:00.000Z`) }
-        : {}),
+      ...(query.payableOn ? { payableOn: new Date(`${query.payableOn}T00:00:00.000Z`) } : {}),
     };
     const [rows, total] = await Promise.all([
       this.database.client.reconciliationBatch.findMany({
