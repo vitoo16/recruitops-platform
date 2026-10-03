@@ -192,7 +192,9 @@ export function CommissionDashboard() {
   }
 
   if (!canView) {
-    return <p className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">{t('restricted')}</p>;
+    return (
+      <p className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">{t('restricted')}</p>
+    );
   }
 
   return (
@@ -200,7 +202,10 @@ export function CommissionDashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium text-neutral-500">{t('eyebrow')}</p>
-          <h2 id="commission-dashboard-title" className="mt-1 text-2xl font-semibold tracking-tight">
+          <h2
+            id="commission-dashboard-title"
+            className="mt-1 text-2xl font-semibold tracking-tight"
+          >
             {t('title')}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">{t('description')}</p>
@@ -220,10 +225,26 @@ export function CommissionDashboard() {
         </p>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-live="polite" aria-busy={loading}>
-        <SummaryCard label={t('summary.accrued')} value={amountSummary(accrued, locale)} count={accrued.length} />
-        <SummaryCard label={t('summary.batched')} value={amountSummary(batched, locale)} count={batched.length} />
-        <SummaryCard label={t('summary.paid')} value={amountSummary(paid, locale)} count={paid.length} />
+      <div
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        aria-live="polite"
+        aria-busy={loading}
+      >
+        <SummaryCard
+          label={t('summary.accrued')}
+          value={amountSummary(accrued, locale)}
+          count={accrued.length}
+        />
+        <SummaryCard
+          label={t('summary.batched')}
+          value={amountSummary(batched, locale)}
+          count={batched.length}
+        />
+        <SummaryCard
+          label={t('summary.paid')}
+          value={amountSummary(paid, locale)}
+          count={paid.length}
+        />
         <SummaryCard
           label={t('summary.openBatches')}
           value={t('summary.batchCount', { count: openBatches.length })}
@@ -288,9 +309,7 @@ export function CommissionDashboard() {
                   <td className="px-3 py-3 font-mono text-xs" title={transaction.beneficiaryUserId}>
                     {shortId(transaction.beneficiaryUserId)}
                   </td>
-                  <td className="px-3 py-3 font-medium">
-                    {amountSummary([transaction], locale)}
-                  </td>
+                  <td className="px-3 py-3 font-medium">{amountSummary([transaction], locale)}</td>
                   <td className="px-3 py-3 text-neutral-600">
                     {formatDateTime(transaction.earnedAt, locale)}
                   </td>
@@ -310,7 +329,9 @@ export function CommissionDashboard() {
           <WalletCards className="size-4" aria-hidden="true" />
           <div>
             <h3 className="font-semibold">{t('batches.title')}</h3>
-            <p className="mt-1 text-sm text-neutral-500">{t('batches.count', { total: batchTotal })}</p>
+            <p className="mt-1 text-sm text-neutral-500">
+              {t('batches.count', { total: batchTotal })}
+            </p>
           </div>
         </div>
 
