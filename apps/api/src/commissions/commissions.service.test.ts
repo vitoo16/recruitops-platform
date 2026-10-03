@@ -125,7 +125,7 @@ describe('CommissionsService milestone accrual', () => {
       status: 'INTERVIEW_INVITED' as const,
       interviewInvitedAt: new Date('2026-10-03T08:00:00.000Z'),
     };
-    const upsert = vi.fn(async () => ({}));
+    const upsert = vi.fn(async (_args: { create: { amountMinor: bigint } }) => ({}));
     const update = vi.fn(async () => updatedApplication);
     const tx = {
       application: {
