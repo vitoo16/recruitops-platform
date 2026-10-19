@@ -23,9 +23,9 @@
     "infra:down": "pnpm infra:setup && docker compose --env-file infra/docker/.env.local -f infra/docker/docker-compose.yml down"
   },
   "devDependencies": {
-    "prettier": "^3.9.9",
-    "turbo": "^2.11.2",
-    "typescript": "^6.0.0",
-    "vitest": "^5.0.2"
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.8",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
   }
 }
