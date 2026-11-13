@@ -164,3 +164,17 @@
 
 Do not add a new checklist item if an existing item already represents the work.
 Refine the existing item instead. This prevents duplicated implementation.
+
+## CI reliability and runner-usage hardening (2026-11-13)
+
+Status: **IN PROGRESS — NOT ACCEPTED**. Scope: preserve all current quality gates while eliminating work from superseded PR revisions. Supporting analysis: [CI hardening baseline](../operations/ci-hardening-2026-11-13.md).
+
+- [x] Inventory all 9 committed workflow files and the monorepo's apps/packages/infra boundaries on baseline `f1e1cd7cf4ba7dc73f4552bca7b782c33820c167`.
+- [x] Add workflow-scoped, PR-only cancellation to CI, integration, E2E, security, CodeQL, performance, AutoSkills and lockfile export. Branch/main and scheduled runs remain uncancelled by these settings.
+- [ ] Regenerate and review the **complete** pnpm workspace lockfile. Existing `pnpm-lock.yaml` records only pnpm as a root packageManager dependency, not application/workspace dependencies; do **not** enable frozen installs or pnpm cache against this incomplete file.
+- [ ] Prove clean install with Node 24.21.0 / pnpm 12.6.0 on the exact HEAD, then standardize frozen install and lockfile-keyed caching while retaining the lockfile-update lifecycle.
+- [ ] Implement missing lint and document/contract checks required by `docs/operations/quality-gates.md`, with real scripts and coverage evidence rather than placeholder PASS.
+- [ ] Construct dependency-aware PR impact map covering API, worker, web, packages, Prisma, Redis, workflows, and security; unknown impact must run all relevant gates.
+- [ ] Record before/after durations, runner-minutes, job pass/fail/skip decisions, and negative trigger scenarios on an enabled runner. GitHub Actions allocation failures currently block live proof.
+- [ ] Preserve CodeQL, dependency audit, integration/worker, Chromium E2E, production web-performance budgets and Dependabot PR review; audit any future test relocation against their existing coverage.
+- [ ] After successful same-SHA CI validation, enable supported branch rules/required stable status checks and complete rollback evidence; never consider green historical runs proof for the new commit.
