@@ -30,3 +30,10 @@ Eight PR-capable workflows now cancel obsolete *runs of the same workflow for th
 ## Acceptance/constraints
 
 No test is deleted, disabled or converted to non-blocking. Do not count skipped jobs as PASS. Verify that a failed security, integration or performance gate blocks the final required check. Do not overwrite any existing agent task completion. No runtime/application code or hosted data is modified by this patch.
+
+## Follow-up implementation — 2026-11-14 (candidate, not accepted)
+- Retained all **nine** workflows and all existing test, security and build commands.
+- Existing PR-only workflow-scoped cancellation remains unchanged. Added Playwright downloaded-browser caching to `e2e.yml` and `web-performance.yml`. Separate functional E2E and production performance budgets remain independent; both still execute `playwright install --with-deps chromium` to provision system libraries and any missing browser revisions.
+- Cache key incorporates runner OS, `pnpm-lock.yaml` and `apps/web/package.json`. This only caches `~/.cache/ms-playwright`, not node_modules or generated build outputs.
+- **No claim of verified savings:** the incomplete workspace pnpm lockfile still blocks reliable `--frozen-lockfile` execution. Rebuild and review a complete lockfile first, then validate successful exact-SHA CI, cache integrity/hit rate, timing and required status checks. Do not silently change to `--no-frozen-lockfile` for the E2E gate.
+- Rollback: remove the two browser-cache steps. No functional, security, performance or test assertions changed.
