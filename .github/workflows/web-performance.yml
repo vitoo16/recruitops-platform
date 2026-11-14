@@ -52,6 +52,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      # Browser payloads are keyed by the locked dependency graph; Playwright still validates/installs the requested revision.
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: recruitops-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
+
       - name: Install Chromium
         run: pnpm --filter @recruitops/web exec playwright install --with-deps chromium
 
