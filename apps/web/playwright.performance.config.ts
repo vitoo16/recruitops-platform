@@ -26,7 +26,7 @@ export default defineConfig({
     video: 'off',
   },
   webServer: {
-    command: 'pnpm build && python3 -m http.server 3200 --bind 127.0.0.1 --directory out',
+    command: 'pnpm build && node ../../tooling/scripts/serve-static.mjs out 3200',
     url: 'http://127.0.0.1:3200',
     timeout: 180_000,
     reuseExistingServer: false,

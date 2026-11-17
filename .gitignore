@@ -39,3 +39,4 @@ tmp/
 .terraform/
 *.tfstate
 *.tfstate.*
+.local-ci/

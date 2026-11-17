@@ -1,10 +1,8 @@
 name: E2E
 
+# Local-first: automatic cloud runners disabled; manual fallback retained.
 on:
-  pull_request:
-  push:
-    branches: [main]
-
+  workflow_dispatch:
 permissions:
   contents: read
 

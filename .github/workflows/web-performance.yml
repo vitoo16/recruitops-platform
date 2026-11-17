@@ -1,25 +1,8 @@
 name: Web Performance
 
+# Local-first: automatic cloud runners disabled; manual fallback retained.
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/contracts/**'
-      - 'pnpm-lock.yaml'
-      - 'package.json'
-      - 'pnpm-workspace.yaml'
-      - '.github/workflows/web-performance.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/contracts/**'
-      - 'pnpm-lock.yaml'
-      - 'package.json'
-      - 'pnpm-workspace.yaml'
-      - '.github/workflows/web-performance.yml'
-
+  workflow_dispatch:
 permissions:
   contents: read
 

@@ -1,0 +1,171 @@
+{
+  "repository": "vitoo16/recruitops-platform",
+  "nodeMajor": 24,
+  "env": {
+    "DATABASE_URL": "postgresql://recruitops:recruitops@127.0.0.1:15432/recruitops?schema=public",
+    "REDIS_URL": "redis://127.0.0.1:16379"
+  },
+  "cleanup": [
+    "docker compose -p recruitops-local-ci -f ci/docker-compose.local-ci.yml down -v"
+  ],
+  "stages": [
+    {
+      "id": "secrets",
+      "command": "node tooling/scripts/check-secrets.mjs"
+    },
+    {
+      "id": "install",
+      "command": "pnpm install --frozen-lockfile"
+    },
+    {
+      "id": "format",
+      "command": "pnpm format:check"
+    },
+    {
+      "id": "infra-env",
+      "command": "node tooling/scripts/init-local-infra.mjs --infra-only"
+    },
+    {
+      "id": "infra-config",
+      "command": "docker compose --env-file infra/docker/.env.local -f infra/docker/docker-compose.yml config --quiet"
+    },
+    {
+      "id": "prisma-validate",
+      "command": "pnpm db:validate"
+    },
+    {
+      "id": "typecheck",
+      "command": "pnpm typecheck"
+    },
+    {
+      "id": "unit",
+      "command": "pnpm test"
+    },
+    {
+      "id": "build",
+      "command": "pnpm build"
+    },
+    {
+      "id": "redis-up",
+      "command": "docker compose -p recruitops-local-ci -f ci/docker-compose.local-ci.yml up -d --wait redis"
+    },
+    {
+      "id": "publication-integration",
+      "command": "pnpm test:integration"
+    },
+    {
+      "id": "chromium-install",
+      "command": "pnpm --filter @recruitops/web exec playwright install chromium"
+    },
+    {
+      "id": "operator-e2e",
+      "command": "pnpm e2e"
+    },
+    {
+      "id": "performance",
+      "command": "pnpm --filter @recruitops/web test:performance"
+    },
+    {
+      "id": "dependency-audit",
+      "command": "pnpm audit --audit-level=moderate"
+    },
+    {
+      "id": "autoskills",
+      "command": "npx --yes autoskills@0.3.3 --dry-run > .local-ci/autoskills-dry-run.txt"
+    },
+    {
+      "id": "skill-registry",
+      "command": "node tooling/scripts/verify-skill-registry.mjs .local-ci/autoskills-dry-run.txt"
+    },
+    {
+      "id": "codeql-build",
+      "command": "codeql database create .local-ci/codeql/recruitops-db --language=javascript-typescript --source-root=. --overwrite"
+    },
+    {
+      "id": "codeql-analysis",
+      "command": "codeql database analyze .local-ci/codeql/recruitops-db javascript-security-extended.qls --format=sarifv2.1.0 --output=.local-ci/codeql/recruitops.sarif"
+    },
+    {
+      "id": "stage-release",
+      "command": "node scripts/local-stage-release.mjs"
+    }
+  ],
+  "profiles": {
+    "quick": [
+      "secrets",
+      "install",
+      "format",
+      "infra-env",
+      "infra-config",
+      "prisma-validate",
+      "typecheck",
+      "unit",
+      "build"
+    ],
+    "full": [
+      "secrets",
+      "install",
+      "format",
+      "infra-env",
+      "infra-config",
+      "prisma-validate",
+      "typecheck",
+      "unit",
+      "build",
+      "redis-up",
+      "publication-integration",
+      "chromium-install",
+      "operator-e2e",
+      "performance",
+      "dependency-audit"
+    ],
+    "security": [
+      "secrets",
+      "install",
+      "format",
+      "infra-env",
+      "infra-config",
+      "prisma-validate",
+      "typecheck",
+      "unit",
+      "build",
+      "redis-up",
+      "publication-integration",
+      "chromium-install",
+      "operator-e2e",
+      "performance",
+      "dependency-audit",
+      "autoskills",
+      "skill-registry",
+      "codeql-build",
+      "codeql-analysis"
+    ],
+    "release": [
+      "secrets",
+      "install",
+      "format",
+      "infra-env",
+      "infra-config",
+      "prisma-validate",
+      "typecheck",
+      "unit",
+      "build",
+      "redis-up",
+      "publication-integration",
+      "chromium-install",
+      "operator-e2e",
+      "performance",
+      "dependency-audit",
+      "autoskills",
+      "skill-registry",
+      "codeql-build",
+      "codeql-analysis",
+      "stage-release"
+    ]
+  },
+  "releaseOutputs": [
+    "apps/web/out",
+    "apps/api/dist",
+    "apps/worker/dist"
+  ]
+}
