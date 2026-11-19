@@ -1,3 +1,8 @@
+# Cancel superseded pull-request runs without cancelling main/scheduled verification.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 name: Web Performance
 
 # Local-first: automatic cloud runners disabled; manual fallback retained.
@@ -29,6 +34,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+
+      # Browser payloads are keyed by the locked dependency graph; Playwright still validates/installs the requested revision.
+      - name: Restore Playwright browser cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: recruitops-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
 
       - name: Install Chromium
         run: pnpm --filter @recruitops/web exec playwright install --with-deps chromium
